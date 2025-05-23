@@ -1,9 +1,12 @@
 package com.evenix.entities;
 
+import java.util.List;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import lombok.Data;
 
 @Data
@@ -21,6 +24,9 @@ public class Entreprise {
 	private String SecteurActivite;
 	private String Telephone;
 	private String Email;
+	
+	@OneToMany(mappedBy = "utilisateur")
+	private List<Utilisateur> utilisateurs;
 	
 	//Constructor
 	public Entreprise() {};
@@ -81,6 +87,10 @@ public class Entreprise {
 
 	public void set_Email(String sEmail) {
 		this.Email = sEmail;
+	}
+	
+	public List<Utilisateur> get_Utilisateurs(){
+		return utilisateurs;
 	}
 	
 	//Functions

@@ -1,9 +1,12 @@
 package com.evenix.entities;
 
+import java.util.List;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 
 @Entity
 public class Role {
@@ -14,6 +17,9 @@ public class Role {
 	private int Id;
 	
 	private String Nom;
+	
+	@OneToMany(mappedBy ="utilisateur")
+	private List<Utilisateur> utilisateurs;
 	
 	//Constructors
 	public Role() {}
@@ -31,6 +37,9 @@ public class Role {
 		return this.Nom;
 	}
 	
+	public List<Utilisateur> get_Utilisateurs(){
+		return utilisateurs;
+	}
 	//Functions
 	
 	@Override

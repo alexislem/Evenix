@@ -6,6 +6,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Utilisateur {
@@ -19,17 +21,22 @@ public class Utilisateur {
 		private Date DateDeNaissance;
 		private String MotDePasse;
 		private String Email;
-		private int ENT_id;
-		private int ROL_id;
 		
-		public Utilisateur(String sNom, String sPrenom, Date dDatedenaissance, String  sMotdepasse, String sEmail, int iENT_id, int iROL_id) {
+		@ManyToOne
+		@JoinColumn(name = "ENT_id", nullable = true)
+		private Entreprise entreprise;
+		
+		
+		@ManyToOne
+		@JoinColumn(name = "ROL_id", nullable = false)
+		private Role role;
+		
+		public Utilisateur(String sNom, String sPrenom, Date dDatedenaissance, String  sMotdepasse, String sEmail) {
 			this.setNom(sNom);
 			this.setPrenom(sPrenom);
 			this.setDatedenaissance(dDatedenaissance);
 			this.setMotdepasse(sMotdepasse);
 			this.setEmail(sEmail);
-			this.setENT_id(iENT_id);
-			this.setROL_id(iROL_id);
 		}
 
 		public String getNom() {
@@ -72,20 +79,20 @@ public class Utilisateur {
 			this.Email = sEmail;
 		}
 
-		public int getENT_id() {
-			return ENT_id;
+		public Entreprise getEntreprise() {
+			return entreprise;
 		}
 
-		public void setENT_id(int iENT_id) {
-			ENT_id = iENT_id;
+		public void setEntreprise(Entreprise entreprise) {
+			this.entreprise = entreprise;
 		}
 
-		public int getROL_id() {
-			return ROL_id;
+		public Role getRole() {
+			return role;
 		}
 
-		public void setROL_id(int iROL_id) {
-			ROL_id = iROL_id;
+		public void setRole(Role role) {
+			this.role = role;
 		}
 		
 		public String toString () {
