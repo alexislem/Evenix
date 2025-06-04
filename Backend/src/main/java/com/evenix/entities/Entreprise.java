@@ -1,109 +1,140 @@
 package com.evenix.entities;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import lombok.Data;
 
-@Data
 @Entity
 public class Entreprise {
 	
-	//Attributes
+	// Attributes
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int iId;
+	@Column (name = "ENT_Id")
+	private int id;
 	
-	private String Nom;
-	private String StatutJuridique;
-	private String Adresse;
-	private String SecteurActivite;
-	private String Telephone;
-	private String Email;
+	@Column (name = "ENT_Nom")
+	private String nom;
 	
-	@OneToMany(mappedBy = "utilisateur")
-	private List<Utilisateur> utilisateurs;
+	@Column (name = "ENT_StatutJuridique")
+	private String statutJuridique;
 	
-	//Constructor
+	@Column (name = "ENT_AdresseSiege")
+	private String adresse;
+	
+	@Column (name = "ENT_SecteurActivite")
+	private String secteurActivite;
+	
+	@Column (name = "ENT_Telephone")
+	private String telephone;
+	
+	@Column (name = "ENT_Email")
+	private String email;
+	
+	@OneToMany(mappedBy = "entreprise")
+	private List<Utilisateur> utilisateurs = new ArrayList<>();
+	
+	// Constructors
+	
 	public Entreprise() {};
 	
 	public Entreprise (String sNom, String sStatutJuridique, String sAdresse, String sSecteurActivite, String sTelephone, String sEmail) {
-		this.set_Nom(sNom);
-		this.set_StatutJuridique(sStatutJuridique);
-		this.set_Adresse(sAdresse);
-		this.set_SecteurActivite(sSecteurActivite);
-		this.set_Telephone(sTelephone);
-		this.set_Email(sEmail);
+		this.nom = sNom;
+		this.statutJuridique = sStatutJuridique;
+		this.adresse = sAdresse;
+		this.secteurActivite = sSecteurActivite;
+		this.telephone = sTelephone;
+		this.email = sEmail;
 	}
 	
-	//Getters/Setters
-	public String get_Nom() {
-		return Nom;
+	// Getters/Setters
+	
+	public String getNom() {
+		return this.nom;
 	}
 
-	public void set_Nom(String sNom) {
-		this.Nom = sNom;
+	public void setNom(String sNom) {
+		this.nom = sNom;
 	}
 
-	public String get_StatutJuridique() {
-		return StatutJuridique;
+	public String getStatutJuridique() {
+		return this.statutJuridique;
 	}
 
-	public void set_StatutJuridique(String sStatutJuridique) {
-		this.StatutJuridique = sStatutJuridique;
+	public void setStatutJuridique(String sStatutJuridique) {
+		this.statutJuridique = sStatutJuridique;
 	}
 
-	public String get_Adresse() {
-		return Adresse;
+	public String getAdresse() {
+		return this.adresse;
 	}
 
-	public void set_Adresse(String sAdresse) {
-		this.Adresse = sAdresse;
+	public void setAdresse(String sAdresse) {
+		this.adresse = sAdresse;
 	}
 
-	public String get_SecteurActivite() {
-		return SecteurActivite;
+	public String getSecteurActivite() {
+		return this.secteurActivite;
 	}
 
-	public void set_SecteurActivite(String sSecteurActivite) {
-		this.SecteurActivite = sSecteurActivite;
+	public void setSecteurActivite(String sSecteurActivite) {
+		this.secteurActivite = sSecteurActivite;
 	}
 
-	public String get_Telephone() {
-		return Telephone;
+	public String getTelephone() {
+		return this.telephone;
 	}
 
-	public void set_Telephone(String sTelephone) {
-		this.Telephone = sTelephone;
+	public void setTelephone(String sTelephone) {
+		this.telephone = sTelephone;
 	}
 
-	public String get_Email() {
-		return Email;
+	public String getEmail() {
+		return this.email;
 	}
 
-	public void set_Email(String sEmail) {
-		this.Email = sEmail;
+	public void setEmail(String sEmail) {
+		this.email = sEmail;
 	}
 	
-	public List<Utilisateur> get_Utilisateurs(){
-		return utilisateurs;
+	public List<Utilisateur> getUtilisateurs(){
+		return this.utilisateurs;
 	}
 	
-	//Functions
+	public void setUtilisateurs(List<Utilisateur> utilisateurs) {
+		this.utilisateurs = utilisateurs;
+	}
+	
+	// Functions
+	
 	@Override
 	public String toString () {
-		try {
-			return " Nom de l'entreprise : " + this.Nom + "; Statut Juridique : " + this.StatutJuridique + 
-					"; Adresse :" + this.Adresse +	"; Secteur d'activité : " + this.SecteurActivite + 
-					"; Numéro de téléphone :" + this.Telephone + "; Adresse mail : " + this.Email + "]";
-		}
-		catch(Exception e) {
-			return "";
-		}
-
+			return " Nom de l'entreprise : " + this.nom + "; Statut Juridique : " + this.statutJuridique + 
+					"; Adresse :" + this.adresse +	"; Secteur d'activité : " + this.secteurActivite + 
+					"; Numéro de téléphone :" + this.telephone + "; Adresse mail : " + this.email + "]";
 	}
+	
+	public void addUtilisateur(Utilisateur utilisateur) {
+	    if (this.utilisateurs == null) {
+	        this.utilisateurs = new ArrayList<>();
+	    }
+	    this.utilisateurs.add(utilisateur);
+	    utilisateur.setEntreprise(this);
+	}
+
+	public void removeUtilisateur(Utilisateur utilisateur) {
+	    if (this.utilisateurs != null) {
+	        this.utilisateurs.remove(utilisateur);
+	        utilisateur.setEntreprise(null);
+	    }
+	}
+
+	
 }

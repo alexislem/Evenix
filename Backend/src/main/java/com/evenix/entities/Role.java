@@ -1,7 +1,9 @@
 package com.evenix.entities;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,44 +13,67 @@ import jakarta.persistence.OneToMany;
 @Entity
 public class Role {
 	
-	//Attributes
+	// Attributes
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int Id;
+	@Column (name = "ROL_Id")
+	private int id;
 	
-	private String Nom;
+	@Column (name = "ROL_Nom")
+	private String nom;
 	
-	@OneToMany(mappedBy ="utilisateur")
-	private List<Utilisateur> utilisateurs;
+	@OneToMany(mappedBy ="role")
+	private List<Utilisateur> utilisateurs = new ArrayList<>();
 	
-	//Constructors
+	// Constructors
+	
 	public Role() {}
 	
 	public Role (String sNom) {
-		this.set_Nom(sNom);
+		this.nom = sNom;
 	}
 	
-	//Getters/Setters
-	public void set_Nom(String sNom) {
-		this.Nom = sNom;
+	// Getters/Setters
+	
+	public int getId() {
+	    return this.id;
+	}
+
+	public void setNom(String sNom) {
+		this.nom = sNom;
 	}
 	
-	public String get_Nom() {
-		return this.Nom;
+	public String getNom() {
+		return this.nom;
 	}
 	
-	public List<Utilisateur> get_Utilisateurs(){
-		return utilisateurs;
+	public List<Utilisateur> getUtilisateurs(){
+		return this.utilisateurs;
 	}
-	//Functions
+	
+	public void setUtilisateurs(List<Utilisateur> utilisateurs) {
+	    this.utilisateurs = utilisateurs;
+	}
+	
+	// Functions
 	
 	@Override
 	public String toString() {
-		try {
-		return "Role [id : " + this.Id + "; Nom : " + this.Nom + "]";
-		}
-				catch(Exception e) {
-		return "";
-				}
+		return "Role [id : " + this.id + "; Nom : " + this.nom + "]";
 	}
+	
+	public void addUtilisateur(Utilisateur utilisateur) {
+	    if (utilisateur != null && !this.utilisateurs.contains(utilisateur)) {
+	        this.utilisateurs.add(utilisateur);
+	        utilisateur.setRole(this);
+	    }
+	}
+	
+	public void removeUtilisateur(Utilisateur utilisateur) {
+	    if (utilisateur != null && this.utilisateurs.remove(utilisateur)) {
+	        utilisateur.setRole(null);
+	    }
+	}
+
 }

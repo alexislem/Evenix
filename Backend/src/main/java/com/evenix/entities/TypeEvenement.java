@@ -1,45 +1,81 @@
 package com.evenix.entities;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 
 @Entity
 public class TypeEvenement {
-	//attributes
+	
+	// Attributes
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int Id;
-	private String Nom;
+	@Column (name = "TYP_EVE_Id")
+	private int id;
 	
-	//constructor
+	@Column (name = "TYP_EVE_Nom")
+	private String nom;
+	
+	@ManyToMany(mappedBy ="typesEvenement")
+	private Set<Evenement> evenements = new HashSet<>();
+	
+	// Constructors
+	
 	public TypeEvenement () {}
 	
 	public TypeEvenement (String sNom) {
-		this.setNom(sNom);
+		this.nom = sNom;
 	}
 
 	
-	//GETTERS/SETTERS
+	// Getters/Setters
+	
+	public int getId() {
+	    return this.id;
+	}
+
 	public String getNom() {
-		return Nom;
+		return this.nom;
 	}
 
-	public void setNom(String nom) {
-		Nom = nom;
+	public void setNom(String sNom) {
+		this.nom = sNom;
 	}
 	
-	//ToString
+	public Set<Evenement> getEvenements() {
+	    return this.evenements;
+	}
+
+	public void setEvenements(Set<Evenement> evenements) {
+	    this.evenements = evenements;
+	}
+
+	// Functions
+	
+	@Override
 	public String toString () {
-		try {
-		return "Type d'evenement [Nom : " + this.Nom + "]";
-		}
-		catch(Exception e) {
-			return "";
-		}
-		
+		return "Type d'évènement [Nom : " + this.nom + "]";
 	}
 	
+	public void addEvenement(Evenement evenement) {
+	    if (evenement != null && !evenements.contains(evenement)) {
+	        evenements.add(evenement);
+	        evenement.addTypeEvenement(this);
+	    }
+	}
 
+	
+	public void removeEvenement(Evenement evenement) {
+	    if (this.evenements != null) {
+	        this.evenements.remove(evenement);
+	    }
+	}
+	
 }

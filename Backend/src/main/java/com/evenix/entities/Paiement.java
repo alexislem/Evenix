@@ -2,85 +2,126 @@ package com.evenix.entities;
 
 import java.time.ZonedDateTime;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Paiement {
 	
-	//Attributes
+	// Attributes
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int Id;
-	private float Montant;
-	private ZonedDateTime Date;
-	private String Code;
-	private int UTI_Id;
-	private int EVE_Id;
+	@Column (name = "PAI_Id")
+	private int id;
 	
-	//constructor
+	@Column (name = "PAI_Montant")
+	private float montant;
+	
+	@Column (name = "PAI_Date")
+	private ZonedDateTime date;
+	
+	@Column (name = "PAI_Code", unique = false)
+	private String code;
+	
+	@ManyToOne
+	@JoinColumn(name = "UTI_Id", nullable = false)
+	private Utilisateur utilisateur;
+	
+	@ManyToOne
+	@JoinColumn(name = "EVE_Id", nullable = false)
+	private Evenement evenement;
+	
+	
+	// Constructors 
+	
 	public Paiement () {};
 	
-	public Paiement (float fmontant, ZonedDateTime zdate, String scode) {
-		this.setMontant(fmontant);
-		this.setDate(zdate);
-		this.setCode(scode);
+	public Paiement (float fMontant, ZonedDateTime zdtDate, String sCode, Utilisateur utilisateur, Evenement evenement) {
+		this.montant = fMontant;
+		this.date = zdtDate;
+		this.code = sCode;
+		this.utilisateur = utilisateur;
+		this.evenement = evenement;
 	}
 	
-	//GETTERS/SETTERS
-
-	public float getMontant() {
-		return Montant;
+	// Getters/Setters
+	
+	public int getId() {
+	    return this.id;
 	}
 
-	public void setMontant(float montant) {
-		Montant = montant;
+	public float getMontant() {
+		return this.montant;
+	}
+
+	public void setMontant(float fMontant) {
+		this.montant = fMontant;
 	}
 
 	public ZonedDateTime getDate() {
-		return Date;
+		return this.date;
 	}
 
-	public void setDate(ZonedDateTime date) {
-		Date = date;
+	public void setDate(ZonedDateTime zdtDate) {
+		this.date = zdtDate;
 	}
 
 	public String getCode() {
-		return Code;
+		return this.code;
 	}
 
-	public void setCode(String code) {
-		Code = code;
+	public void setCode(String sCode) {
+		this.code = sCode;
 	}
 
-	public int getUTI_Id() {
-		return UTI_Id;
+	public Utilisateur getUtilisateur() {
+		return this.utilisateur;
 	}
 
-	public void setUTI_Id(int uTI_Id) {
-		UTI_Id = uTI_Id;
+	public void setUtilisateur(Utilisateur utilisateur) {
+	    if (this.utilisateur != utilisateur) {
+	        this.utilisateur = utilisateur;
+	        if (utilisateur != null && !utilisateur.getPaiements().contains(this)) {
+	            utilisateur.getPaiements().add(this);
+	        }
+	    }
 	}
 
-	public int getEVE_Id() {
-		return EVE_Id;
+	public void setEvenement(Evenement evenement) {
+	    if (this.evenement != evenement) {
+	        this.evenement = evenement;
+	        if (evenement != null && !evenement.getPaiements().contains(this)) {
+	            evenement.getPaiements().add(this);
+	        }
+	    }
 	}
 
-	public void setEVE_Id(int eVE_Id) {
-		EVE_Id = eVE_Id;
+
+
+	
+	public Evenement getEvenement() {
+		return this.evenement;
+	}
+
+	
+	// Functions
+	
+	@Override
+	public String toString() {
+	    String nomUtilisateur = (utilisateur != null) ? utilisateur.getNom() : "N/A";
+	    String nomEvenement = (evenement != null) ? evenement.getNom() : "N/A";
+
+	    return "Paiement [montant=" + montant +
+	           ", date=" + date +
+	           ", code=" + code +
+	           ", utilisateur=" + nomUtilisateur +
+	           ", evenement=" + nomEvenement + "]";
 	}
 	
-	//FUNCTION
-	public String toString () {
-		try {
-		return " Montant : " + this.Montant + " Date de paiement : " + this.Date + " Code : " + this.Code + "]";
-	}
-		catch(Exception e) {
-			return "";
-		}
-	}
-	
-	
-
 }

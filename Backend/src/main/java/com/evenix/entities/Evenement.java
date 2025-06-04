@@ -1,13 +1,21 @@
 package com.evenix.entities;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 @Entity
 public class Evenement {
@@ -16,14 +24,42 @@ public class Evenement {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int Id;
+	@Column (name = "EVE_Id")
+	private int id;
 	
-	private String Nom;
-	private ZonedDateTime DateDebut;
-	private ZonedDateTime DateFin;
-	private Boolean Payant;
-	private String Description;
-	private float Prix;
+	@Column (name = "EVE_Nom")
+	private String nom;
+	
+	@Column (name = "EVE_DateDebut")
+	private ZonedDateTime dateDebut;
+	
+	@Column (name = "EVE_DateFin")
+	private ZonedDateTime dateFin;
+	
+	@Column (name = "EVE_Payant")
+	private Boolean payant;
+	
+	@Column (name = "EVE_Description")
+	private String description;
+	
+	@Column (name = "EVE_Prix")
+	private float prix;
+	
+	@ManyToMany
+	@JoinTable(
+			name = "EST_DE_TYPE",
+			joinColumns = @JoinColumn(name = "EVE_Id" ),
+			inverseJoinColumns = @JoinColumn(name = "TYP_EVE_Id")
+			)
+    private Set<TypeEvenement> typesEvenement = new HashSet<>();
+	
+	@ManyToMany
+	@JoinTable(
+	name = "EST_PROCHE",
+	joinColumns = @JoinColumn(name = "EVE_Id"),
+	inverseJoinColumns = @JoinColumn(name = "LIEU_CULTU_Id")
+	)
+	private Set<LieuCulturel> lieuxCulturelsProches = new HashSet<>();
 	
 	@ManyToOne
 	@JoinColumn(name = "UTI_Id", nullable = false)
@@ -33,70 +69,101 @@ public class Evenement {
 	@JoinColumn(name = "LIEU_Id", nullable = false)
 	private Lieu lieu;
 	
-	public Evenement(String sNom, ZonedDateTime dtDateDebut, ZonedDateTime dtDateFin, Boolean bPayant, String sDescription, float fPrix, Lieu lieu, Utilisateur utilisateur) {
-		this.setNom(sNom);
-		this.setDateDebut(dtDateDebut);
-		this.setDateFin(dtDateFin);
-		this.setPayant(bPayant);
-		this.setDescription(sDescription);
-		this.setPrix(fPrix);
-		this.setLieu(lieu);
-		this.setUtilisateur(utilisateur);
-	}
+	@OneToMany(mappedBy = "evenement")
+	private List<Paiement> paiements = new ArrayList <>();
+	
+	@OneToMany(mappedBy = "evenement")
+	private List<Inscription> inscriptions = new ArrayList<>();
+
+	// Constructors
 	
 	public Evenement() {}
+	
+	public Evenement(String nom, ZonedDateTime dateDebut, ZonedDateTime dateFin, Boolean payant,
+		String description, float prix, Lieu lieu, Utilisateur utilisateur) {
+			this.nom = nom;
+			this.dateDebut = dateDebut;
+			this.dateFin = dateFin;
+			this.payant = payant;
+			this.description = description;
+			this.prix = prix;
+			this.lieu = lieu;
+			this.utilisateur = utilisateur;
+		}
+	
+	public Evenement(String nom, ZonedDateTime dateDebut, ZonedDateTime dateFin, Boolean payant,
+        String description, float prix, Lieu lieu, Utilisateur utilisateur,
+        Set<TypeEvenement> typesEvenement, Set<LieuCulturel> lieuxCulturelsProches) {
+			this.nom = nom;
+			this.dateDebut = dateDebut;
+			this.dateFin = dateFin;
+			this.payant = payant;
+			this.description = description;
+			this.prix = prix;
+			this.lieu = lieu;
+			this.utilisateur = utilisateur;
+			this.typesEvenement = typesEvenement != null ? typesEvenement : new HashSet<>();
+			this.lieuxCulturelsProches = lieuxCulturelsProches != null ? lieuxCulturelsProches : new HashSet<>();
+	}
+
+
 	// Getters/Setters
 	
+	public int getId() {
+	    return this.id;
+	}
+
+	
 	public String getNom() {
-		return Nom;
+		return this.nom;
 	}
 
 	public void setNom(String sNom) {
-		this.Nom = sNom;
+		this.nom = sNom;
 	}
 
 	public ZonedDateTime getDateDebut() {
-		return DateDebut;
+		return this.dateDebut;
 	}
 
-	public void setDateDebut(ZonedDateTime dateDebut) {
-		DateDebut = dateDebut;
+	public void setDateDebut(ZonedDateTime zdtDateDebut) {
+		this.dateDebut = zdtDateDebut;
 	}
 
 	public ZonedDateTime getDateFin() {
-		return DateFin;
+		return this.dateFin;
 	}
 
-	public void setDateFin(ZonedDateTime dateFin) {
-		DateFin = dateFin;
+	public void setDateFin(ZonedDateTime zdtDateFin) {
+		this.dateFin = zdtDateFin;
 	}
 
 	public Boolean getPayant() {
-		return Payant;
+		return this.payant;
 	}
 
-	public void setPayant(Boolean payant) {
-		Payant = payant;
+	public void setPayant(Boolean bPayant) {
+		this.payant = bPayant;
 	}
 
 	public String getDescription() {
-		return Description;
+		return this.description;
 	}
 
-	public void setDescription(String description) {
-		Description = description;
+	public void setDescription(String sDescription) {
+		this.description = sDescription;
 	}
 
 	public float getPrix() {
-		return Prix;
+		return this.prix;
 	}
 
-	public void setPrix(float prix) {
-		Prix = prix;
+	public void setPrix(float fPrix) {
+		this.prix = fPrix;
 	}
 	
 	public Utilisateur getUtilisateur() {
-		return utilisateur;
+		return this.utilisateur;
 	}
 
 	public void setUtilisateur(Utilisateur utilisateur) {
@@ -104,24 +171,108 @@ public class Evenement {
 	}
 
 	public Lieu getLieu() {
-		return lieu;
+		return this.lieu;
 	}
 
 	public void setLieu(Lieu lieu) {
 		this.lieu = lieu;
 	}
 	
+	public Set<TypeEvenement> getTypesEvenement() {
+	    return this.typesEvenement;
+	}
+
+	public List<Paiement> getPaiements() {
+	    return this.paiements;
+	}
+
+	public void setTypesEvenement(Set<TypeEvenement> typesEvenement) {
+	    this.typesEvenement = typesEvenement;
+	}
+
+	public void setPaiements(List<Paiement> paiements) {
+	    this.paiements = paiements;
+	}
+
+	public Set<LieuCulturel> getLieuxCulturelsProches() {
+	    return this.lieuxCulturelsProches;
+	}
+	
+	public void setLieuxCulturelsProches(Set<LieuCulturel> lieuxCulturels) {
+		this.lieuxCulturelsProches = lieuxCulturels;
+	}
+	
+	public List<Inscription> getInscriptions(){
+		return this.inscriptions;
+	}
+	
 	// Functions 
 	
 	public String toString () {
-		try {
-			return " Nom de l'évènement : " + this.Nom + "; Date de début : " + this.DateDebut+ 
-					"; Date de fin :" + this.DateFin +	"; Payant  : " + this.Payant + 
-					"; Description :" + this.Description + "; Prix :" + this.Prix + "]";
-		}
-		catch(Exception e) {
-			return "";
-		}
-
+			return " Nom de l'évènement : " + this.nom + "; Date de début : " + this.dateDebut+ 
+					"; Date de fin :" + this.dateFin +	"; Payant  : " + this.payant + 
+					"; Description :" + this.description + "; Prix :" + this.prix + "]";
 	}
+	
+	public void addTypeEvenement(TypeEvenement typeEvenement) {
+	    if (typeEvenement != null && !typesEvenement.contains(typeEvenement)) {
+	        typesEvenement.add(typeEvenement);
+	        typeEvenement.getEvenements().add(this);
+	    }
+	}
+
+	
+	public void removeTypeEvenement(TypeEvenement typeEvenement) {
+	    if (this.typesEvenement != null) {
+	        this.typesEvenement.remove(typeEvenement);
+	    }
+	}
+
+	
+	public void addLieuCulturelProche(LieuCulturel lieu) {
+	    if (lieu != null && !lieuxCulturelsProches.contains(lieu)) {
+	        lieuxCulturelsProches.add(lieu);
+	        lieu.getEvenementsProches().add(this);
+	    }
+	}
+
+	
+	public void removeLieuCulturelProche(LieuCulturel lieuCulturel) {
+	    if (this.lieuxCulturelsProches != null) {
+	        this.lieuxCulturelsProches.remove(lieuCulturel);
+	    }
+	}
+
+	
+	public void addPaiement(Paiement paiement) {
+	    if (paiement != null && !this.paiements.contains(paiement)) {
+	        if (this.paiements == null) {
+	            this.paiements = new ArrayList<>();
+	        }
+	        this.paiements.add(paiement);
+	        paiement.setEvenement(this);
+	    }
+	}
+
+	
+	public void removePaiement(Paiement paiement) {
+	    if (this.paiements != null && this.paiements.remove(paiement)) {
+	        paiement.setEvenement(null);
+	    }
+	}
+
+	public void addInscription(Inscription inscription) {
+	    if (inscription != null && !inscriptions.contains(inscription)) {
+	        inscriptions.add(inscription);
+	        inscription.setEvenement(this);
+	    }
+	}
+
+	public void removeInscription(Inscription inscription) {
+	    if (inscriptions.remove(inscription)) {
+	        inscription.setEvenement(null);
+	    }
+	}
+
+
 }

@@ -1,83 +1,88 @@
 package com.evenix.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.Data;
 
-@Data
 @Entity
 public class Lieu {
 	
-	//Attributes
+	// Attributes
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int Id;
+	@Column (name = "LIEU_Id")
+	private int id;
 	
-	private float Latitude;
-	private float Longitude;
-	private String Nom;
-	private String Adresse;
+	@Column (name = "LIEU_Latitude")
+	private float latitude;
 	
-	//Constructors
+	@Column (name = "LIEU_Longitude")
+	private float longitude;
+	
+	@Column (name = "LIEU_Nom")
+	private String nom;
+	
+	@Column (name = "LIEU_Adresse")
+	private String adresse;
+	
+	// Constructors
+	
 	public Lieu() {}
 	
 	public Lieu(float fLatitude, float fLongitude, String sNom, String sAdresse) {
-		this.set_Latitude(fLatitude);
-		this.set_Longitude(fLongitude);
-		this.set_Nom(sNom);
-		this.set_Adresse(sAdresse);
+		this.latitude = fLatitude;
+		this.longitude = fLongitude;
+		this.nom = sNom;
+		this.adresse = sAdresse;
 	}
 	
-	//Getters/Setters
-	public int get_Id() {
-		return Id;
+	// Getters/Setters
+	
+	public int getId() {
+		return this.id;
 	}
 
-	public float get_Latitude() {
-		return Latitude;
+	public float getLatitude() {
+		return this.latitude;
 	}
 
-	public void set_Latitude(float fLatitude) {
-		this.Latitude = fLatitude;
+	public void setLatitude(float fLatitude) {
+		this.latitude = fLatitude;
 	}
 
-	public float get_Longitude() {
-		return Longitude;
+	public float getLongitude() {
+		return this.longitude;
 	}
 
-	public void set_Longitude(float fLongitude) {
-		this.Longitude = fLongitude;
+	public void setLongitude(float fLongitude) {
+		this.longitude = fLongitude;
 	}
 
-	public String get_Nom() {
-		return Nom;
+	public String getNom() {
+		return this.nom;
 	}
 
-	public void set_Nom(String sNom) {
-		this.Nom = sNom;
+	public void setNom(String sNom) {
+		this.nom = sNom;
 	}
 
-	public String get_Adresse() {
-		return Adresse;
+	public String getAdresse() {
+		return this.adresse;
 	}
 
-	public void set_Adresse(String sAdresse) {
-		this.Adresse = sAdresse;
+	public void setAdresse(String sAdresse) {
+		this.adresse = sAdresse;
 	}
 	
-	//Functions
+	// Functions
 	
 	@Override
 	public String toString() {
-		try	{
-		return "Latitude : " + this.Latitude + "; Longitude  : " + this.Longitude + 
-				"; Nom :" + this.Nom + "; Adresse : " + this.Adresse + "]";
-		}
-		catch(Exception e) {
-			return "";
-		}
+		return "Latitude : " + this.latitude + "; Longitude  : " + this.longitude + 
+				"; Nom :" + this.nom + "; Adresse : " + this.adresse + "]";
 	}
 	
 }
