@@ -39,6 +39,10 @@ public class Role {
 	public int getId() {
 	    return this.id;
 	}
+	
+	public void setId(int iId) {
+		this.id = iId;
+	}
 
 	public void setNom(String sNom) {
 		this.nom = sNom;
