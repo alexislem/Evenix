@@ -27,6 +27,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $utilisateur = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($utilisateur && password_verify($mot_de_passe, $utilisateur["uti_mdp"])) {
+    session_start();
+    $_SESSION["uti_id"] = $utilisateur["uti_id"];
+    $_SESSION["uti_prenom"] = $utilisateur["uti_prenom"]; // optionnel
     header("Location: accueil.php");
     exit;
     } else {
