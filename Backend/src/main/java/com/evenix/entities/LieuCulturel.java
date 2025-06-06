@@ -10,7 +10,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
-
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class LieuCulturel {
@@ -25,9 +26,6 @@ public class LieuCulturel {
 	@Column (name = "LIEU_CULTU_Nom")
 	private String nom;
 	
-	@Column (name = "LIEU_CULTU_Type")
-	private String type;
-	
 	@Column (name = "LIEU_CULTU_Latitude")
 	private float latitude;
 	
@@ -37,16 +35,21 @@ public class LieuCulturel {
 	@ManyToMany(mappedBy = "lieuxCulturelsProches")
 	private Set<Evenement> evenementsProches = new HashSet <>();
 	
+	@ManyToOne
+	@JoinColumn(name = "TYP_LIEU_ID", nullable = false)
+	private TypeLieuCulturel typeLieuCulturel;
+	
 	// Constructors
 	
 	public LieuCulturel() {}
 	
-	public LieuCulturel(String sNom, String sType, float fLatitude, float fLongitude) {
-		this.nom = sNom;
-		this.type = sType;
-		this.latitude = fLatitude;
-		this.longitude = fLongitude;
+	public LieuCulturel(String sNom, float fLatitude, float fLongitude, TypeLieuCulturel type) {
+	    this.nom = sNom;
+	    this.latitude = fLatitude;
+	    this.longitude = fLongitude;
+	    this.typeLieuCulturel = type;
 	}
+
 	
 	// Getters/Setters
 	
@@ -62,14 +65,7 @@ public class LieuCulturel {
 		this.nom = sNom;
 	}
 	
-	public String getType() {
-		return this.type;
-	}
-	
-	public void setType(String sType) {
-		this.type = sType;
-	}
-	
+
 	public float getLatitude() {
 		return this.latitude;
 	}
@@ -81,6 +77,15 @@ public class LieuCulturel {
 	public float getLongitude() {
 		return this.longitude;
 	}
+	
+	public TypeLieuCulturel getTypeLieuCulturel() {
+	    return typeLieuCulturel;
+	}
+
+	public void setTypeLieuCulturel(TypeLieuCulturel typeLieuCulturel) {
+	    this.typeLieuCulturel = typeLieuCulturel;
+	}
+
 	
 	public void setLongitude(float fLongitude) {
 		this.longitude = fLongitude;
@@ -95,9 +100,13 @@ public class LieuCulturel {
 	
 	@Override
 	public String toString() {
-		return "Lieu culturel [Nom : " + this.nom + "; Type : " + this.type + 
-				"; Latitude : " + this.latitude + "; Longitude : " + this.longitude + "]";
+	    String typeNom = (typeLieuCulturel != null) ? typeLieuCulturel.getNom() : "Inconnu";
+	    return "Lieu culturel [Nom : " + this.nom +
+	           "; Type : " + typeNom +
+	           "; Latitude : " + this.latitude +
+	           "; Longitude : " + this.longitude + "]";
 	}
+
 	
 	public void addEvenement(Evenement evenement) {
 	    if (evenement != null && !evenementsProches.contains(evenement)) {
@@ -111,6 +120,14 @@ public class LieuCulturel {
 	        evenement.getLieuxCulturelsProches().remove(this);
 	    }
 	}
+	
+	public void assignType(TypeLieuCulturel type) {
+	    this.typeLieuCulturel = type;
+	    if (!type.getLieuxCulturels().contains(this)) {
+	        type.getLieuxCulturels().add(this);
+	    }
+	}
+
 
 
 }
