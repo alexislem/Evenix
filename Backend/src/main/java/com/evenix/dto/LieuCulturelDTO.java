@@ -3,7 +3,7 @@ package com.evenix.dto;
 public class LieuCulturelDTO {
 	private int id;
     private String nom;
-    private String type;
+    private TypeLieuCulturelDTO typeLieuCulturel;
     private float latitude;
     private float longitude;
 
@@ -15,6 +15,14 @@ public class LieuCulturelDTO {
     public void setId(int id) {
         this.id = id;
     }
+    
+    public TypeLieuCulturelDTO getTypeLieuCulturel() {
+        return typeLieuCulturel;
+    }
+
+    public void setTypeLieuCulturel(TypeLieuCulturelDTO typeLieuCulturel) {
+        this.typeLieuCulturel = typeLieuCulturel;
+    }
 
     public String getNom() {
         return nom;
@@ -24,13 +32,6 @@ public class LieuCulturelDTO {
         this.nom = nom;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
 
     public float getLatitude() {
         return latitude;
