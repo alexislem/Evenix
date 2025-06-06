@@ -1,7 +1,7 @@
 package com.evenix.repos;
 
 import java.time.ZonedDateTime;
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,12 +14,12 @@ import com.evenix.entities.Utilisateur;
 
 @RepositoryRestResource(path = "rest")
 public interface EvenementRepository extends JpaRepository<Evenement, Integer> {
-	List<EvenementRepository> findById(int id);
-	List<EvenementRepository> findByNom(String nom);
-	List<EvenementRepository> findByDateDebut(ZonedDateTime dateDebut);
-	List<EvenementRepository> findByDateFin(ZonedDateTime dateFin);
-	List<EvenementRepository> findByPrix(float prix);
-	List<EvenementRepository> findByUtilisateur(Utilisateur utilisateur);
-	List<EvenementRepository> findByLieu(Lieu lieu);
-	List<EvenementRepository> findByTypesEvenements(Set<TypeEvenement> typesEvenements);
+	Optional<Evenement> findById(int id);
+	Optional<Evenement> findByNom(String nom);
+	Optional<Evenement> findByDateDebut(ZonedDateTime dateDebut);
+	Optional<Evenement> findByDateFin(ZonedDateTime dateFin);
+	Optional<Evenement> findByPrix(float prix);
+	Optional<Evenement> findByUtilisateur(Utilisateur utilisateur);
+	Optional<Evenement> findByLieu(Lieu lieu);
+	Optional<Evenement> findByTypesEvenements(Set<TypeEvenement> typesEvenements);
 }

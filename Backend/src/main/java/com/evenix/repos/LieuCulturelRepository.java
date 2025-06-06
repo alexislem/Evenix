@@ -1,6 +1,6 @@
 package com.evenix.repos;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,9 +12,9 @@ import com.evenix.entities.TypeLieuCulturel;
 
 @RepositoryRestResource(path = "rest")
 public interface LieuCulturelRepository extends JpaRepository<LieuCulturel, Integer> {
-	List<LieuCulturelRepository> findById(int id);
-	List<LieuCulturelRepository> findByNom(String nom);
-	List<LieuCulturelRepository> findByTypeLieuCulturel(TypeLieuCulturel typeLieuCulturel);
-	List<LieuCulturelRepository> findByEvenementsProche(Set<Evenement> evenementsProche);
+	Optional<LieuCulturel> findById(int id);
+	Optional<LieuCulturel> findByNom(String nom);
+	Optional<LieuCulturel> findByTypeLieuCulturel(TypeLieuCulturel typeLieuCulturel);
+	Optional<LieuCulturel> findByEvenementsProche(Set<Evenement> evenementsProche);
 
 }
