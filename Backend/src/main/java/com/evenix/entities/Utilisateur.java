@@ -1,6 +1,7 @@
 package com.evenix.entities;
 
 import java.util.ArrayList;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -29,6 +30,7 @@ public class Utilisateur {
 	@Column (name = "UTI_Prenom")
 	private String prenom;
 	
+	@JsonFormat(pattern = "yyyy-MM-dd")
 	@Column (name = "UTI_DateDeNaissance")
 	private Date dateDeNaissance;
 	

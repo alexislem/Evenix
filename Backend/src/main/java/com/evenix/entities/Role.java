@@ -1,6 +1,7 @@
 package com.evenix.entities;
 
 import java.util.ArrayList;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 
 import jakarta.persistence.Column;
@@ -24,6 +25,7 @@ public class Role {
 	private String nom;
 	
 	@OneToMany(mappedBy ="role")
+	@JsonIgnore
 	private List<Utilisateur> utilisateurs = new ArrayList<>();
 	
 	// Constructors
