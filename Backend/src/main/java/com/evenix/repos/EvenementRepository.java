@@ -21,5 +21,5 @@ public interface EvenementRepository extends JpaRepository<Evenement, Integer> {
 	Optional<Evenement> findByPrix(float prix);
 	Optional<Evenement> findByUtilisateur(Utilisateur utilisateur);
 	Optional<Evenement> findByLieu(Lieu lieu);
-	Optional<Evenement> findByTypesEvenements(Set<TypeEvenement> typesEvenements);
+	Optional<Evenement> findByTypesEvenement(Set<TypeEvenement> typesEvenements);
 }

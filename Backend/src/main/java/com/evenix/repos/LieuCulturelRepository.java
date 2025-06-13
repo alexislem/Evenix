@@ -15,6 +15,6 @@ public interface LieuCulturelRepository extends JpaRepository<LieuCulturel, Inte
 	Optional<LieuCulturel> findById(int id);
 	Optional<LieuCulturel> findByNom(String nom);
 	Optional<LieuCulturel> findByTypeLieuCulturel(TypeLieuCulturel typeLieuCulturel);
-	Optional<LieuCulturel> findByEvenementsProche(Set<Evenement> evenementsProche);
+	Optional<LieuCulturel> findByEvenementsProches(Set<Evenement> evenementsProche);
 
 }
