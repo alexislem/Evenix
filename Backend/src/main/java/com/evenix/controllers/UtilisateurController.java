@@ -33,12 +33,17 @@ public class UtilisateurController {
     }
 
     @PostMapping
-    public Utilisateur createUtilisateur(@RequestBody Utilisateur utilisateur) {
-        Role role = roleRepository.findById(utilisateur.getRole().getId())
-            .orElseThrow(() -> new RuntimeException("Role non trouvé"));
+    public ResponseEntity<Utilisateur> createUtilisateur(@RequestBody Utilisateur utilisateur) {
+        int roleId = utilisateur.getRole() != null ? utilisateur.getRole().getId() : -1;
+        Role role = roleRepository.findById(roleId)
+            .orElseThrow(() -> new RuntimeException("Role non trouvé avec id = " + roleId));
+
         utilisateur.setRole(role);
-        return utilisateurService.createUtilisateur(utilisateur);
+
+        Utilisateur savedUtilisateur = utilisateurService.createUtilisateur(utilisateur);
+        return ResponseEntity.ok(savedUtilisateur);
     }
+
     
     @PutMapping("/{id}")
     public ResponseEntity<Utilisateur> updateUtilisateur(@PathVariable int id, @RequestBody Utilisateur utilisateur) {

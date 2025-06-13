@@ -1,177 +1,168 @@
 package com.evenix.entities;
 
+import java.sql.Date;
 import java.util.ArrayList;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import java.util.Date;
 import java.util.List;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 
 @Entity
 public class Utilisateur {
 
-	// Attributes
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column (name = "UTI_Id")
-	private int id;
-	
-	@Column (name = "UTI_Nom")
-	private String nom;
-	
-	@Column (name = "UTI_Prenom")
-	private String prenom;
-	
-	@JsonFormat(pattern = "yyyy-MM-dd")
-	@Column (name = "UTI_DateDeNaissance")
-	private Date dateDeNaissance;
-	
-	@Column (name = "UTI_Mdp")
-	private String motDePasse;
-	
-	@Column (name = "UTI_Email", unique = true)
-	private String email;
-	
-	@ManyToOne
-	@JoinColumn(name = "ENT_id", nullable = true)
-	private Entreprise entreprise;
-	
-	@ManyToOne
-	@JoinColumn(name = "ROL_id", nullable = false)
-	private Role role;
-	
-	@OneToMany(mappedBy = "utilisateur")
-	private List<Paiement> paiements = new ArrayList <>();
-		
-	@OneToMany(mappedBy = "utilisateur")
-	private List<Inscription> inscriptions = new ArrayList<>();
+    // Attributes
 
-		
-	// Constructors
-		
-	public Utilisateur() {}
-	
-	public Utilisateur(String sNom, String sPrenom, Date dDatedenaissance, String  sMotdepasse, String sEmail, Role Role) {
-		this.nom = sNom;
-		this.prenom = sPrenom;
-		this.dateDeNaissance = dDatedenaissance;
-		this.motDePasse = sMotdepasse;
-		this.email = sEmail;
-		this.role = Role;
-	}
-		
-	// Getters/Setters
-		
-	public String getNom() {
-		return this.nom;
-	}
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "UTI_Id")
+    private int id;
 
-	public void setNom(String sNom) {
-		this.nom = sNom;
-	}
+    @Column(name = "UTI_Nom")
+    private String nom;
 
-	public String getPrenom() {
-		return this.prenom;
-	}
+    @Column(name = "UTI_Prenom")
+    private String prenom;
 
-	public void setPrenom(String sPrenom) {
-		this.prenom = sPrenom;
-	}
+    @Column(name = "UTI_DateDeNaissance")
+    private Date dateDeNaissance;
 
-	public Date getDatedenaissance() {
-		return this.dateDeNaissance;
-	}
+    @Column(name = "UTI_Mdp")
+    private String motDePasse;
 
-	public void setDatedenaissance(Date dDatedenaissance) {
-		this.dateDeNaissance = dDatedenaissance;
-	}
+    @Column(name = "UTI_Email", unique = true)
+    private String email;
 
-	public String getMotdepasse() {
-		return this.motDePasse;
-	}
+    @ManyToOne
+    @JoinColumn(name = "ENT_id", nullable = true)
+    private Entreprise entreprise;
 
-	public void setMotdepasse(String sMotdepasse) {
-		this.motDePasse = sMotdepasse;
-	}
+    @ManyToOne
+    @JoinColumn(name = "ROL_id", nullable = false)
+    private Role role;
 
-	public String getEmail() {
-		return this.email;
-	}
+    @OneToMany(mappedBy = "utilisateur")
+    private List<Paiement> paiements = new ArrayList<>();
 
-	public void setEmail(String sEmail) {
-		this.email = sEmail;
-	}
+    @OneToMany(mappedBy = "utilisateur")
+    private List<Inscription> inscriptions = new ArrayList<>();
 
-	public Entreprise getEntreprise() {
-		return this.entreprise;
-	}
+    // Constructors
 
-	public void setEntreprise(Entreprise entreprise) {
-		this.entreprise = entreprise;
-	}
+    public Utilisateur() {}
 
-	public Role getRole() {
-		return this.role;
-	}
+    public Utilisateur(String nom, String prenom, Date dateDeNaissance, String motDePasse, String email, Role role) {
+        this.nom = nom;
+        this.prenom = prenom;
+        this.dateDeNaissance = dateDeNaissance;
+        this.motDePasse = motDePasse;
+        this.email = email;
+        this.role = role;
+    }
 
-	public void setRole(Role role) {
-	    if (this.role != role) {
-	        this.role = role;
-	        if (role != null && !role.getUtilisateurs().contains(this)) {
-	            role.getUtilisateurs().add(this);
-	        }
-	    }
-	}
-	
-	public List<Paiement> getPaiements() {
-		return this.paiements;
-	}
-	
-	public List<Inscription> getInscriptions(){
-		return this.inscriptions;
-	}
-	
-	// Functions
-		
-	@Override
-	public String toString () {
-			return " Nom de la personne : " + this.nom + "; Prenom : " + this.prenom + 
-					"; Date de naissance :" + this.dateDeNaissance + 
-					"; Adresse Email :" + this.email + "]";
-	}
-	
-	public void addPaiement(Paiement paiement) {
-	    if (!this.paiements.contains(paiement)) {
-	        this.paiements.add(paiement);
-	        paiement.setUtilisateur(this);
-	    }
-	}
-	
-	public void removePaiement(Paiement paiement) {
-	    if (this.paiements != null) {
-	        this.paiements.remove(paiement);
-	    }
-	}
+    // Getters/Setters
 
-	public void addInscription(Inscription inscription) {
-	    if (inscription != null && !inscriptions.contains(inscription)) {
-	        inscriptions.add(inscription);
-	        inscription.setUtilisateur(this);
-	    }
-	}
+    public int getId() {
+        return id;
+    }
 
-	public void removeInscription(Inscription inscription) {
-	    if (inscriptions.remove(inscription)) {
-	        inscription.setUtilisateur(null);
-	    }
-	}
+    public String getNom() {
+        return nom;
+    }
+
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
+
+    public String getPrenom() {
+        return prenom;
+    }
+
+    public void setPrenom(String prenom) {
+        this.prenom = prenom;
+    }
+
+    public Date getDateDeNaissance() {
+        return dateDeNaissance;
+    }
+
+    public void setDateDeNaissance(Date dateDeNaissance) {
+        this.dateDeNaissance = dateDeNaissance;
+    }
+
+    public String getMotDePasse() {
+        return motDePasse;
+    }
+
+    public void setMotDePasse(String motDePasse) {
+        this.motDePasse = motDePasse;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public Entreprise getEntreprise() {
+        return entreprise;
+    }
+
+    public void setEntreprise(Entreprise entreprise) {
+        this.entreprise = entreprise;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+        if (role != null && !role.getUtilisateurs().contains(this)) {
+            role.getUtilisateurs().add(this);
+        }
+    }
+
+    public List<Paiement> getPaiements() {
+        return paiements;
+    }
+
+    public List<Inscription> getInscriptions() {
+        return inscriptions;
+    }
+
+    // Functions
+
+    @Override
+    public String toString() {
+        return "Nom : " + nom + "; Prénom : " + prenom +
+                "; Date de naissance : " + dateDeNaissance +
+                "; Email : " + email + "]";
+    }
+
+    public void addPaiement(Paiement paiement) {
+        if (!this.paiements.contains(paiement)) {
+            this.paiements.add(paiement);
+            paiement.setUtilisateur(this);
+        }
+    }
+
+    public void removePaiement(Paiement paiement) {
+        if (paiements != null) {
+            paiements.remove(paiement);
+        }
+    }
+
+    public void addInscription(Inscription inscription) {
+        if (inscription != null && !inscriptions.contains(inscription)) {
+            inscriptions.add(inscription);
+            inscription.setUtilisateur(this);
+        }
+    }
+
+    public void removeInscription(Inscription inscription) {
+        if (inscriptions.remove(inscription)) {
+            inscription.setUtilisateur(null);
+        }
+    }
 }
-

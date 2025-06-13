@@ -30,8 +30,8 @@ public class UtilisateurService {
         return utilisateurRepository.findById(id).map(utilisateur -> {
             utilisateur.setNom(utilisateurDetails.getNom());
             utilisateur.setPrenom(utilisateurDetails.getPrenom());
-            utilisateur.setDatedenaissance(utilisateurDetails.getDatedenaissance());
-            utilisateur.setMotdepasse(utilisateurDetails.getMotdepasse());
+            utilisateur.setDateDeNaissance(utilisateurDetails.getDateDeNaissance());
+            utilisateur.setMotDePasse(utilisateurDetails.getMotDePasse());
             utilisateur.setEmail(utilisateurDetails.getEmail());
             utilisateur.setEntreprise(utilisateurDetails.getEntreprise());
             utilisateur.setRole(utilisateurDetails.getRole());
