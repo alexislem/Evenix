@@ -107,26 +107,6 @@ public class LieuCulturel {
 	           "; Longitude : " + this.longitude + "]";
 	}
 
-	
-	public void addEvenement(Evenement evenement) {
-	    if (evenement != null && !evenementsProches.contains(evenement)) {
-	        evenementsProches.add(evenement);
-	        evenement.addLieuCulturelProche(this);
-	    }
-	}
-	
-	public void removeEvenement(Evenement evenement) {
-	    if (evenement != null && evenementsProches.remove(evenement)) {
-	        evenement.getLieuxCulturelsProches().remove(this);
-	    }
-	}
-	
-	public void assignType(TypeLieuCulturel type) {
-	    this.typeLieuCulturel = type;
-	    if (!type.getLieuxCulturels().contains(this)) {
-	        type.getLieuxCulturels().add(this);
-	    }
-	}
 
 
 

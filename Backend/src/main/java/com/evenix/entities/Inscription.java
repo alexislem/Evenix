@@ -2,6 +2,8 @@ package com.evenix.entities;
 
 import java.time.ZonedDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,10 +24,12 @@ public class Inscription {
 
     @ManyToOne
     @JoinColumn(name = "UTI_Id", nullable = false)
+    @JsonIgnore
     private Utilisateur utilisateur;
 
     @ManyToOne
     @JoinColumn(name = "EVE_Id", nullable = false)
+    @JsonIgnore
     private Evenement evenement;
 
     @Column (name = "INS_DateInscription")
@@ -76,16 +80,10 @@ public class Inscription {
 	
 	public void setEvenement(Evenement evenement) {
 	    this.evenement = evenement;
-	    if (evenement != null && !evenement.getInscriptions().contains(this)) {
-	        evenement.getInscriptions().add(this);
-	    }
 	}
 
 	public void setUtilisateur(Utilisateur utilisateur) {
 	    this.utilisateur = utilisateur;
-	    if (utilisateur != null && !utilisateur.getInscriptions().contains(this)) {
-	        utilisateur.getInscriptions().add(this);
-	    }
 	}
 
 

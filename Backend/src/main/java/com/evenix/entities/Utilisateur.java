@@ -4,9 +4,12 @@ import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.*;
 
 @Entity
+@JsonIgnoreProperties({"paiements", "inscriptions"})
 public class Utilisateur {
 
     // Attributes
@@ -118,9 +121,6 @@ public class Utilisateur {
 
     public void setRole(Role role) {
         this.role = role;
-        if (role != null && !role.getUtilisateurs().contains(this)) {
-            role.getUtilisateurs().add(this);
-        }
     }
 
     public List<Paiement> getPaiements() {
@@ -138,31 +138,5 @@ public class Utilisateur {
         return "Nom : " + nom + "; Prénom : " + prenom +
                 "; Date de naissance : " + dateDeNaissance +
                 "; Email : " + email + "]";
-    }
-
-    public void addPaiement(Paiement paiement) {
-        if (!this.paiements.contains(paiement)) {
-            this.paiements.add(paiement);
-            paiement.setUtilisateur(this);
-        }
-    }
-
-    public void removePaiement(Paiement paiement) {
-        if (paiements != null) {
-            paiements.remove(paiement);
-        }
-    }
-
-    public void addInscription(Inscription inscription) {
-        if (inscription != null && !inscriptions.contains(inscription)) {
-            inscriptions.add(inscription);
-            inscription.setUtilisateur(this);
-        }
-    }
-
-    public void removeInscription(Inscription inscription) {
-        if (inscriptions.remove(inscription)) {
-            inscription.setUtilisateur(null);
-        }
     }
 }
