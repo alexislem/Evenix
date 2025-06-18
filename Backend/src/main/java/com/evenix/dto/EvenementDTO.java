@@ -1,20 +1,38 @@
 package com.evenix.dto;
 
+import jakarta.validation.constraints.*;
 import java.time.ZonedDateTime;
 
 public class EvenementDTO {
 
     private int id;
+
+    @NotBlank(message = "Le nom est obligatoire.")
+    @Size(max = 100, message = "Le nom ne peut pas dépasser 100 caractères.")
     private String nom;
+
+    @NotNull(message = "La date de début est obligatoire.")
     private ZonedDateTime dateDebut;
+
+    @NotNull(message = "La date de fin est obligatoire.")
     private ZonedDateTime dateFin;
+
+    @NotNull(message = "Le champ payant est obligatoire.")
     private Boolean payant;
+
+    @Size(max = 500, message = "La description ne peut pas dépasser 500 caractères.")
     private String description;
+
+    @PositiveOrZero(message = "Le prix doit être positif ou nul.")
     private float prix;
+
+    @NotNull(message = "Un utilisateur doit être associé à l'évènement.")
     private UtilisateurDTO utilisateur;
+
+    @NotNull(message = "Un lieu doit être associé à l'évènement.")
     private LieuDTO lieu;
 
-// Getters & Setters
+    // Getters & Setters
     public int getId() {
         return id;
     }
@@ -70,21 +88,20 @@ public class EvenementDTO {
     public void setPrix(float prix) {
         this.prix = prix;
     }
-    
+
     public UtilisateurDTO getUtilisateur() {
-    	return utilisateur;
-    }
-    
-    public void setUtilisateur(UtilisateurDTO utilisateur) {
-    	this.utilisateur = utilisateur;
-    }
-    
-    public LieuDTO getLieu () {
-    	return lieu;
-    }
-    
-    public void setLieu(LieuDTO lieu) {
-    	this.lieu = lieu;
+        return utilisateur;
     }
 
+    public void setUtilisateur(UtilisateurDTO utilisateur) {
+        this.utilisateur = utilisateur;
+    }
+
+    public LieuDTO getLieu() {
+        return lieu;
+    }
+
+    public void setLieu(LieuDTO lieu) {
+        this.lieu = lieu;
+    }
 }

@@ -2,12 +2,25 @@ package com.evenix.dto;
 
 import java.time.ZonedDateTime;
 
+import jakarta.validation.constraints.*;
+
 public class PaiementDTO {
+    
     private int id;
+
+    @Positive(message = "Le montant doit être un nombre positif.")
     private float montant;
+
+    @NotNull(message = "La date du paiement est obligatoire.")
     private ZonedDateTime date;
+
+    @NotBlank(message = "Le code de paiement est obligatoire.")
     private String code;
+
+    @Positive(message = "L'identifiant utilisateur doit être un entier positif.")
     private int utilisateurId;
+
+    @Positive(message = "L'identifiant événement doit être un entier positif.")
     private int evenementId;
 
     // Getters / Setters

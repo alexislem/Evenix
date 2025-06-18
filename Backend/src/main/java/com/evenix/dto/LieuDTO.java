@@ -1,22 +1,35 @@
 package com.evenix.dto;
 
+import jakarta.validation.constraints.*;
+
 public class LieuDTO {
 
     private int id;
+
+    @DecimalMin(value = "-90.0", message = "La latitude doit être ≥ -90.")
+    @DecimalMax(value = "90.0", message = "La latitude doit être ≤ 90.")
     private float latitude;
+
+    @DecimalMin(value = "-180.0", message = "La longitude doit être ≥ -180.")
+    @DecimalMax(value = "180.0", message = "La longitude doit être ≤ 180.")
     private float longitude;
+
+    @NotBlank(message = "Le nom du lieu est obligatoire.")
     private String nom;
+
+    @NotBlank(message = "L'adresse du lieu est obligatoire.")
     private String adresse;
+
+    @Min(value = 1, message = "Le nombre de places doit être supérieur à 0.")
     private int nbPlaces;
 
+    @NotNull(message = "Le type de lieu est obligatoire.")
     private TypeLieuDTO typeLieu;
-    
+
     // Constructor
-
     public LieuDTO() {}
-    
-    // Getters / Setters
 
+    // Getters / Setters
     public int getId() {
         return id;
     }

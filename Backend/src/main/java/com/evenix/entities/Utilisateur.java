@@ -62,6 +62,9 @@ public class Utilisateur {
     }
 
     // Getters/Setters
+    public void setId(int id) {
+    	this.id = id;
+    }
 
     public int getId() {
         return id;

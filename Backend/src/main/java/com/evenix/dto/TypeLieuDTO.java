@@ -1,8 +1,14 @@
 package com.evenix.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+
 public class TypeLieuDTO {
 
+    @Positive(message = "L'identifiant doit être un entier positif.")
     private int id;
+
+    @NotBlank(message = "Le libellé du type de lieu est obligatoire.")
     private String libelle;
 
     // Constructeurs

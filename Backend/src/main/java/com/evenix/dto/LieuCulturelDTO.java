@@ -1,27 +1,32 @@
 package com.evenix.dto;
 
+import jakarta.validation.constraints.*;
+
 public class LieuCulturelDTO {
-	private int id;
+
+    private int id;
+
+    @NotBlank(message = "Le nom du lieu culturel est obligatoire.")
     private String nom;
+
+    @NotNull(message = "Le type de lieu culturel est obligatoire.")
     private TypeLieuCulturelDTO typeLieuCulturel;
+
+    @DecimalMin(value = "-90.0", message = "La latitude doit être supérieure ou égale à -90.")
+    @DecimalMax(value = "90.0", message = "La latitude doit être inférieure ou égale à 90.")
     private float latitude;
+
+    @DecimalMin(value = "-180.0", message = "La longitude doit être supérieure ou égale à -180.")
+    @DecimalMax(value = "180.0", message = "La longitude doit être inférieure ou égale à 180.")
     private float longitude;
 
-// Getters & Setters
+    // Getters & Setters
     public int getId() {
         return id;
     }
 
     public void setId(int id) {
         this.id = id;
-    }
-    
-    public TypeLieuCulturelDTO getTypeLieuCulturel() {
-        return typeLieuCulturel;
-    }
-
-    public void setTypeLieuCulturel(TypeLieuCulturelDTO typeLieuCulturel) {
-        this.typeLieuCulturel = typeLieuCulturel;
     }
 
     public String getNom() {
@@ -32,6 +37,13 @@ public class LieuCulturelDTO {
         this.nom = nom;
     }
 
+    public TypeLieuCulturelDTO getTypeLieuCulturel() {
+        return typeLieuCulturel;
+    }
+
+    public void setTypeLieuCulturel(TypeLieuCulturelDTO typeLieuCulturel) {
+        this.typeLieuCulturel = typeLieuCulturel;
+    }
 
     public float getLatitude() {
         return latitude;
@@ -49,5 +61,3 @@ public class LieuCulturelDTO {
         this.longitude = longitude;
     }
 }
-
-

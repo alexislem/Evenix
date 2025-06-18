@@ -1,14 +1,17 @@
 package com.evenix.dto;
 
-public class TypeLieuCulturelDTO {
-	
-	// Attributes
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 
+public class TypeLieuCulturelDTO {
+
+    @Positive(message = "L'identifiant doit être un entier positif.")
     private int id;
+
+    @NotBlank(message = "Le nom du type de lieu culturel est obligatoire.")
     private String nom;
 
     // Getters & Setters
-    
     public int getId() {
         return id;
     }
