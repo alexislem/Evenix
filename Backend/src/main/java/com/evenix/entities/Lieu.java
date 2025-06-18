@@ -1,88 +1,106 @@
 package com.evenix.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
 public class Lieu {
-	
-	// Attributes
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column (name = "LIEU_Id")
-	private int id;
-	
-	@Column (name = "LIEU_Latitude")
-	private float latitude;
-	
-	@Column (name = "LIEU_Longitude")
-	private float longitude;
-	
-	@Column (name = "LIEU_Nom")
-	private String nom;
-	
-	@Column (name = "LIEU_Adresse")
-	private String adresse;
-	
-	// Constructors
-	
-	public Lieu() {}
-	
-	public Lieu(float fLatitude, float fLongitude, String sNom, String sAdresse) {
-		this.latitude = fLatitude;
-		this.longitude = fLongitude;
-		this.nom = sNom;
-		this.adresse = sAdresse;
-	}
-	
-	// Getters/Setters
-	
-	public int getId() {
-		return this.id;
-	}
 
-	public float getLatitude() {
-		return this.latitude;
-	}
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "LIEU_Id")
+    private int id;
 
-	public void setLatitude(float fLatitude) {
-		this.latitude = fLatitude;
-	}
+    @Column(name = "LIEU_Latitude")
+    private float latitude;
 
-	public float getLongitude() {
-		return this.longitude;
-	}
+    @Column(name = "LIEU_Longitude")
+    private float longitude;
 
-	public void setLongitude(float fLongitude) {
-		this.longitude = fLongitude;
-	}
+    @Column(name = "LIEU_Nom")
+    private String nom;
 
-	public String getNom() {
-		return this.nom;
-	}
+    @Column(name = "LIEU_Adresse")
+    private String adresse;
 
-	public void setNom(String sNom) {
-		this.nom = sNom;
-	}
+    @Column(name = "Nb_Places")
+    private int nb_places;
 
-	public String getAdresse() {
-		return this.adresse;
-	}
+    @ManyToOne
+    @JoinColumn(name = "TYP_Id", nullable = false)
+    private TypeLieu typeLieu;
 
-	public void setAdresse(String sAdresse) {
-		this.adresse = sAdresse;
-	}
-	
-	// Functions
-	
-	@Override
-	public String toString() {
-		return "Latitude : " + this.latitude + "; Longitude  : " + this.longitude + 
-				"; Nom :" + this.nom + "; Adresse : " + this.adresse + "]";
-	}
-	
+    // Constructors
+
+    public Lieu() {}
+
+    public Lieu(float latitude, float longitude, String nom, String adresse, int nb_places, TypeLieu typeLieu) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.nom = nom;
+        this.adresse = adresse;
+        this.nb_places = nb_places;
+        this.typeLieu = typeLieu;
+    }
+
+    // Getters/Setters
+
+    public int getId() {
+        return id;
+    }
+
+    public float getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(float latitude) {
+        this.latitude = latitude;
+    }
+
+    public float getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(float longitude) {
+        this.longitude = longitude;
+    }
+
+    public String getNom() {
+        return nom;
+    }
+
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
+
+    public String getAdresse() {
+        return adresse;
+    }
+
+    public void setAdresse(String adresse) {
+        this.adresse = adresse;
+    }
+
+    public int getNbPlaces() {
+        return nb_places;
+    }
+
+    public void setNbPlaces(int nb_places) {
+        this.nb_places = nb_places;
+    }
+
+    public TypeLieu getTypeLieu() {
+        return typeLieu;
+    }
+
+    public void setTypeLieu(TypeLieu typeLieu) {
+        this.typeLieu = typeLieu;
+    }
+
+    // toString
+    @Override
+    public String toString() {
+        return "Lieu [latitude=" + latitude + ", longitude=" + longitude + ", nom=" + nom +
+               ", adresse=" + adresse + ", nb_places=" + nb_places +
+               ", typeLieu=" + (typeLieu != null ? typeLieu.getLibelle() : "null") + "]";
+    }
 }
