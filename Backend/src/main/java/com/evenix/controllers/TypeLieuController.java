@@ -1,63 +1,49 @@
 package com.evenix.controllers;
 
-import com.evenix.entities.TypeLieu;
+import com.evenix.dto.TypeLieuDTO;
 import com.evenix.services.TypeLieuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/typelieux")
+@RequestMapping("/api/typelieu")
 public class TypeLieuController {
 
     @Autowired
     private TypeLieuService typeLieuService;
 
-    // GET all
     @GetMapping
-    public List<TypeLieu> getAllTypes() {
-        return typeLieuService.getAllTypes();
+    public List<TypeLieuDTO> getAll() {
+        return typeLieuService.getAllTypeLieux();
     }
 
-    // GET by id
     @GetMapping("/{id}")
-    public ResponseEntity<TypeLieu> getTypeById(@PathVariable int id) {
-        Optional<TypeLieu> optional = typeLieuService.getTypeById(id);
-        return optional.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<TypeLieuDTO> getById(@PathVariable int id) {
+        return typeLieuService.getTypeLieuById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // GET by libelle
-    @GetMapping("/libelle/{libelle}")
-    public ResponseEntity<TypeLieu> getTypeByLibelle(@PathVariable String libelle) {
-        Optional<TypeLieu> optional = typeLieuService.getTypeByLibelle(libelle);
-        return optional.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
-    }
-
-    // POST create
     @PostMapping
-    public ResponseEntity<TypeLieu> createType(@RequestBody TypeLieu typeLieu) {
-        TypeLieu saved = typeLieuService.createType(typeLieu);
-        return ResponseEntity.ok(saved);
+    public ResponseEntity<TypeLieuDTO> create(@RequestBody TypeLieuDTO dto) {
+        TypeLieuDTO created = typeLieuService.createTypeLieu(dto);
+        return ResponseEntity.ok(created);
     }
 
-    // PUT update
     @PutMapping("/{id}")
-    public ResponseEntity<TypeLieu> updateType(@PathVariable int id, @RequestBody TypeLieu typeLieu) {
-        try {
-            TypeLieu updated = typeLieuService.updateType(id, typeLieu);
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<TypeLieuDTO> update(@PathVariable int id, @RequestBody TypeLieuDTO dto) {
+        return typeLieuService.updateTypeLieu(id, dto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // DELETE
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteType(@PathVariable int id) {
-        typeLieuService.deleteType(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> delete(@PathVariable int id) {
+        return typeLieuService.deleteTypeLieu(id) ?
+                ResponseEntity.noContent().build() :
+                ResponseEntity.notFound().build();
     }
 }

@@ -2,126 +2,106 @@ package com.evenix.entities;
 
 import java.time.ZonedDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.persistence.*;
 
 @Entity
+@JsonIgnoreProperties({"utilisateur", "evenement"}) // empêche les boucles avec Jackson
 public class Paiement {
-	
-	// Attributes
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column (name = "PAI_Id")
-	private int id;
-	
-	@Column (name = "PAI_Montant")
-	private float montant;
-	
-	@Column (name = "PAI_Date")
-	private ZonedDateTime date;
-	
-	@Column (name = "PAI_Code", unique = false)
-	private String code;
-	
-	@ManyToOne
-	@JoinColumn(name = "UTI_Id", nullable = false)
-	private Utilisateur utilisateur;
-	
-	@ManyToOne
-	@JoinColumn(name = "EVE_Id", nullable = false)
-	private Evenement evenement;
-	
-	
-	// Constructors 
-	
-	public Paiement () {};
-	
-	public Paiement (float fMontant, ZonedDateTime zdtDate, String sCode, Utilisateur utilisateur, Evenement evenement) {
-		this.montant = fMontant;
-		this.date = zdtDate;
-		this.code = sCode;
-		this.utilisateur = utilisateur;
-		this.evenement = evenement;
-	}
-	
-	// Getters/Setters
-	
-	public int getId() {
-	    return this.id;
-	}
 
-	public float getMontant() {
-		return this.montant;
-	}
+    // Attributs
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "PAI_Id")
+    private int id;
 
-	public void setMontant(float fMontant) {
-		this.montant = fMontant;
-	}
+    @Column(name = "PAI_Montant")
+    private float montant;
 
-	public ZonedDateTime getDate() {
-		return this.date;
-	}
+    @Column(name = "PAI_Date")
+    private ZonedDateTime date;
 
-	public void setDate(ZonedDateTime zdtDate) {
-		this.date = zdtDate;
-	}
+    @Column(name = "PAI_Code")
+    private String code;
 
-	public String getCode() {
-		return this.code;
-	}
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "UTI_Id", nullable = false)
+    private Utilisateur utilisateur;
 
-	public void setCode(String sCode) {
-		this.code = sCode;
-	}
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "EVE_Id", nullable = false)
+    private Evenement evenement;
 
-	public Utilisateur getUtilisateur() {
-		return this.utilisateur;
-	}
+    // Constructeurs
 
-	public void setUtilisateur(Utilisateur utilisateur) {
-	    if (this.utilisateur != utilisateur) {
-	        this.utilisateur = utilisateur;
-	        if (utilisateur != null && !utilisateur.getPaiements().contains(this)) {
-	            utilisateur.getPaiements().add(this);
-	        }
-	    }
-	}
+    public Paiement() {}
 
-	public void setEvenement(Evenement evenement) {
-	    if (this.evenement != evenement) {
-	        this.evenement = evenement;
-	        if (evenement != null && !evenement.getPaiements().contains(this)) {
-	            evenement.getPaiements().add(this);
-	        }
-	    }
-	}
+    public Paiement(float montant, ZonedDateTime date, String code, Utilisateur utilisateur, Evenement evenement) {
+        this.montant = montant;
+        this.date = date;
+        this.code = code;
+        this.utilisateur = utilisateur;
+        this.evenement = evenement;
+    }
 
+    // Getters/Setters
 
+    public int getId() {
+        return id;
+    }
 
-	
-	public Evenement getEvenement() {
-		return this.evenement;
-	}
+    public float getMontant() {
+        return montant;
+    }
 
-	
-	// Functions
-	
-	@Override
-	public String toString() {
-	    String nomUtilisateur = (utilisateur != null) ? utilisateur.getNom() : "N/A";
-	    String nomEvenement = (evenement != null) ? evenement.getNom() : "N/A";
+    public void setMontant(float montant) {
+        this.montant = montant;
+    }
 
-	    return "Paiement [montant=" + montant +
-	           ", date=" + date +
-	           ", code=" + code +
-	           ", utilisateur=" + nomUtilisateur +
-	           ", evenement=" + nomEvenement + "]";
-	}
-	
+    public ZonedDateTime getDate() {
+        return date;
+    }
+
+    public void setDate(ZonedDateTime date) {
+        this.date = date;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public Utilisateur getUtilisateur() {
+        return utilisateur;
+    }
+
+    public void setUtilisateur(Utilisateur utilisateur) {
+        this.utilisateur = utilisateur;
+    }
+
+    public Evenement getEvenement() {
+        return evenement;
+    }
+
+    public void setEvenement(Evenement evenement) {
+        this.evenement = evenement;
+    }
+
+    // Méthode utilitaire
+
+    @Override
+    public String toString() {
+        String nomUtilisateur = (utilisateur != null) ? utilisateur.getNom() : "N/A";
+        String nomEvenement = (evenement != null) ? evenement.getNom() : "N/A";
+
+        return "Paiement [montant=" + montant +
+               ", date=" + date +
+               ", code=" + code +
+               ", utilisateur=" + nomUtilisateur +
+               ", evenement=" + nomEvenement + "]";
+    }
 }

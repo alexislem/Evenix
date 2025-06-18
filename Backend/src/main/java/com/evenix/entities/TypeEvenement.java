@@ -64,18 +64,4 @@ public class TypeEvenement {
 		return "Type d'évènement [Nom : " + this.nom + "]";
 	}
 	
-	public void addEvenement(Evenement evenement) {
-	    if (evenement != null && !evenements.contains(evenement)) {
-	        evenements.add(evenement);
-	        evenement.addTypeEvenement(this);
-	    }
-	}
-
-	
-	public void removeEvenement(Evenement evenement) {
-	    if (this.evenements != null) {
-	        this.evenements.remove(evenement);
-	    }
-	}
-	
 }

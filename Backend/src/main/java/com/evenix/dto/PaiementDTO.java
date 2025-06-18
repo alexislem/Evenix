@@ -3,14 +3,14 @@ package com.evenix.dto;
 import java.time.ZonedDateTime;
 
 public class PaiementDTO {
-	private int id;
+    private int id;
     private float montant;
     private ZonedDateTime date;
     private String code;
-    private UtilisateurDTO utilisateur;
-    private EvenementDTO evenement;
-    
-//GETTERS/SETTERS
+    private int utilisateurId;
+    private int evenementId;
+
+    // Getters / Setters
     public int getId() {
         return id;
     }
@@ -42,21 +42,20 @@ public class PaiementDTO {
     public void setCode(String code) {
         this.code = code;
     }
-    
-    public UtilisateurDTO getUtilisateur() {
-    	return utilisateur;
-    }
-    
-    public void setUtilisateur(UtilisateurDTO utilisateur) {
-    	this.utilisateur = utilisateur;
-    }
-    
-    public EvenementDTO getEvenement() {
-    	return evenement;
-    }
-    
-    public void setEvenement(EvenementDTO evenement) {
-    	this.evenement = evenement;
+
+    public int getUtilisateurId() {
+        return utilisateurId;
     }
 
+    public void setUtilisateurId(int utilisateurId) {
+        this.utilisateurId = utilisateurId;
+    }
+
+    public int getEvenementId() {
+        return evenementId;
+    }
+
+    public void setEvenementId(int evenementId) {
+        this.evenementId = evenementId;
+    }
 }

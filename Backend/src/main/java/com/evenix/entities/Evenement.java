@@ -6,6 +6,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,6 +22,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 @Entity
+@JsonIgnoreProperties("paiements")
 public class Evenement {
 	
 	// Attributes
@@ -70,9 +75,13 @@ public class Evenement {
 	private Lieu lieu;
 	
 	@OneToMany(mappedBy = "evenement")
-	private List<Paiement> paiements = new ArrayList <>();
+	@JsonManagedReference
+	private List<Paiement> paiements = new ArrayList<>();
+
+
 	
 	@OneToMany(mappedBy = "evenement")
+	@JsonIgnore
 	private List<Inscription> inscriptions = new ArrayList<>();
 
 	// Constructors
@@ -214,45 +223,6 @@ public class Evenement {
 					"; Description :" + this.description + "; Prix :" + this.prix + "]";
 	}
 	
-	public void addTypeEvenement(TypeEvenement typeEvenement) {
-	    if (typeEvenement != null && !typesEvenement.contains(typeEvenement)) {
-	        typesEvenement.add(typeEvenement);
-	        typeEvenement.getEvenements().add(this);
-	    }
-	}
-
-	
-	public void removeTypeEvenement(TypeEvenement typeEvenement) {
-	    if (this.typesEvenement != null) {
-	        this.typesEvenement.remove(typeEvenement);
-	    }
-	}
-
-	
-	public void addLieuCulturelProche(LieuCulturel lieu) {
-	    if (lieu != null && !lieuxCulturelsProches.contains(lieu)) {
-	        lieuxCulturelsProches.add(lieu);
-	        lieu.getEvenementsProches().add(this);
-	    }
-	}
-
-	
-	public void removeLieuCulturelProche(LieuCulturel lieuCulturel) {
-	    if (this.lieuxCulturelsProches != null) {
-	        this.lieuxCulturelsProches.remove(lieuCulturel);
-	    }
-	}
-
-	
-	public void addPaiement(Paiement paiement) {
-	    if (paiement != null && !this.paiements.contains(paiement)) {
-	        if (this.paiements == null) {
-	            this.paiements = new ArrayList<>();
-	        }
-	        this.paiements.add(paiement);
-	        paiement.setEvenement(this);
-	    }
-	}
 
 	
 	public void removePaiement(Paiement paiement) {
