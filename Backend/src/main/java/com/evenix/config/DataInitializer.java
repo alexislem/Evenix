@@ -1,41 +1,25 @@
 package com.evenix.config;
 
-import com.evenix.entities.Entreprise;
-import com.evenix.entities.Evenement;
-import com.evenix.entities.Inscription;
-import com.evenix.entities.Lieu;
-import com.evenix.entities.LieuCulturel;
-import com.evenix.entities.Paiement;
-import com.evenix.entities.Role;
-import com.evenix.entities.TypeEvenement;
-import com.evenix.entities.TypeLieu;
-import com.evenix.entities.TypeLieuCulturel;
-import com.evenix.entities.Utilisateur;
-import com.evenix.repos.EntrepriseRepository;
-import com.evenix.repos.EvenementRepository;
-import com.evenix.repos.InscriptionRepository;
-import com.evenix.repos.LieuCulturelRepository;
-import com.evenix.repos.LieuRepository;
-import com.evenix.repos.PaiementRepository;
-import com.evenix.repos.RoleRepository;
-import com.evenix.repos.TypeEvenementRepository;
-import com.evenix.repos.TypeLieuCulturelRepository;
-import com.evenix.repos.TypeLieuRepository;
-import com.evenix.repos.UtilisateurRepository;
+import com.evenix.entities.*;
+import com.evenix.repos.*;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.Date;
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
+@Profile("dev")              // <-- active le seed uniquement sur le profil "dev"
+@Transactional               // <-- rend le seed atomique (tout ou rien)
 public class DataInitializer implements CommandLineRunner {
-    
+
     @Autowired private RoleRepository roleRepository;
     @Autowired private EntrepriseRepository entrepriseRepository;
     @Autowired private UtilisateurRepository utilisateurRepository;
@@ -48,273 +32,245 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired private InscriptionRepository inscriptionRepository;
     @Autowired private TypeEvenementRepository typeEvenementRepository;
 
+    // -------- Helpers génériques idempotents (pas de méthodes custom requises) --------
+
+    private Role ensureRole(String nom) {
+        return roleRepository.findAll().stream()
+                .filter(r -> nom.equalsIgnoreCase(r.getNom()))
+                .findFirst()
+                .orElseGet(() -> {
+                    Role r = new Role();
+                    r.setNom(nom);
+                    return roleRepository.save(r);
+                });
+    }
+
+    private Entreprise ensureEntreprise(String nom, String adresse, String email,
+                                       String secteur, String statut, String tel) {
+        return entrepriseRepository.findAll().stream()
+                .filter(e -> nom.equalsIgnoreCase(e.getNom()))
+                .findFirst()
+                .orElseGet(() -> {
+                    Entreprise e = new Entreprise();
+                    e.setNom(nom);
+                    e.setAdresse(adresse);
+                    e.setEmail(email);
+                    e.setSecteurActivite(secteur);
+                    e.setStatutJuridique(statut);
+                    e.setTelephone(tel);
+                    return entrepriseRepository.save(e);
+                });
+    }
+
+    private Utilisateur ensureUserByEmail(String email,
+                                          String nom, String prenom,
+                                          String motDePasse, Date dateNaissance,
+                                          Role role, Entreprise entreprise) {
+        return utilisateurRepository.findAll().stream()
+                .filter(u -> email.equalsIgnoreCase(u.getEmail()))
+                .findFirst()
+                .orElseGet(() -> {
+                    Utilisateur u = new Utilisateur();
+                    u.setNom(nom);
+                    u.setPrenom(prenom);
+                    u.setEmail(email);
+                    u.setMotDePasse(motDePasse); // ⚠ idéalement encoder (BCrypt) si Spring Security actif
+                    u.setDateDeNaissance(dateNaissance);
+                    u.setRole(role);
+                    u.setEntreprise(entreprise);
+                    return utilisateurRepository.save(u);
+                });
+    }
+
+    private TypeLieu ensureTypeLieu(String nom) {
+        return typeLieuRepository.findAll().stream()
+                .filter(t -> nom.equalsIgnoreCase(t.getLibelle()))
+                .findFirst()
+                .orElseGet(() -> typeLieuRepository.save(new TypeLieu(nom)));
+    }
+
+    private TypeLieuCulturel ensureTypeLieuCulturel(String nom) {
+        return typeLieuCulturelRepository.findAll().stream()
+                .filter(t -> nom.equalsIgnoreCase(t.getNom()))
+                .findFirst()
+                .orElseGet(() -> typeLieuCulturelRepository.save(new TypeLieuCulturel(nom)));
+    }
+
+    private TypeEvenement ensureTypeEvenement(String nom) {
+        return typeEvenementRepository.findAll().stream()
+                .filter(t -> nom.equalsIgnoreCase(t.getNom()))
+                .findFirst()
+                .orElseGet(() -> typeEvenementRepository.save(new TypeEvenement(nom)));
+    }
+
+    private Lieu ensureLieu(String nom, String adresse, float lat, float lon, int capacite, TypeLieu type) {
+        // Clé métier ici = nom (à adapter si tu préfères une autre clé)
+        return lieuRepository.findAll().stream()
+                .filter(l -> nom.equalsIgnoreCase(l.getNom()))
+                .findFirst()
+                .orElseGet(() -> {
+                    Lieu l = new Lieu(lat, lon, nom, adresse, capacite, type);
+                    return lieuRepository.save(l);
+                });
+    }
+
+    private LieuCulturel ensureLieuCulturel(String nom, float lat, float lon, TypeLieuCulturel type) {
+        // Clé métier ici = nom
+        return lieuCulturelRepository.findAll().stream()
+                .filter(lc -> nom.equalsIgnoreCase(lc.getNom()))
+                .findFirst()
+                .orElseGet(() -> {
+                    LieuCulturel lc = new LieuCulturel(nom, lat, lon, type);
+                    return lieuCulturelRepository.save(lc);
+                });
+    }
+
+    private Evenement ensureEvenement(String titre,
+                                      ZonedDateTime debut, ZonedDateTime fin,
+                                      boolean payant, String description, float prix,
+                                      Lieu lieu, Utilisateur organisateur,
+                                      Set<TypeEvenement> types, Set<LieuCulturel> lieuxCulturels) {
+        // Clé métier = (titre + début)
+        return evenementRepository.findAll().stream()
+                .filter(e -> titre.equalsIgnoreCase(e.getNom())
+                        && e.getDateDebut() != null
+                        && e.getDateDebut().toInstant().equals(debut.toInstant()))
+                .findFirst()
+                .orElseGet(() -> {
+                    Evenement ev = new Evenement(
+                            titre, debut, fin, payant, description, prix,
+                            lieu, organisateur, types, lieuxCulturels
+                    );
+                    return evenementRepository.save(ev);
+                });
+    }
+
+    private Inscription ensureInscription(Utilisateur utilisateur, Evenement evenement, ZonedDateTime date) {
+        // Unicité logique: (utilisateur, evenement)
+        return inscriptionRepository.findAll().stream()
+                .filter(i -> i.getUtilisateur() != null && i.getEvenement() != null
+                        && Objects.equals(i.getUtilisateur().getId(), utilisateur.getId())
+                        && Objects.equals(i.getEvenement().getId(), evenement.getId()))
+                .findFirst()
+                .orElseGet(() -> inscriptionRepository.save(new Inscription(utilisateur, evenement, date)));
+    }
+
+    private Paiement ensurePaiement(String reference, float montant, ZonedDateTime date, Utilisateur utilisateur, Evenement evenement) {
+        // Unicité logique: reference
+        return paiementRepository.findAll().stream()
+                .filter(p -> reference.equalsIgnoreCase(p.getCode()))
+                .findFirst()
+                .orElseGet(() -> paiementRepository.save(new Paiement(montant, date, reference, utilisateur, evenement)));
+    }
+
+    // ------------------- Run -------------------
+
     @Override
-    public void run(String... args) throws Exception {
-        if (roleRepository.count() == 0) {
-            Role admin = new Role();
-            admin.setNom("ADMIN");
+    public void run(String... args) {
 
-            Role user = new Role();
-            user.setNom("UTILISATEUR");
-            
-            Role organisateur = new Role();
-            organisateur.setNom("ORGANISATEUR");
+        // 1) Rôles
+        Role adminRole        = ensureRole("ADMIN");
+        Role userRole         = ensureRole("UTILISATEUR");
+        Role organisateurRole = ensureRole("ORGANISATEUR");
 
-            roleRepository.saveAll(List.of(admin, user, organisateur));
-            System.out.println("[DataInit] Rôles créés.");
-        }
+        // 2) Entreprises
+        Entreprise e  = ensureEntreprise("OpenAI France",        "1 rue de l'IA",                     "contact@openai.fr",         "Tech",                "SAS",  "0102030405");
+        Entreprise e1 = ensureEntreprise("CyberSecure Solutions", "45 avenue de la Défense",          "contact@cybersecure.fr",    "Cybersécurité",       "SARL", "0145789652");
+        Entreprise e2 = ensureEntreprise("GreenTech Innov",       "12 boulevard des Énergies",        "info@greentech-innov.com",  "Énergie renouvelable","SASU", "0178956423");
 
-        if (entrepriseRepository.count() == 0) {
-            Entreprise e = new Entreprise();
-            e.setNom("OpenAI France");
-            e.setAdresse("1 rue de l'IA");
-            e.setEmail("contact@openai.fr");
-            e.setSecteurActivite("Tech");
-            e.setStatutJuridique("SAS");
-            e.setTelephone("0102030405");
-            
-            Entreprise e1 = new Entreprise();
-            e1.setNom("CyberSecure Solutions");
-            e1.setAdresse("45 avenue de la Défense");
-            e1.setEmail("contact@cybersecure.fr");
-            e1.setSecteurActivite("Cybersécurité");
-            e1.setStatutJuridique("SARL");
-            e1.setTelephone("0145789652");
+        // 3) Utilisateurs (emails uniques)
+        Utilisateur admin = ensureUserByEmail(
+                "admin@evenix.fr", "Admin", "Systeme", "admin123",
+                Date.valueOf("1990-01-01"), adminRole, e
+        );
+        Utilisateur user = ensureUserByEmail(
+                "claire.martin@evenix.fr", "Martin", "Claire", "claireM2024",
+                Date.valueOf("1992-08-12"), userRole, e1
+        );
+        Utilisateur organisateur = ensureUserByEmail(
+                "thomas.lemoine@evenix.fr", "Lemoine", "Thomas", "thomasL2024",
+                Date.valueOf("1988-11-23"), organisateurRole, e2
+        );
 
-            Entreprise e2 = new Entreprise();
-            e2.setNom("GreenTech Innov");
-            e2.setAdresse("12 boulevard des Énergies");
-            e2.setEmail("info@greentech-innov.com");
-            e2.setSecteurActivite("Énergie renouvelable");
-            e2.setStatutJuridique("SASU");
-            e2.setTelephone("0178956423");
+        // 4) Types de lieux / lieux culturels / types d'événements
+        TypeLieuCulturel tlcMusee    = ensureTypeLieuCulturel("Musée");
+        TypeLieuCulturel tlcTheatre  = ensureTypeLieuCulturel("Théâtre");
+        TypeLieuCulturel tlcCinema   = ensureTypeLieuCulturel("Cinéma");
 
+        TypeLieu tlSalle        = ensureTypeLieu("Salle");
+        TypeLieu tlAmphi        = ensureTypeLieu("Amphithéâtre");
+        TypeLieu tlStudio       = ensureTypeLieu("Studio");
 
-            entrepriseRepository.saveAll(List.of(e,e1,e2));
-            System.out.println("[DataInit] Entreprise créée.");
-        }
+        TypeEvenement teConf    = ensureTypeEvenement("Conférence");
+        TypeEvenement teConcert = ensureTypeEvenement("Concert");
+        TypeEvenement teAtelier = ensureTypeEvenement("Atelier");
 
-        Optional<Role> adminRoleOpt = roleRepository.findByNom("ADMIN");
-        Optional<Role> userRoleOpt = roleRepository.findByNom("UTILISATEUR");
-        Optional<Role> organisateurRoleOpt = roleRepository.findByNom("ORGANISATEUR");
-        Entreprise entreprise = entrepriseRepository.findAll().get(0);
-        Entreprise entreprise1 = entrepriseRepository.findAll().get(1);
-        Entreprise entreprise2 = entrepriseRepository.findAll().get(2);
+        // 5) Lieux culturels
+        LieuCulturel lc1 = ensureLieuCulturel("Musée d'art moderne", 48.8606f, 2.3376f, tlcMusee);
+        LieuCulturel lc2 = ensureLieuCulturel("Théâtre national",    45.7578f, 4.8320f, tlcTheatre);
+        LieuCulturel lc3 = ensureLieuCulturel("Cinéma Gaumont",      43.6047f, 1.4442f, tlcCinema);
 
-        if (adminRoleOpt.isPresent() && userRoleOpt.isPresent() && organisateurRoleOpt.isPresent()) {
-            Role adminRole = adminRoleOpt.get();
-            Role userRole = userRoleOpt.get();
-            Role organisateurRole = organisateurRoleOpt.get();
+        // 6) Lieux "classiques"
+        Lieu l1 = ensureLieu("Salle Alpha",  "10 rue des Arts, Marseille", 43.2965f, 5.3698f, 200, tlSalle);
+        Lieu l2 = ensureLieu("Amphi Delta",  "15 avenue Université, Lille", 50.6292f, 3.0573f, 300, tlAmphi);
+        Lieu l3 = ensureLieu("Studio B",     "20 boulevard des Studios, Nice", 43.7102f, 7.2620f, 100, tlStudio);
 
-            Utilisateur admin = new Utilisateur();
-            admin.setNom("Admin");
-            admin.setPrenom("Systeme");
-            admin.setEmail("admin@evenix.fr");
-            admin.setMotDePasse("admin123");
-            admin.setDateDeNaissance(Date.valueOf("1990-01-01"));
-            admin.setRole(adminRole);
-            admin.setEntreprise(entreprise);
+        // 7) Événements (clé = titre + début)
+        Evenement ev1 = ensureEvenement(
+                "Conférence IA",
+                ZonedDateTime.now().plusDays(5),
+                ZonedDateTime.now().plusDays(6),
+                true,
+                "Une conférence sur l'intelligence artificielle et ses enjeux.",
+                25.0f,
+                l1,
+                organisateur,
+                setOf(teConf),
+                setOf(lc1)
+        );
 
-            Utilisateur user = new Utilisateur();
-            user.setNom("Martin");
-            user.setPrenom("Claire");
-            user.setEmail("claire.martin@evenix.fr");
-            user.setMotDePasse("claireM2024");
-            user.setDateDeNaissance(Date.valueOf("1992-08-12"));
-            user.setRole(userRole);
-            user.setEntreprise(entreprise1);
-            
-            Utilisateur organisateur = new Utilisateur();
-            organisateur.setNom("Lemoine");
-            organisateur.setPrenom("Thomas");
-            organisateur.setEmail("thomas.lemoine@evenix.fr");
-            organisateur.setMotDePasse("thomasL2024");
-            organisateur.setDateDeNaissance(Date.valueOf("1988-11-23"));
-            organisateur.setRole(organisateurRole);
-            organisateur.setEntreprise(entreprise2);
-            
-            utilisateurRepository.saveAll(List.of(admin, user, organisateur));
-            System.out.println("[DataInit] Utilisateurs initiaux créés.");
-        } else {
-            System.err.println("[DataInit] ERREUR : Rôle ADMIN ou UTILISATEUR manquant.");
-        }
-        
-        if (typeLieuCulturelRepository.count() == 0) {
-            typeLieuCulturelRepository.saveAll(List.of(
-                new TypeLieuCulturel("Musée"),
-                new TypeLieuCulturel("Théâtre"),
-                new TypeLieuCulturel("Cinéma")
-            ));
-        }
+        Evenement ev2 = ensureEvenement(
+                "Concert de Jazz",
+                ZonedDateTime.now().plusDays(10),
+                ZonedDateTime.now().plusDays(10).plusHours(2),
+                true,
+                "Concert de jazz dans une ambiance feutrée.",
+                15.0f,
+                l2,
+                organisateur,
+                setOf(teConcert),
+                setOf(lc2)
+        );
 
-        if (typeLieuRepository.count() == 0) {
-            typeLieuRepository.saveAll(List.of(
-                new TypeLieu("Salle"),
-                new TypeLieu("Amphithéâtre"),
-                new TypeLieu("Studio")
-            ));
-        }
-        
-        if (typeEvenementRepository.count() == 0) {
-            typeEvenementRepository.saveAll(List.of(
-                new TypeEvenement("Conférence"),
-                new TypeEvenement("Concert"),
-                new TypeEvenement("Atelier")
-            ));
-            System.out.println("[DataInit] Types d'événements créés.");
-        }
+        Evenement ev3 = ensureEvenement(
+                "Atelier de codage",
+                ZonedDateTime.now().plusDays(3),
+                ZonedDateTime.now().plusDays(3).plusHours(2),
+                false,
+                "Initiation à la programmation pour débutants.",
+                0.0f,
+                l3,
+                organisateur,
+                setOf(teAtelier),
+                setOf(lc3)
+        );
 
-        
-        if (lieuCulturelRepository.count() == 0 && typeLieuCulturelRepository.count() >= 3) {
-            List<TypeLieuCulturel> typesCulturels = typeLieuCulturelRepository.findAll();
-            lieuCulturelRepository.saveAll(List.of(
-                new LieuCulturel("Musée d'art moderne", 48.8606f, 2.3376f, typesCulturels.get(0)),
-                new LieuCulturel("Théâtre national", 45.7578f, 4.8320f, typesCulturels.get(1)),
-                new LieuCulturel("Cinéma Gaumont", 43.6047f, 1.4442f, typesCulturels.get(2))
-            ));
-            System.out.println("[DataInit] Lieux culturels créés.");
-        }
+        // 8) Inscriptions (unicité logique utilisateur+évènement)
+        ensureInscription(user,  ev1, ZonedDateTime.now().minusDays(1));
+        ensureInscription(user,  ev2, ZonedDateTime.now().minusHours(12));
+        ensureInscription(admin, ev3, ZonedDateTime.now());
 
-        if (lieuRepository.count() == 0 && typeLieuRepository.count() >= 3) {
-            List<TypeLieu> types = typeLieuRepository.findAll();
-            lieuRepository.saveAll(List.of(
-                new Lieu(43.2965f, 5.3698f, "Salle Alpha", "10 rue des Arts, Marseille", 200, types.get(0)),
-                new Lieu(50.6292f, 3.0573f, "Amphi Delta", "15 avenue Université, Lille", 300, types.get(1)),
-                new Lieu(43.7102f, 7.2620f, "Studio B", "20 boulevard des Studios, Nice", 100, types.get(2))
-            ));
-            System.out.println("[DataInit] Lieux classiques créés.");
-        }
-        
-        if (evenementRepository.count() == 0) {
-            List<Lieu> lieux = lieuRepository.findAll();
-            List<LieuCulturel> lieuxCulturels = lieuCulturelRepository.findAll();
-            List<TypeEvenement> typesEvenement = typeEvenementRepository.findAll();
-            List<Utilisateur> utilisateurs = utilisateurRepository.findAll();
+        // 9) Paiements (unicité par référence)
+        ensurePaiement("PAI123456", 25.0f, ZonedDateTime.now().minusDays(1),  user,  ev1);
+        ensurePaiement("PAI123457", 15.0f, ZonedDateTime.now().minusHours(20), user,  ev2);
+        ensurePaiement("PAI123458", 25.0f, ZonedDateTime.now().minusHours(6),  admin, ev1);
 
-            if (lieux.size() >= 3 && lieuxCulturels.size() >= 3 && typesEvenement.size() >= 3 && utilisateurs.size() >= 3) {
+        System.out.println("[DataInit] Seed terminé sans doublons.");
+    }
 
-                Utilisateur organisateur = null;
-                for (Utilisateur u : utilisateurs) {
-                    if (u.getRole() != null && "ORGANISATEUR".equals(u.getRole().getNom())) {
-                        organisateur = u;
-                        break;
-                    }
-                }
-
-                if (organisateur == null) {
-                    System.err.println("[DataInit] ERREUR : Aucun utilisateur avec le rôle ORGANISATEUR.");
-                    return;
-                }
-
-                Evenement ev1 = new Evenement(
-                    "Conférence IA",
-                    ZonedDateTime.now().plusDays(5),
-                    ZonedDateTime.now().plusDays(6),
-                    true,
-                    "Une conférence sur l'intelligence artificielle et ses enjeux.",
-                    25.0f,
-                    lieux.get(0),
-                    organisateur,
-                    Set.of(typesEvenement.get(0)),
-                    Set.of(lieuxCulturels.get(0))
-                );
-
-                Evenement ev2 = new Evenement(
-                    "Concert de Jazz",
-                    ZonedDateTime.now().plusDays(10),
-                    ZonedDateTime.now().plusDays(10).plusHours(2),
-                    true,
-                    "Concert de jazz dans une ambiance feutrée.",
-                    15.0f,
-                    lieux.get(1),
-                    organisateur,
-                    Set.of(typesEvenement.get(1)),
-                    Set.of(lieuxCulturels.get(1))
-                );
-
-                Evenement ev3 = new Evenement(
-                    "Atelier de codage",
-                    ZonedDateTime.now().plusDays(3),
-                    ZonedDateTime.now().plusDays(3).plusHours(2),
-                    false,
-                    "Initiation à la programmation pour débutants.",
-                    0.0f,
-                    lieux.get(2),
-                    organisateur,
-                    Set.of(typesEvenement.get(2)),
-                    Set.of(lieuxCulturels.get(2))
-                );
-
-                evenementRepository.saveAll(List.of(ev1, ev2, ev3));
-                System.out.println("[DataInit] Événements créés.");
-            } else {
-                System.err.println("[DataInit] ERREUR : Données insuffisantes pour créer des événements.");
-            }
-        }
-        
-        if (inscriptionRepository.count() == 0) {
-            List<Utilisateur> utilisateurs = utilisateurRepository.findAll();
-            List<Evenement> evenements = evenementRepository.findAll();
-
-            if (utilisateurs.size() >= 2 && evenements.size() >= 3) {
-                Utilisateur user = utilisateurs.stream()
-                    .filter(u -> "UTILISATEUR".equals(u.getRole().getNom()))
-                    .findFirst()
-                    .orElse(null);
-
-                Utilisateur admin = utilisateurs.stream()
-                    .filter(u -> "ADMIN".equals(u.getRole().getNom()))
-                    .findFirst()
-                    .orElse(null);
-
-                if (user == null || admin == null) {
-                    System.err.println("[DataInit] ERREUR : Utilisateurs nécessaires pour les inscriptions non trouvés.");
-                    return;
-                }
-
-                Inscription i1 = new Inscription(user, evenements.get(0), ZonedDateTime.now().minusDays(1));
-                Inscription i2 = new Inscription(user, evenements.get(1), ZonedDateTime.now().minusHours(12));
-                Inscription i3 = new Inscription(admin, evenements.get(2), ZonedDateTime.now());
-
-                inscriptionRepository.saveAll(List.of(i1, i2, i3));
-                System.out.println("[DataInit] Inscriptions créées.");
-            } else {
-                System.err.println("[DataInit] ERREUR : Pas assez d'utilisateurs ou d'événements pour créer des inscriptions.");
-            }
-        }
-        
-        if (paiementRepository.count() == 0) {
-            List<Utilisateur> utilisateurs = utilisateurRepository.findAll();
-            List<Evenement> evenements = evenementRepository.findAll();
-
-            if (utilisateurs.size() >= 2 && evenements.size() >= 3) {
-                Utilisateur user = utilisateurs.stream()
-                    .filter(u -> "UTILISATEUR".equals(u.getRole().getNom()))
-                    .findFirst()
-                    .orElse(null);
-
-                Utilisateur admin = utilisateurs.stream()
-                    .filter(u -> "ADMIN".equals(u.getRole().getNom()))
-                    .findFirst()
-                    .orElse(null);
-
-                if (user == null || admin == null) {
-                    System.err.println("[DataInit] ERREUR : Utilisateurs nécessaires pour les paiements non trouvés.");
-                    return;
-                }
-
-                Paiement p1 = new Paiement(25.0f, ZonedDateTime.now().minusDays(1), "PAI123456", user, evenements.get(0));
-                Paiement p2 = new Paiement(15.0f, ZonedDateTime.now().minusHours(20), "PAI123457", user, evenements.get(1));
-                Paiement p3 = new Paiement(25.0f, ZonedDateTime.now().minusHours(6), "PAI123458", admin, evenements.get(0));
-
-                paiementRepository.saveAll(List.of(p1, p2, p3));
-                System.out.println("[DataInit] Paiements créés.");
-            } else {
-                System.err.println("[DataInit] ERREUR : Pas assez de données pour générer les paiements.");
-            }
-        }
-
-
-
+    // Petit utilitaire pour créer des sets en une ligne
+    @SafeVarargs
+    private static <T> Set<T> setOf(T... items) {
+        return Arrays.stream(items).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }
