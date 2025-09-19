@@ -113,7 +113,7 @@
           liste.innerHTML = "";
           data.forEach(role => {
             const li = document.createElement("li");
-            li.textContent = `ID: ${role.id}, Libellé: ${role.libelle}`;
+            li.textContent = `ID: ${role.id}, Libellé: ${role.nom}`;
             liste.appendChild(li);
           });
         })
