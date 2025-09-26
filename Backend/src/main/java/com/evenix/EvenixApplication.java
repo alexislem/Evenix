@@ -16,11 +16,7 @@ public class EvenixApplication {
         SpringApplication.run(EvenixApplication.class, args);
     }
 
-    /**
-     * Initialise quelques rôles et utilisateurs au démarrage.
-     * Utilise les services injectés dans le runner (pas dans le constructeur) pour éviter
-     * tout cycle de dépendances avec d'autres beans (ex: BCryptPasswordEncoder).
-     */
+
     @Bean
     CommandLineRunner initData(UtilisateurServiceImpl utilisateurService,
                                       RoleServiceImpl roleService) {
