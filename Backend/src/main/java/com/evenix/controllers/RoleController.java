@@ -1,7 +1,7 @@
 package com.evenix.controllers;
 
 import com.evenix.entities.Role;
-import com.evenix.services.RoleService;
+import com.evenix.services.RoleServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +14,8 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost")
 public class RoleController {
 
-    private final RoleService roleService;
-    public RoleController(RoleService roleService) { this.roleService = roleService; }
+    private final RoleServiceImpl roleService;
+    public RoleController(RoleServiceImpl roleService) { this.roleService = roleService; }
 
     @GetMapping
     public List<Role> getAllRoles() {

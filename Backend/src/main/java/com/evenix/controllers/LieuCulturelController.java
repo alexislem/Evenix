@@ -1,7 +1,7 @@
 package com.evenix.controllers;
 
 import com.evenix.dto.LieuCulturelDTO;
-import com.evenix.services.LieuCulturelService;
+import com.evenix.services.LieuCulturelServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +13,7 @@ import java.util.List;
 public class LieuCulturelController {
 
     @Autowired
-    private LieuCulturelService service;
+    private LieuCulturelServiceImpl service;
 
     @GetMapping
     public List<LieuCulturelDTO> getAll() {

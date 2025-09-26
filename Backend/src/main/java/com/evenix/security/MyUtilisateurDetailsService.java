@@ -2,7 +2,7 @@ package com.evenix.security;
 
 import com.evenix.entities.Role;
 import com.evenix.entities.Utilisateur;
-import com.evenix.services.UtilisateurService;
+import com.evenix.services.UtilisateurServiceImpl;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User; // ⚠️ attention à l'import
@@ -17,9 +17,9 @@ import java.util.List;
 @Service
 public class MyUtilisateurDetailsService implements UserDetailsService {
 
-    private final UtilisateurService utilisateurService;
+    private final UtilisateurServiceImpl utilisateurService;
 
-    public MyUtilisateurDetailsService(UtilisateurService utilisateurService) {
+    public MyUtilisateurDetailsService(UtilisateurServiceImpl utilisateurService) {
         this.utilisateurService = utilisateurService;
     }
 

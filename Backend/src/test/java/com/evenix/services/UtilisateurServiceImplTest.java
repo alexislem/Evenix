@@ -18,15 +18,15 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class UtilisateurServiceTest {
+class UtilisateurServiceImplTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(UtilisateurServiceTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(UtilisateurServiceImplTest.class);
 
     @Mock
     private UtilisateurRepository utilisateurRepository;
 
     @InjectMocks
-    private UtilisateurService utilisateurService;
+    private UtilisateurServiceImpl utilisateurService;
 
     private Utilisateur utilisateur;
 
