@@ -2,6 +2,8 @@ package com.evenix.controllers;
 
 import com.evenix.entities.Role;
 import com.evenix.services.RoleService;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,10 +15,7 @@ import java.util.List;
 public class RoleController {
 
     private final RoleService roleService;
-
-    public RoleController(RoleService roleService) {
-        this.roleService = roleService;
-    }
+    public RoleController(RoleService roleService) { this.roleService = roleService; }
 
     @GetMapping
     public List<Role> getAllRoles() {
@@ -25,23 +24,27 @@ public class RoleController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Role> getRoleById(@PathVariable int id) {
-        return roleService.getRoleById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(roleService.getRoleById(id));
     }
 
     @PostMapping
-    public Role createRole(@RequestBody Role role) {
-        return roleService.createRole(role);
+    public ResponseEntity<Role> createRole(@RequestBody Role role) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(roleService.createRole(role));
     }
 
     @PutMapping("/{id}")
-    public Role updateRole(@PathVariable int id, @RequestBody Role updatedRole) {
-        return roleService.updateRole(id, updatedRole);
+    public ResponseEntity<Role> updateRole(@PathVariable int id, @RequestBody Role updatedRole) {
+        return ResponseEntity.ok(roleService.updateRole(id, updatedRole));
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteRole(@PathVariable int id) {
         roleService.deleteRole(id);
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Void> handleNotFound(EntityNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 }

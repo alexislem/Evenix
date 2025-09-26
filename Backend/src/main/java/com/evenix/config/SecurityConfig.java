@@ -2,11 +2,12 @@ package com.evenix.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -21,28 +22,28 @@ public class SecurityConfig {
   SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
       .csrf(csrf -> csrf.disable())
-      .cors(Customizer.withDefaults())                   // ⬅️ active CORS
+      .cors(Customizer.withDefaults())
+      .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/api/**").permitAll()
-        .anyRequest().permitAll()
+        .requestMatchers("/login", "/api/auth/login").permitAll()  
+        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()    
+        .anyRequest().authenticated()
       );
+
     return http.build();
   }
 
   @Bean
   CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
-    // ⚠️ Autorise les origines courantes en dev (et file:// via "null")
     config.setAllowedOrigins(List.of(
-      "http://localhost",
-      "http://localhost:5500",
-      "http://127.0.0.1",
-      "http://127.0.0.1:5500",
-      "null"
+      "http://localhost:5173","http://127.0.0.1:5173",
+      "http://localhost:3000","http://127.0.0.1:3000"
     ));
-    config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
-    config.setAllowedHeaders(List.of("*"));
-    config.setAllowCredentials(false); // pour tests simples
+    config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
+    config.setAllowedHeaders(List.of("Authorization","Content-Type","Accept","X-Requested-With"));
+    config.setExposedHeaders(List.of("Authorization","Location"));
+    config.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", config);
