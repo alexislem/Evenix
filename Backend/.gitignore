@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+java-head/
+java-main/
+*~HEAD
+*~main
+*.orig
+
