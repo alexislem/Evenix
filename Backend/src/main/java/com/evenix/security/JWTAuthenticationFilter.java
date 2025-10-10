@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
@@ -28,14 +29,18 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     private final AuthenticationManager authenticationManager;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+
     public JWTAuthenticationFilter(AuthenticationManager authenticationManager) {
-        super();
-        this.authenticationManager = authenticationManager;
+      super();
+      this.authenticationManager = authenticationManager;
 
-        setFilterProcessesUrl("/api/auth/login");
+      this.setRequiresAuthenticationRequestMatcher(
+          new AntPathRequestMatcher("/api/auth/login", "POST")
+      );
+
+      this.setPostOnly(true);
     }
-
-    @Override
+    
     public Authentication attemptAuthentication(HttpServletRequest request,
                                                 HttpServletResponse response)
             throws AuthenticationException {
