@@ -63,9 +63,5 @@ public class UtilisateurController {
         utilisateurService.deleteUtilisateur(id);
         return ResponseEntity.noContent().build();
     }
-   
-    @PostMapping("/register")
-    public Utilisateur register(@RequestBody RegistrationRequest request) {
-    	return UtilisateurService.registerUtilisateur(request);
-    }
+
 }

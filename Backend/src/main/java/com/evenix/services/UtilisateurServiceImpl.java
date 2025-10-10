@@ -118,7 +118,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
         return utilisateurRepository.save(usr);
     }
 
-    /* (Optionnel) Variante C : par id (utilise Optional du JpaRepository) */
+
     @Override
     public Utilisateur addRoleToUtilisateur(int utilisateurId, int roleId) {
         Utilisateur usr = utilisateurRepository.findById(utilisateurId)
@@ -133,20 +133,26 @@ public class UtilisateurServiceImpl implements UtilisateurService{
     
     @Override
     public Utilisateur registerUtilisateur(RegistrationRequest request) {
-    	Optional<Utilisateur> optionalUtilisateur = utilisateurRepository.findByEmail(request.getEmail());
-    		if(optionalUtilisateur.isPresent())
-    			throw new EmailAlreadyExistsException("Email déjà existant !");
-    	
-    	Utilisateur newUtilisateur = new Utilisateur();
-    		newUtilisateur.setNom(request.getUsername());
-    		newUtilisateur.setEmail(request.getEmail());
-    		
-    	newUtilisateur.setMotDePasse(bCryptPassWordEncoder.encode(request.getPassword()));
-    		utilisateurRepository.save(newUtilisateur);
-    		
-    	Optional<Role> r = roleRepository.findByNom("UTILISATEUR");
-    	newUtilisateur.setRole(r);	
-    		return utilisateurRepository.save(newUtilisateur);	
+
+        if (utilisateurRepository.existsByEmail(request.getEmail())) {
+            throw new EmailAlreadyExistsException("Email déjà existant !");
+        }
+
+
+        Utilisateur newUtilisateur = new Utilisateur();
+        newUtilisateur.setNom(request.getUsername());               
+        newUtilisateur.setEmail(request.getEmail());
+        newUtilisateur.setMotDePasse(bCryptPassWordEncoder.encode(request.getPassword()));
+
+
+        Role roleUser = roleRepository.findByNom("UTILISATEUR")
+            .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Rôle UTILISATEUR introuvable"));
+        newUtilisateur.setRole(roleUser); 
+        
+
+        return utilisateurRepository.save(newUtilisateur);
     }
+
+
     
 }

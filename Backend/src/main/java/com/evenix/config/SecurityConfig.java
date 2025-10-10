@@ -26,7 +26,7 @@ public class SecurityConfig {
   SecurityFilterChain filterChain(HttpSecurity http,
                                   AuthenticationConfiguration authConfig) throws Exception {
 
-    http
+    /*http
       .csrf(csrf -> csrf.disable())
       .cors(Customizer.withDefaults())
       .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -35,15 +35,28 @@ public class SecurityConfig {
         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
         .anyRequest().authenticated()
       );
+*/
+	  
+	  http
+	    .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+	    .csrf(csrf -> csrf.disable())
+	    .cors(Customizer.withDefaults())
+	    .authorizeHttpRequests(auth -> auth
+	      .requestMatchers("/api/auth/**").permitAll()
+	      .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+	      .anyRequest().authenticated()
+	    );
 
-
-    AuthenticationManager authMgr = authConfig.getAuthenticationManager();
+   /* AuthenticationManager authMgr = authConfig.getAuthenticationManager();
 
 
     JWTAuthenticationFilter jwtAuthFilter = new JWTAuthenticationFilter(authMgr);
 
     http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
+*/
+	  
+	  AuthenticationManager authMgr = authConfig.getAuthenticationManager();
+	  http.addFilterBefore(new JWTAuthenticationFilter(authMgr), UsernamePasswordAuthenticationFilter.class);
     return http.build();
   }
 

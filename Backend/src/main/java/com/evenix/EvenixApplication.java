@@ -25,6 +25,7 @@ public class EvenixApplication {
 
             createRoleIfMissing(roleService, "ADMIN");
             createRoleIfMissing(roleService, "USER");
+            createRoleIfMissing(roleService, "UTILISATEUR");
 
 
             createUserIfMissing(utilisateurService, roleService, "admin", "123", "ADMIN");
