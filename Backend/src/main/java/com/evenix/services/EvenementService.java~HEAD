@@ -1,0 +1,21 @@
+package com.evenix.services;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
+import com.evenix.dto.EvenementDTO;
+
+@Service
+public interface EvenementService {
+	List<EvenementDTO> getAllEvenements();
+    
+    Optional<EvenementDTO> getEvenementById(int id);
+    
+    EvenementDTO createEvenement(EvenementDTO dto);
+    
+    EvenementDTO updateEvenement(int id, EvenementDTO dto);
+    
+    void deleteEvenement(int id);
+}

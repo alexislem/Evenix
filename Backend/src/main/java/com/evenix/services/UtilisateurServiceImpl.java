@@ -2,13 +2,17 @@ package com.evenix.services;
 
 import com.evenix.entities.Role;
 import com.evenix.entities.Utilisateur;
+import com.evenix.exception.EmailAlreadyExistsException;
 import com.evenix.repos.RoleRepository;
 import com.evenix.repos.UtilisateurRepository;
+import com.evenix.dto.request.RegistrationRequest;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -126,4 +130,23 @@ public class UtilisateurServiceImpl implements UtilisateurService{
         usr.setRole(role);
         return utilisateurRepository.save(usr);
     }
+    
+    @Override
+    public Utilisateur registerUtilisateur(RegistrationRequest request) {
+    	Optional<Utilisateur> optionalUtilisateur = utilisateurRepository.findByEmail(request.getEmail());
+    		if(optionalUtilisateur.isPresent())
+    			throw new EmailAlreadyExistsException("Email déjà existant !");
+    	
+    	Utilisateur newUtilisateur = new Utilisateur();
+    		newUtilisateur.setNom(request.getUsername());
+    		newUtilisateur.setEmail(request.getEmail());
+    		
+    	newUtilisateur.setMotDePasse(bCryptPassWordEncoder.encode(request.getPassword()));
+    		utilisateurRepository.save(newUtilisateur);
+    		
+    	Optional<Role> r = roleRepository.findByNom("UTILISATEUR");
+    	newUtilisateur.setRole(r);	
+    		return utilisateurRepository.save(newUtilisateur);	
+    }
+    
 }

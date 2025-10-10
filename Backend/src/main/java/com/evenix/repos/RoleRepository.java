@@ -13,4 +13,5 @@ import com.evenix.entities.Role;
 public interface RoleRepository extends JpaRepository <Role, Integer> {
 	Optional<Role> findByNom(String nom);
 	Optional<Role> findById(int id);
+	Optional<Role> findByRole(Role role);
 }

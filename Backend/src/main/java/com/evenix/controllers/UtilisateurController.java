@@ -1,9 +1,12 @@
 package com.evenix.controllers;
 
+import com.evenix.dto.request.RegistrationRequest;
 import com.evenix.entities.Role;
 import com.evenix.entities.Utilisateur;
 import com.evenix.repos.RoleRepository;
+import com.evenix.services.UtilisateurService;
 import com.evenix.services.UtilisateurServiceImpl;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -59,5 +62,10 @@ public class UtilisateurController {
     public ResponseEntity<Void> deleteUtilisateur(@PathVariable int id) {
         utilisateurService.deleteUtilisateur(id);
         return ResponseEntity.noContent().build();
+    }
+   
+    @PostMapping("/register")
+    public Utilisateur register(@RequestBody RegistrationRequest request) {
+    	return UtilisateurService.registerUtilisateur(request);
     }
 }
