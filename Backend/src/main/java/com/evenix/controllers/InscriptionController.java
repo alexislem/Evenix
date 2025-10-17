@@ -8,14 +8,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.evenix.entities.Inscription;
-import com.evenix.services.InscriptionService;
+import com.evenix.services.InscriptionServiceImpl;
 
 @RestController
 @RequestMapping("/api/inscription")
 public class InscriptionController {
 
     @Autowired
-    private InscriptionService inscriptionService;
+    private InscriptionServiceImpl inscriptionService;
 
     @PostMapping
     public ResponseEntity<Inscription> createInscription(@RequestBody Map<String, Object> payload) {

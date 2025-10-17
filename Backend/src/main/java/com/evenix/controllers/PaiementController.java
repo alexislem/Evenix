@@ -7,15 +7,15 @@ import org.springframework.web.bind.annotation.*;
 
 import com.evenix.dto.PaiementDTO;
 import com.evenix.entities.Paiement;
-import com.evenix.services.PaiementService;
+import com.evenix.services.PaiementServiceImpl;
 
 @RestController
 @RequestMapping("/api/paiement")
 public class PaiementController {
 
-    private final PaiementService paiementService;
+    private final PaiementServiceImpl paiementService;
 
-    public PaiementController(PaiementService paiementService) {
+    public PaiementController(PaiementServiceImpl paiementService) {
         this.paiementService = paiementService;
     }
 

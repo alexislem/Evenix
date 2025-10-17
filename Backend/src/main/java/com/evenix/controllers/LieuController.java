@@ -1,7 +1,7 @@
 package com.evenix.controllers;
 
 import com.evenix.dto.LieuDTO;
-import com.evenix.services.LieuService;
+import com.evenix.services.LieuServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,9 +11,9 @@ import java.util.List;
 @RequestMapping("/api/lieu")
 public class LieuController {
 
-    private final LieuService lieuService;
+    private final LieuServiceImpl lieuService;
 
-    public LieuController(LieuService lieuService) {
+    public LieuController(LieuServiceImpl lieuService) {
         this.lieuService = lieuService;
     }
 

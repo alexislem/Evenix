@@ -1,7 +1,7 @@
 package com.evenix.controllers;
 
 import com.evenix.dto.EvenementDTO;
-import com.evenix.services.EvenementService;
+import com.evenix.services.EvenementServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,9 +11,9 @@ import java.util.List;
 @RequestMapping("/api/evenement")
 public class EvenementController {
 
-    private final EvenementService evenementService;
+    private final EvenementServiceImpl evenementService;
 
-    public EvenementController(EvenementService evenementService) {
+    public EvenementController(EvenementServiceImpl evenementService) {
         this.evenementService = evenementService;
     }
 
@@ -43,5 +43,10 @@ public class EvenementController {
     public ResponseEntity<Void> delete(@PathVariable int id) {
         evenementService.deleteEvenement(id);
         return ResponseEntity.noContent().build();
+    }
+    
+    @GetMapping("/recommandes")
+    public List<EvenementDTO> getRecommended(@RequestParam(defaultValue = "8") int limit) {
+        return evenementService.getRecommended(limit);
     }
 }

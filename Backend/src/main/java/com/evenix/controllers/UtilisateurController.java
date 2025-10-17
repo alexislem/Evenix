@@ -3,7 +3,7 @@ package com.evenix.controllers;
 import com.evenix.entities.Role;
 import com.evenix.entities.Utilisateur;
 import com.evenix.repos.RoleRepository;
-import com.evenix.services.UtilisateurService;
+import com.evenix.services.UtilisateurServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +15,7 @@ import java.util.List;
 public class UtilisateurController {
 
     @Autowired
-    private UtilisateurService utilisateurService;
+    private UtilisateurServiceImpl utilisateurService;
 
     @Autowired
     private RoleRepository roleRepository;

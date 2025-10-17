@@ -1,7 +1,7 @@
 package com.evenix.controllers;
 
 import com.evenix.dto.TypeEvenementDTO;
-import com.evenix.services.TypeEvenementService;
+import com.evenix.services.TypeEvenementServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +13,7 @@ import java.util.List;
 public class TypeEvenementController {
 
     @Autowired
-    private TypeEvenementService service;
+    private TypeEvenementServiceImpl service;
 
     @GetMapping
     public List<TypeEvenementDTO> getAll() {
