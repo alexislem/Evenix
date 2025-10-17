@@ -1,6 +1,8 @@
 package com.evenix.config;
 
 import com.evenix.security.JWTAuthenticationFilter;
+import com.evenix.security.JWTAuthorizationFilter;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -43,6 +45,9 @@ public class SecurityConfig {
 	    .cors(Customizer.withDefaults())
 	    .authorizeHttpRequests(auth -> auth
 	      .requestMatchers("/api/auth/**").permitAll()
+	      .requestMatchers(HttpMethod.POST, "/api/utilisateur").permitAll()
+	      .requestMatchers(HttpMethod.GET, "/api/utilisateur").permitAll()
+	      .requestMatchers(HttpMethod.POST, "/login").permitAll()
 	      .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 	      .anyRequest().authenticated()
 	    );
@@ -57,6 +62,12 @@ public class SecurityConfig {
 	  
 	  AuthenticationManager authMgr = authConfig.getAuthenticationManager();
 	  http.addFilterBefore(new JWTAuthenticationFilter(authMgr), UsernamePasswordAuthenticationFilter.class);
+	  
+
+	  http.addFilterBefore(
+	      new JWTAuthorizationFilter("evenix-secret-change-me"), // même secret que pour signer !
+	      UsernamePasswordAuthenticationFilter.class
+	  );
     return http.build();
   }
 
