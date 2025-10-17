@@ -44,4 +44,9 @@ public class EvenementController {
         evenementService.deleteEvenement(id);
         return ResponseEntity.noContent().build();
     }
+    
+    @GetMapping("/recommandes")
+    public List<EvenementDTO> getRecommended(@RequestParam(defaultValue = "8") int limit) {
+        return evenementService.getRecommended(limit);
+    }
 }

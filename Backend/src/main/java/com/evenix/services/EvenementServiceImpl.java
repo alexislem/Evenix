@@ -9,14 +9,16 @@ import com.evenix.entities.Utilisateur;
 import com.evenix.repos.EvenementRepository;
 import com.evenix.repos.LieuRepository;
 import com.evenix.repos.UtilisateurRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class EvenementServiceImpl implements EvenementService{
+public class EvenementServiceImpl implements EvenementService {
 
     private final EvenementRepository evenementRepository;
     private final LieuRepository lieuRepository;
@@ -34,7 +36,7 @@ public class EvenementServiceImpl implements EvenementService{
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
-    
+
     @Override
     public Optional<EvenementDTO> getEvenementById(int id) {
         return evenementRepository.findById(id).map(this::convertToDTO);
@@ -44,6 +46,17 @@ public class EvenementServiceImpl implements EvenementService{
     public EvenementDTO createEvenement(EvenementDTO dto) {
         Evenement evenement = convertToEntity(dto);
         return convertToDTO(evenementRepository.save(evenement));
+    }
+
+    @Override
+    public List<EvenementDTO> getRecommended(int limit) {
+        var now = ZonedDateTime.now();
+        var page = PageRequest.of(0, Math.max(1, limit));
+        return evenementRepository
+                .findByDateDebutAfterOrderByDateDebutAsc(now, page)
+                .stream()
+                .map(this::convertToDTO)
+                .toList();
     }
 
     @Override
@@ -74,8 +87,9 @@ public class EvenementServiceImpl implements EvenementService{
         evenementRepository.deleteById(id);
     }
 
-    // Conversion helpers
-
+    // ======================================================
+    // Conversion Entity <-> DTO
+    // ======================================================
 
     private EvenementDTO convertToDTO(Evenement e) {
         EvenementDTO dto = new EvenementDTO();
@@ -103,7 +117,6 @@ public class EvenementServiceImpl implements EvenementService{
 
         return dto;
     }
-
 
     private Evenement convertToEntity(EvenementDTO dto) {
         Evenement e = new Evenement();

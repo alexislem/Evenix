@@ -11,4 +11,5 @@ public interface EvenementService {
     EvenementDTO createEvenement(EvenementDTO dto);
     EvenementDTO updateEvenement(int id, EvenementDTO dto);
     void deleteEvenement(int id);
+    List<EvenementDTO> getRecommended(int limit);
 }
