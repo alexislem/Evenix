@@ -1,10 +1,9 @@
 package com.evenix.controllers;
 
-import com.evenix.dto.request.RegistrationRequest;
+
 import com.evenix.entities.Role;
 import com.evenix.entities.Utilisateur;
 import com.evenix.repos.RoleRepository;
-import com.evenix.services.UtilisateurService;
 import com.evenix.services.UtilisateurServiceImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
