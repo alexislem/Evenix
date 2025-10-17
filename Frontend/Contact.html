@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contact — Evenix</title>
+  <link rel="stylesheet" href="css/Contact.css" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="container header-wrap">
+      <a href="index.html" class="brand">Evenix</a>
+      <nav class="nav">
+        <a href="index.html">Accueil</a>
+        <a href="liste-evenement.html">Événements</a>
+        <a href="A-propos.html">À propos</a>
+        <a href="contact.html" aria-current="page">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===== HERO / INTRO ===== -->
+    <section class="section intro">
+      <div class="container">
+        <h1>Nous contacter</h1>
+        <p>Remplissez le formulaire suivant</p>
+      </div>
+    </section>
+
+    <!-- ===== FORMULAIRE + INFOS ===== -->
+    <section class="section">
+      <div class="container contact-grid">
+        <!-- Formulaire -->
+        <form class="contact-form" action="#" method="post" novalidate>
+          <div class="form-row">
+            <div class="form-field">
+              <label for="nom">Nom</label>
+              <input id="nom" name="nom" type="text" placeholder="Votre nom" required />
+            </div>
+            <div class="form-field">
+              <label for="prenom">Prénom</label>
+              <input id="prenom" name="prenom" type="text" placeholder="Votre prénom" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field full">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" placeholder="vous@exemple.com" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field full">
+              <label for="message">Votre message</label>
+              <textarea id="message" name="message" rows="6" placeholder="Écrivez votre message..."></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Envoyer</button>
+        </form>
+
+        <!-- Infos / Horaires / Adresse -->
+        <aside class="contact-infos">
+          <div class="bloc">
+            <h2>Horaires</h2>
+            <p>
+              Lundi au vendredi : 9h–12h30, 14h–18h<br/>
+              Samedi : 9h–18h
+            </p>
+          </div>
+
+          <div class="bloc">
+            <h2>Adresse</h2>
+            <p>12 rue de Taylor<br/>Paris</p>
+          </div>
+
+          <div class="bloc map">
+            <img src="image/A-propos.png" alt="Plan d'accès" />
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="container footer-wrap">
+      <div class="footer-brand">Evenix</div>
+      <div class="footer-col">
+        <h4>Localisation</h4>
+        <p>1 rue de Paris<br>Paris, 75001</p>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <p>contact@evenix.com<br>07 98 45 76 21</p>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; 2025 Evenix — Tous droits réservés.</p>
+    </div>
+  </footer>
+
+</body>
+</html>

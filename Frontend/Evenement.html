@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title id="page-title">Événement – Evenix</title>
+  <link rel="stylesheet" href="css/Evenement.css" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="container header-wrap">
+      <a href="index.html" class="brand">Evenix</a>
+      <nav class="nav">
+        <a href="Accueil.html">Accueil</a>
+        <!-- ⚠️ vérifie le nom exact de ta page liste (ListeEvenement.html ?) -->
+        <a href="ListeEvenement.html" aria-current="page">Événements</a>
+        <a href="#">À propos</a>
+        <a href="#">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===== Lien de retour ===== -->
+    <div class="container back-wrap">
+      <a class="back-link" id="back-link" href="ListeEvenement.html">← Retour aux événements</a>
+    </div>
+
+    <!-- ===== FICHE ÉVÉNEMENT ===== -->
+    <section class="section">
+      <div class="container event">
+        <div class="event-media">
+          <img id="event-img" src="image/evenement.png" alt="Affiche de l'événement" class="event-img" />
+        </div>
+
+        <div class="event-info">
+          <h1 class="event-title" id="event-title">Titre…</h1>
+          <p class="event-price" id="event-price">—</p>
+
+          <p class="event-desc" id="event-desc">—</p>
+
+          <div class="event-meta">
+            <p class="event-datetime"><strong>Date/Heure :</strong> <span id="event-datetime">—</span></p>
+            <p class="event-lieu"><strong>Lieu :</strong> <span id="event-lieu">—</span></p>
+          </div>
+
+          <div class="event-actions">
+            <label for="qty" class="qty-label">Quantité</label>
+            <div class="qty-control">
+              <button type="button" class="qty-btn" aria-label="Diminuer">−</button>
+              <input id="qty" name="qty" type="number" min="1" value="1" inputmode="numeric" />
+              <button type="button" class="qty-btn" aria-label="Augmenter">+</button>
+            </div>
+          </div>
+
+          <button class="btn btn-primary add-to-cart" type="button">
+            Ajouter au panier
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="container" id="status" style="display:none;"></div>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="container footer-wrap">
+      <div class="footer-brand">Evenix</div>
+      <div class="footer-col">
+        <h4>Localisation</h4>
+        <p>1 rue de Paris<br>Paris, 75001</p>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <p>contact@evenix.com<br>07 98 45 76 21</p>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; 2025 Evenix — Tous droits réservés.</p>
+    </div>
+  </footer>
+
+  <!-- JS quantité +/- -->
+  <script>
+    const minus = document.querySelectorAll('.qty-btn')[0];
+    const plus  = document.querySelectorAll('.qty-btn')[1];
+    const input = document.getElementById('qty');
+    minus?.addEventListener('click', () => {
+      const v = Math.max(1, parseInt(input.value || '1', 10) - 1);
+      input.value = v;
+    });
+    plus?.addEventListener('click', () => {
+      const v = Math.max(1, parseInt(input.value || '1', 10) + 1);
+      input.value = v;
+    });
+  </script>
+
+  <!-- JS chargement des données depuis l'API -->
+  <script>
+    (async () => {
+      // --- Helpers ---
+      const esc = s => (s ?? '').toString().replace(/[&<>"']/g, m => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+      }[m]));
+      const fmtPrice = (payant, prix) => payant ? `${Number(prix ?? 0).toFixed(2)} €` : 'Gratuit';
+      const fmtDate = iso => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return d.toLocaleString('fr-FR', {
+          day:'2-digit', month:'2-digit', year:'numeric',
+          hour:'2-digit', minute:'2-digit'
+        });
+      };
+      const getParam = (k) => new URLSearchParams(location.search).get(k);
+
+      // --- Récup id dans l'URL ---
+      const id = getParam('id');
+      const status = document.getElementById('status');
+      if (!id) {
+        status.style.display = 'block';
+        status.textContent = "Identifiant d'événement manquant dans l'URL.";
+        return;
+      }
+
+      // --- Appel API ---
+      const API = 'http://localhost:8080/api/evenement/' + encodeURIComponent(id);
+      try {
+        const res = await fetch(API, { headers: { 'Accept':'application/json' }});
+        if (!res.ok) {
+          const txt = await res.text().catch(()=> '');
+          throw new Error(`HTTP ${res.status} ${res.statusText} – ${txt}`);
+        }
+        const ev = await res.json();
+
+        // --- Remplissage DOM ---
+        document.getElementById('event-title').textContent = ev.nom ?? 'Événement';
+        document.getElementById('page-title').textContent  = `${ev.nom ?? 'Événement'} – Evenix`;
+        document.getElementById('event-price').textContent = fmtPrice(ev.payant, ev.prix);
+        document.getElementById('event-desc').textContent  = ev.description || '—';
+
+        const dt = fmtDate(ev.dateDebut);
+        document.getElementById('event-datetime').textContent = dt || '—';
+
+        const lieuParts = [];
+        if (ev?.lieu?.nom)       lieuParts.push(ev.lieu.nom);
+        if (ev?.lieu?.adresse)   lieuParts.push(ev.lieu.adresse);
+        document.getElementById('event-lieu').textContent = (lieuParts.join(' – ') || '—');
+
+        // Image : si tu ajoutes imageUrl côté DTO, utilise-la, sinon placeholder
+        const img = ev.imageUrl || 'image/evenement.png';
+        const imgEl = document.getElementById('event-img');
+        imgEl.src = img;
+        imgEl.alt = `Affiche – ${ev.nom ?? 'Événement'}`;
+
+        // Lien de retour : garder un ancrage pour revenir à la liste
+        const back = document.getElementById('back-link');
+        back.href = 'ListeEvenement.html';
+
+      } catch (err) {
+        console.error('EV API error:', err);
+        status.style.display = 'block';
+        status.textContent = `Impossible de charger l'événement. ${err.message ?? ''}`;
+      }
+    })();
+  </script>
+</body>
+</html>
