@@ -68,7 +68,7 @@
       const prix = (ev.payant === true)
         ? `${(ev.prix ?? 0).toFixed(2)} €`
         : 'Gratuit';
-      const img = ev.imageUrl || 'image/gims.jpg'; // si tu ajoutes imageUrl côté DTO
+      const img = ev.imageUrl || 'image/evenement.png'; // si tu ajoutes imageUrl côté DTO
       return `
         <article class="card">
           <img class="card-media" src="${img}" alt="${escapeHtml(ev.nom)}" />
