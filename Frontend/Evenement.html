@@ -17,6 +17,10 @@
         <a href="ListeEvenement.html" aria-current="page">Événements</a>
         <a href="A-propos.html">À propos</a>
         <a href="Contact.html">Contact</a>
+        <a href="Panier.html" class="nav-cart" id="cart-link">
+     <span>Panier</span>
+    <span class="cart-badge" id="cart-badge" hidden>0</span>
+  </a>
       </nav>
     </div>
   </header>
@@ -165,5 +169,32 @@
       }
     })();
   </script>
+  <script src="js/cart.js"></script>
+<script>
+  // suppose que tu as déjà récupéré l'événement "ev" dans ton script précédent
+  // On écoute le bouton "Ajouter au panier"
+  document.querySelector('.add-to-cart')?.addEventListener('click', () => {
+    const qty = Number(document.getElementById('qty')?.value || 1);
+
+    // Récup des infos depuis le DOM (si tu n’as plus l’objet ev sous la main)
+    const id    = new URLSearchParams(location.search).get('id');
+    const name  = document.getElementById('event-title')?.textContent?.trim() || 'Événement';
+    const priceTxt = document.getElementById('event-price')?.textContent || '0';
+    const price = priceTxt.includes('Gratuit') ? 0 : Number(priceTxt.replace(/[^\d.,]/g,'').replace(',', '.')) || 0;
+    const date  = document.getElementById('event-datetime')?.textContent || '';
+    const lieu  = document.getElementById('event-lieu')?.textContent || '';
+
+    EvenixCart.upsert({
+      id: String(id),
+      name,
+      price,
+      qty,
+      meta: { date, lieu }
+    });
+
+    // redirection vers le panier
+    location.href = 'Panier.html';
+  });
+</script>
 </body>
 </html>

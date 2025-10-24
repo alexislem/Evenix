@@ -1,0 +1,197 @@
+/* ===================================================================
+   PANIER — style harmonisé Evenix
+   =================================================================== */
+
+/* ===== Variables (mêmes teintes que tes autres pages) ===== */
+:root{
+  --max-width: 1200px;
+  --bg: #beaaaa;
+  --surface: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --shadow: 0 10px 25px rgba(0,0,0,.08);
+
+  --brand-600: #2c3e50;
+  --brand-700: #1f2d3a;
+
+  --success: #22c55e;
+  --success-hover: #16a34a;
+
+  --r-xs: .375rem;
+  --r: .75rem;
+}
+
+/* ===== Base ===== */
+*{ box-sizing: border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+img{ max-width:100%; height:auto; display:block; }
+a{ color:inherit; text-decoration:none; }
+.container{
+  width:100%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding: 2rem 1rem;
+}
+
+/* ===== Header / Nav (mêmes règles que tes autres pages) ===== */
+.site-header{
+  position: sticky; top: 0; z-index: 50;
+  background:#fff; border-bottom:1px solid var(--border);
+}
+.header-wrap{
+  display:flex; align-items:center; justify-content:space-between;
+  height:72px; gap:1rem;
+}
+.brand-name{ font-size:2rem; font-weight:700; }
+.nav{ display:flex; align-items:center; gap:1.5rem; }
+.nav .nav-link,
+.nav a,
+.nav a#cart-link,
+.nav .nav-cart#cart-link{
+  display:inline-flex; align-items:center; gap:.35rem;
+  padding:.5rem .75rem; border-radius: var(--r-xs);
+  font-weight:600; color: var(--text); line-height:1.2;
+}
+.nav a[aria-current="page"]{ background:#f1f5f9; }
+.nav a:hover{ background:#eef2f7; }
+#cart-badge{
+  position:relative; top:-1px;
+  display:inline-block; min-width:1.3rem; padding:0 .35rem;
+  font-size:.8rem; line-height:1.3rem; text-align:center;
+  border-radius:999px; background:#22c55e; color:#fff; font-weight:700;
+}
+
+/* ===== Titre & intro ===== */
+h1{
+  font-size: clamp(1.6rem, 1rem + 2vw, 2.2rem);
+  margin: 0 0 .75rem; font-weight: 800;
+}
+.muted{ color: var(--muted); margin: 0 0 1.5rem; font-size:.95rem; }
+
+/* ===== Panier vide ===== */
+#cart-empty{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  padding: 2.25rem 1.5rem;
+  text-align: center;
+}
+#cart-empty p{ margin:.25rem 0 .75rem; }
+#cart-empty .btn-link{
+  color:#5b21b6; font-weight:700; text-decoration:none;
+}
+#cart-empty .btn-link:hover{ text-decoration:underline; }
+
+/* ===== Tableau du panier ===== */
+.cart-table{
+  width:100%; border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.cart-table thead{ background:#f3f4f6; }
+.cart-table th,
+.cart-table td{
+  padding: 1rem .75rem;
+  border-bottom: 1px solid var(--border);
+  text-align: center; vertical-align: middle;
+}
+.cart-table th{
+  font-size:.85rem; text-transform: uppercase;
+  letter-spacing:.02em; color:#374151;
+}
+.cart-table tr:last-child td{ border-bottom: 0; }
+
+/* Colonnes sémantiques */
+.cart-name{ font-weight:700; text-align:left; }
+.cart-meta{ color:var(--muted); text-align:left; font-size:.95rem; }
+.cart-line{ font-weight:700; }
+
+/* ===== Quantités ===== */
+.cart-qty{
+  display:flex; justify-content:center; align-items:center; gap:.35rem;
+}
+.cart-qty .qty-dec,
+.cart-qty .qty-inc{
+  width:34px; height:34px; border:1px solid var(--border);
+  background:#f9fafb; border-radius: var(--r-xs);
+  font-size:1rem; cursor:pointer; transition: background .15s ease;
+}
+.cart-qty .qty-dec:hover,
+.cart-qty .qty-inc:hover{ background:#eef2f7; }
+.cart-qty .qty-input{
+  width:58px; text-align:center; padding:.4rem .5rem;
+  border:1px solid var(--border); border-radius: var(--r-xs);
+}
+
+/* ===== Bouton supprimer ===== */
+.remove{
+  background:transparent; border:0; color:#ef4444;
+  font-size:1.1rem; cursor:pointer;
+}
+.remove:hover{ color:#b91c1c; }
+
+/* ===== Actions + récap ===== */
+.cart-actions{
+  display:flex; justify-content:flex-end; gap:.75rem; margin:1rem 0 0;
+}
+.cart-summary{
+  display:flex; align-items:center; justify-content:flex-end; gap:1rem;
+  margin-top:1.25rem; font-size:1.05rem;
+}
+.cart-summary strong{ font-size:1.25rem; }
+
+/* ===== Boutons ===== */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+  height:44px; padding:0 1rem; border-radius:9999px;
+  border:1px solid transparent; font-weight:700; cursor:pointer;
+  white-space: nowrap; text-decoration:none;
+}
+.btn-secondary{ background:#fff; border-color: var(--border); }
+.btn-secondary:hover{ background:#f9fafb; }
+.btn-primary{ background: var(--success); color:#fff; }
+.btn-primary:hover{ background: var(--success-hover); }
+
+/* ===== Footer ===== */
+.site-footer{
+  background:#fff; border-top:1px solid var(--border);
+  color: var(--muted); font-size:.95rem; text-align:center; padding:1.25rem 0;
+  margin-top: 2.25rem;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 960px){
+  .cart-table th, .cart-table td{ padding:.85rem .5rem; }
+  .cart-meta{ font-size:.9rem; }
+}
+@media (max-width: 720px){
+  /* Cache la colonne "Détails" sur mobile pour aérer */
+  .cart-table th:nth-child(2),
+  .cart-table td:nth-child(2){ display:none; }
+}
+
+/* ===== (Optionnel) Bandeau sticky en bas sur mobile ===== */
+/*
+@media (max-width:720px){
+  .cart-summary{
+    position: sticky; bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: .75rem 1rem;
+    box-shadow: 0 -6px 20px rgba(0,0,0,.06);
+  }
+}
+*/

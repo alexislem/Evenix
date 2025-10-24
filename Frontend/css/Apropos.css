@@ -48,6 +48,59 @@ a{color:inherit; text-decoration:none}
 .nav a:hover{background:#f3f4f6}
 .nav a[aria-current="page"]{color:var(--brand-600)}
 
+/* ====== NAV – harmonisation du bouton Panier ====== */
+/* styles communs pour tous les liens de la nav, y compris #cart-link */
+.site-header .nav a,
+.site-header .nav .nav-link,
+.site-header .nav a#cart-link,
+.site-header .nav .nav-cart#cart-link{
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.5rem .75rem;
+  border-radius:var(--r-xs);
+  font-weight:600;
+  color:var(--text);
+  text-decoration:none;
+  line-height:1.2;
+}
+
+/* état actif (si tu utilises aria-current="page") */
+.site-header .nav a[aria-current="page"]{
+  background:#f1f5f9;
+}
+
+/* hover commun */
+.site-header .nav a:hover,
+.site-header .nav a#cart-link:hover{
+  background:#eef2f7;
+}
+
+/* badge du panier */
+.site-header .nav #cart-badge{
+  position:relative;
+  top:-1px;
+  display:inline-block;
+  min-width:1.3rem;
+  padding:0 .35rem;
+  font-size:.8rem;
+  line-height:1.3rem;
+  text-align:center;
+  border-radius:999px;
+  background:#22c55e;
+  color:#fff;
+  font-weight:700;
+}
+
+/* neutralise d’éventuels styles spéciaux sur la home */
+.site-header .nav a#cart-link,
+.site-header .nav .nav-cart#cart-link{
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  text-transform:none;
+}
+
 /* ===== À propos (texte + image) ===== */
 .about{
   display:grid;

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panier – Evenix</title>
+  <link rel="stylesheet" href="css/Panier.css"><!-- ton CSS si tu veux -->
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-wrap">
+      <a class="brand" href="Accueil.html">
+        <span class="brand-name">Evenix</span>
+      </a>
+      <nav class="nav">
+        <a href="Accueil.html" class="nav-link">Accueil</a>
+        <a href="ListeEvenement.html" class="nav-link">Événement</a>
+        <a href="A-propos.html" class="nav-link">A Propos</a>
+        <a href="Contact.html" class="nav-link">Contact</a>
+        <a href="Panier.html" class="nav-cart" id="cart-link">
+     <span>Panier</span>
+    <span class="cart-badge" id="cart-badge" hidden>0</span>
+  </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1>Votre panier</h1>
+      <p id="expire-info" class="muted"></p>
+
+      <div id="cart-empty" style="display:none;">
+        <p>Votre panier est vide.</p>
+        <p><a class="btn" href="ListeEvenement.html">Continuer vos achats</a></p>
+      </div>
+
+      <div id="cart-table-wrap" style="display:none;">
+        <table class="cart-table">
+          <thead>
+            <tr>
+              <th>Événement</th>
+              <th>Détails</th>
+              <th>Prix</th>
+              <th>Qté</th>
+              <th>Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cart-rows"></tbody>
+        </table>
+
+        <div class="cart-actions">
+          <button id="clear-cart" class="btn btn-secondary">Vider le panier</button>
+        </div>
+
+        <div class="cart-summary">
+          <div>Total : <strong id="cart-total">0,00 €</strong></div>
+          <button id="checkout" class="btn btn-primary">Payer</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <p>&copy; 2025 Evenix — Tous droits réservés.</p>
+    </div>
+  </footer>
+
+  <script src="js/cart.js"></script>
+  <script>
+    const f = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+
+    function render() {
+      const cart = EvenixCart.read();
+      const rows = document.getElementById('cart-rows');
+      const empty = document.getElementById('cart-empty');
+      const table = document.getElementById('cart-table-wrap');
+      const expire = document.getElementById('expire-info');
+
+      // info expiration
+      const mins = EvenixCart.TTL_MINUTES;
+      expire.textContent = `Ce panier est temporaire (${mins} min). Il se prolongera à chaque modification.`;
+
+      if (!cart.items.length) {
+        empty.style.display = '';
+        table.style.display = 'none';
+        return;
+      }
+      empty.style.display = 'none';
+      table.style.display = '';
+
+      rows.innerHTML = cart.items.map(it => {
+        const line = it.price * it.qty;
+        const meta = it.meta || {};
+        const details = [meta.lieu, meta.date].filter(Boolean).join(' – ');
+        return `
+          <tr data-id="${it.id}">
+            <td class="cart-name">${it.name}</td>
+            <td class="cart-meta">${details || ''}</td>
+            <td>${f.format(it.price)}</td>
+            <td class="cart-qty">
+              <button class="qty-dec">−</button>
+              <input type="number" class="qty-input" min="1" max="999" value="${it.qty}">
+              <button class="qty-inc">+</button>
+            </td>
+            <td class="cart-line">${f.format(line)}</td>
+            <td><button class="remove">✕</button></td>
+          </tr>
+        `;
+      }).join('');
+
+      // total
+      const t = EvenixCart.totals();
+      document.getElementById('cart-total').textContent = f.format(t.totalHT);
+
+      // bind events ligne
+      rows.querySelectorAll('tr').forEach(tr => {
+        const id = tr.getAttribute('data-id');
+        tr.querySelector('.qty-dec').addEventListener('click', () => {
+          const input = tr.querySelector('.qty-input');
+          input.value = Math.max(1, Number(input.value) - 1);
+          EvenixCart.updateQty(id, input.value);
+          render();
+        });
+        tr.querySelector('.qty-inc').addEventListener('click', () => {
+          const input = tr.querySelector('.qty-input');
+          input.value = Math.min(999, Number(input.value) + 1);
+          EvenixCart.updateQty(id, input.value);
+          render();
+        });
+        tr.querySelector('.qty-input').addEventListener('change', (e) => {
+          const v = Math.max(1, Math.min(999, Number(e.target.value || 1)));
+          EvenixCart.updateQty(id, v);
+          render();
+        });
+        tr.querySelector('.remove').addEventListener('click', () => {
+          EvenixCart.remove(id);
+          render();
+        });
+      });
+    }
+
+    document.getElementById('clear-cart')?.addEventListener('click', () => {
+      EvenixCart.clear();
+      render();
+    });
+
+    document.getElementById('checkout')?.addEventListener('click', () => {
+      // TODO: rediriger vers une page de paiement
+      // pour l’instant on montre un message simple
+      alert('Étape paiement à brancher (Stripe / PayPal / CB).');
+    });
+
+    document.addEventListener('DOMContentLoaded', render);
+  </script>
+</body>
+</html>
