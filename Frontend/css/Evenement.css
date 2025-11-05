@@ -206,6 +206,53 @@ input[type="number"]{
 .btn-primary:hover{filter: brightness(0.95)}
 .add-to-cart{width:100%; max-width: 360px}
 
+/* === Lieux à proximité (mise en grille) === */
+#nearby-grid{
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+#nearby-grid .card{
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: .75rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#nearby-grid .card-media{
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+#nearby-grid .card-body{
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+#nearby-grid .card-title{
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+#nearby-grid .card-meta{
+  color: #6b7280;
+  margin: 0;
+}
+
+#nearby-grid .btn{
+  margin-top: .25rem;
+  align-self: start;
+}
+
+
 /* ===== Footer ===== */
 .site-footer{
   border-top:1px solid var(--border);

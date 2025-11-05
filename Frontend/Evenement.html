@@ -11,16 +11,16 @@
   <!-- ===== HEADER ===== -->
   <header class="site-header">
     <div class="container header-wrap">
-      <a href="index.html" class="brand">Evenix</a>
+      <a href="Accueil.html" class="brand">Evenix</a>
       <nav class="nav">
         <a href="Accueil.html">Accueil</a>
         <a href="ListeEvenement.html" aria-current="page">Événements</a>
         <a href="A-propos.html">À propos</a>
         <a href="Contact.html">Contact</a>
         <a href="Panier.html" class="nav-cart" id="cart-link">
-     <span>Panier</span>
-    <span class="cart-badge" id="cart-badge" hidden>0</span>
-  </a>
+          <span>Panier</span>
+          <span class="cart-badge" id="cart-badge" hidden>0</span>
+        </a>
       </nav>
     </div>
   </header>
@@ -66,6 +66,14 @@
     </section>
 
     <div class="container" id="status" style="display:none;"></div>
+
+    <!-- ===== LIEUX À PROXIMITÉ ===== -->
+    <section class="section" id="nearby-section" style="display:none;">
+      <div class="container">
+        <h2 class="section-title">À visiter à proximité</h2>
+        <div class="grid cards" id="nearby-grid"></div>
+      </div>
+    </section>
   </main>
 
   <!-- ===== FOOTER ===== -->
@@ -86,7 +94,7 @@
     </div>
   </footer>
 
-  <!-- JS quantité +/- -->
+  <!-- ===== quantité +/- ===== -->
   <script>
     const minus = document.querySelectorAll('.qty-btn')[0];
     const plus  = document.querySelectorAll('.qty-btn')[1];
@@ -101,100 +109,256 @@
     });
   </script>
 
-  <!-- JS chargement des données depuis l'API -->
+  <!-- ===== ÉVÉNEMENT + LIEUX PROCHES ===== -->
   <script>
-    (async () => {
-      // --- Helpers ---
-      const esc = s => (s ?? '').toString().replace(/[&<>"']/g, m => ({
-        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
-      }[m]));
-      const fmtPrice = (payant, prix) => payant ? `${Number(prix ?? 0).toFixed(2)} €` : 'Gratuit';
-      const fmtDate = iso => {
-        if (!iso) return '';
-        const d = new Date(iso);
-        return d.toLocaleString('fr-FR', {
-          day:'2-digit', month:'2-digit', year:'numeric',
-          hour:'2-digit', minute:'2-digit'
-        });
-      };
-      const getParam = (k) => new URLSearchParams(location.search).get(k);
+  (async () => {
+    const GEO_KEY = "471755b09461446b977bd2caa1a75d4d"; // <-- remplace par ta clé
 
-      // --- Récup id dans l'URL ---
-      const id = getParam('id');
-      const status = document.getElementById('status');
-      if (!id) {
-        status.style.display = 'block';
-        status.textContent = "Identifiant d'événement manquant dans l'URL.";
+    // ---------- Utils ----------
+    const esc = s => (s ?? '').toString().replace(/[&<>"']/g, m => (
+      { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]
+    ));
+    const fmtPrice = (payant, prix) => payant ? `${Number(prix ?? 0).toFixed(2)} €` : 'Gratuit';
+    const fmtDate = iso => iso ? new Date(iso).toLocaleString('fr-FR', {
+      day:'2-digit', month:'2-digit', year:'numeric',
+      hour:'2-digit', minute:'2-digit'
+    }) : '';
+    const getParam = (k) => new URLSearchParams(location.search).get(k);
+
+    const containsCity = (txt, city) => new RegExp(`\\b${city}\\b`, 'i').test(txt || '');
+
+    function normalizeUrl(u) {
+      if (!u) return '';
+      try {
+        if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+        return new URL(u).href;
+      } catch { return ''; }
+    }
+    function buildFallbackLink(p) {
+      const hasCoords = Number.isFinite(p.lat) && Number.isFinite(p.lon);
+      if (hasCoords) {
+        return `https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}#map=17/${p.lat}/${p.lon}`;
+      }
+      const q = [p.name, p.address].filter(Boolean).join(' ');
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+    }
+
+    // ---------- 1) Chargement de l'événement ----------
+    const id = getParam('id');
+    const status = document.getElementById('status');
+    if (!id) {
+      status.style.display = 'block';
+      status.textContent = "Identifiant d'événement manquant dans l'URL.";
+      return;
+    }
+
+    const API = 'http://localhost:8080/api/evenement/' + encodeURIComponent(id);
+
+    let ev = null;
+    try {
+      const res = await fetch(API, { headers: { 'Accept':'application/json' }});
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      ev = await res.json();
+    } catch (err) {
+      console.error('[event] load error', err);
+      status.style.display = 'block';
+      status.textContent = "Impossible de charger l'événement.";
+      return;
+    }
+
+    // Remplissage DOM
+    document.getElementById('event-title').textContent = ev.nom ?? 'Événement';
+    document.getElementById('page-title').textContent  = `${ev.nom ?? 'Événement'} – Evenix`;
+    document.getElementById('event-price').textContent = fmtPrice(ev.payant, ev.prix);
+    document.getElementById('event-desc').textContent  = ev.description || '—';
+    document.getElementById('event-datetime').textContent = fmtDate(ev.dateDebut);
+
+    const lieuParts = [];
+    if (ev?.lieu?.nom)     lieuParts.push(ev.lieu.nom);
+    if (ev?.lieu?.adresse) lieuParts.push(ev.lieu.adresse);
+    document.getElementById('event-lieu').textContent = (lieuParts.join(' – ') || '—');
+
+    const img = ev.imageUrl || 'image/evenement.png';
+    const imgEl = document.getElementById('event-img');
+    imgEl.src = img; imgEl.alt = `Affiche – ${ev.nom ?? 'Événement'}`;
+    document.getElementById('back-link').href = 'ListeEvenement.html';
+
+    // ---------- 2) Géocodage robuste ----------
+    // Catégories strictement culturelles (v2/places)
+    const CORE_CULTURE = ["entertainment.museum","tourism.sights","tourism.attraction"];
+    const SOFT_EXPANSIONS = [["entertainment.zoo","entertainment.theme_park"],["leisure.park"]];
+
+    function guessCityFallback(ev) {
+      // déduire la ville depuis le nom/description (ex: “Paris”)
+      const text = `${ev?.nom || ''} ${ev?.description || ''} ${ev?.lieu?.adresse || ''}`;
+      if (containsCity(text, 'Paris')) return 'Paris';
+      // ajoute d'autres heuristiques si besoin (Marseille, Lyon…)
+      return '';
+    }
+
+    async function geocodeIfNeeded(ev) {
+      // a) coordonnées directes depuis la BDD
+      let lat = Number(ev?.lieu?.latitude), lon = Number(ev?.lieu?.longitude);
+      if (Number.isFinite(lat) && Number.isFinite(lon) && lat !== 0 && lon !== 0) {
+        console.log('[geo] using DB coords', {lat, lon});
+        return { lat, lon };
+      }
+
+      // b) géocodage structuré
+      const nom      = (ev?.lieu?.nom || '').trim();                 // ex: "Place de la République"
+      const adresse  = (ev?.lieu?.adresse || '').trim();             // ex: "Place de la République, 75003"
+      const ville    = (ev?.lieu?.ville || '').trim() || guessCityFallback(ev); // ex: "Paris"
+      const cp       = (ev?.lieu?.codePostal || '').toString().trim();          // ex: "75003"
+      const pays     = (ev?.lieu?.pays || 'France').trim();
+
+      // Texte principal pour le matching
+      const text = [adresse || nom].filter(Boolean).join(', ');
+
+      if (!text && !ville) return null;
+
+      const params = new URLSearchParams({
+        apiKey: GEO_KEY,
+        limit: '1',
+        lang: 'fr'
+      });
+      if (text) params.set('text', text);
+      if (ville) params.set('city', ville);
+      if (cp)    params.set('postcode', cp);
+      if (pays)  params.set('country', pays);
+
+      const url = `https://api.geoapify.com/v1/geocode/search?${params.toString()}`;
+      console.log('[geo] url', url);
+
+      try {
+        const r = await fetch(url);
+        if (!r.ok) { console.warn('[geo] HTTP', r.status); return null; }
+        const data = await r.json();
+        const p = data?.features?.[0]?.properties;
+        if (p?.lat && p?.lon) {
+          console.log('[geo] result', {lat:p.lat, lon:p.lon, city:p.city});
+          return { lat: p.lat, lon: p.lon };
+        }
+      } catch (e) {
+        console.warn('[geo] error', e);
+      }
+      return null;
+    }
+
+    async function fetchPlaces(categories, coords, radius = 8000) {
+      const url =
+        `https://api.geoapify.com/v2/places?categories=${categories.join(',')}` +
+        `&filter=circle:${coords.lon},${coords.lat},${radius}` +
+        `&bias=proximity:${coords.lon},${coords.lat}` +
+        `&lang=fr&limit=24&apiKey=${GEO_KEY}`;
+
+      const r = await fetch(url);
+      if (!r.ok) {
+        let info = ''; try { info = (await r.json())?.message || ''; } catch {}
+        throw new Error(`Geoapify HTTP ${r.status}${info ? ' — ' + info : ''}`);
+      }
+      return (await r.json())?.features ?? [];
+    }
+
+    async function loadNearbyPlaces(ev) {
+      const section = document.getElementById('nearby-section');
+      const grid    = document.getElementById('nearby-grid');
+
+      const coords = await geocodeIfNeeded(ev);
+      if (!coords) {
+        section.style.display = 'block';
+        grid.innerHTML = "<p>Aucun lieu culturel trouvé à proximité (pas de coordonnées).</p>";
         return;
       }
 
-      // --- Appel API ---
-      const API = 'http://localhost:8080/api/evenement/' + encodeURIComponent(id);
+      let features = [];
       try {
-        const res = await fetch(API, { headers: { 'Accept':'application/json' }});
-        if (!res.ok) {
-          const txt = await res.text().catch(()=> '');
-          throw new Error(`HTTP ${res.status} ${res.statusText} – ${txt}`);
+        features = await fetchPlaces(CORE_CULTURE, coords);
+        for (const extra of SOFT_EXPANSIONS) {
+          if (features.length) break;
+          features = await fetchPlaces(CORE_CULTURE.concat(extra), coords);
         }
-        const ev = await res.json();
-
-        // --- Remplissage DOM ---
-        document.getElementById('event-title').textContent = ev.nom ?? 'Événement';
-        document.getElementById('page-title').textContent  = `${ev.nom ?? 'Événement'} – Evenix`;
-        document.getElementById('event-price').textContent = fmtPrice(ev.payant, ev.prix);
-        document.getElementById('event-desc').textContent  = ev.description || '—';
-
-        const dt = fmtDate(ev.dateDebut);
-        document.getElementById('event-datetime').textContent = dt || '—';
-
-        const lieuParts = [];
-        if (ev?.lieu?.nom)       lieuParts.push(ev.lieu.nom);
-        if (ev?.lieu?.adresse)   lieuParts.push(ev.lieu.adresse);
-        document.getElementById('event-lieu').textContent = (lieuParts.join(' – ') || '—');
-
-        // Image : si tu ajoutes imageUrl côté DTO, utilise-la, sinon placeholder
-        const img = ev.imageUrl || 'image/evenement.png';
-        const imgEl = document.getElementById('event-img');
-        imgEl.src = img;
-        imgEl.alt = `Affiche – ${ev.nom ?? 'Événement'}`;
-
-        // Lien de retour : garder un ancrage pour revenir à la liste
-        const back = document.getElementById('back-link');
-        back.href = 'ListeEvenement.html';
-
-      } catch (err) {
-        console.error('EV API error:', err);
-        status.style.display = 'block';
-        status.textContent = `Impossible de charger l'événement. ${err.message ?? ''}`;
+      } catch (e) {
+        console.error('[nearby] error', e);
+        section.style.display = 'block';
+        grid.innerHTML = `<p>Impossible de charger les lieux à proximité (API). ${esc(e.message || '')}</p>`;
+        return;
       }
-    })();
+
+      let pois = (features || []).map(f => {
+        const p = f.properties || {};
+        const website = normalizeUrl(p.website) || normalizeUrl(p.url) || '';
+        const address = [p.address_line1, p.address_line2].filter(Boolean).join(', ');
+        return {
+          name: p.name || p.address_line1 || 'Lieu culturel',
+          address,
+          distance: p.distance ?? Infinity,
+          website,
+          lat: p.lat, lon: p.lon
+        };
+      });
+
+      // dédoublonnage
+      const seen = new Set();
+      pois = pois.filter(p => {
+        const key = (p.name + '|' + p.address).toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      // tri et limite
+      pois.sort((a,b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+      pois = pois.slice(0, 8);
+
+      section.style.display = 'block';
+      if (!pois.length) {
+        grid.innerHTML = "<p>Aucun lieu culturel trouvé à proximité.</p>";
+        return;
+      }
+
+      const km = m => (m/1000).toFixed(1);
+      grid.innerHTML = pois.map(p => {
+        const href = p.website || buildFallbackLink(p);
+        const dist = Number.isFinite(p.distance) ? ` — ${km(p.distance)} km` : '';
+        return `
+          <article class="card">
+            <img class="card-media" src="image/evenement.png" alt="${esc(p.name)}">
+            <div class="card-body">
+              <h3 class="card-title">${esc(p.name)}${dist}</h3>
+              ${p.address ? `<p class="card-meta">${esc(p.address)}</p>` : ''}
+              <a class="btn btn-secondary" href="${esc(href)}" target="_blank" rel="noopener">Voir</a>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    await loadNearbyPlaces(ev);
+  })();
   </script>
+
+  <!-- ===== Panier ===== -->
   <script src="js/cart.js"></script>
-<script>
-  // suppose que tu as déjà récupéré l'événement "ev" dans ton script précédent
-  // On écoute le bouton "Ajouter au panier"
-  document.querySelector('.add-to-cart')?.addEventListener('click', () => {
-    const qty = Number(document.getElementById('qty')?.value || 1);
+  <script>
+    document.querySelector('.add-to-cart')?.addEventListener('click', () => {
+      const qty = Number(document.getElementById('qty')?.value || 1);
+      const id    = new URLSearchParams(location.search).get('id');
+      const name  = document.getElementById('event-title')?.textContent?.trim() || 'Événement';
+      const priceTxt = document.getElementById('event-price')?.textContent || '0';
+      const price = priceTxt.includes('Gratuit') ? 0 : Number(priceTxt.replace(/[^\d.,]/g,'').replace(',', '.')) || 0;
+      const date  = document.getElementById('event-datetime')?.textContent || '';
+      const lieu  = document.getElementById('event-lieu')?.textContent || '';
 
-    // Récup des infos depuis le DOM (si tu n’as plus l’objet ev sous la main)
-    const id    = new URLSearchParams(location.search).get('id');
-    const name  = document.getElementById('event-title')?.textContent?.trim() || 'Événement';
-    const priceTxt = document.getElementById('event-price')?.textContent || '0';
-    const price = priceTxt.includes('Gratuit') ? 0 : Number(priceTxt.replace(/[^\d.,]/g,'').replace(',', '.')) || 0;
-    const date  = document.getElementById('event-datetime')?.textContent || '';
-    const lieu  = document.getElementById('event-lieu')?.textContent || '';
+      EvenixCart.upsert({
+        id: String(id),
+        name,
+        price,
+        qty,
+        meta: { date, lieu }
+      });
 
-    EvenixCart.upsert({
-      id: String(id),
-      name,
-      price,
-      qty,
-      meta: { date, lieu }
+      location.href = 'Panier.html';
     });
-
-    // redirection vers le panier
-    location.href = 'Panier.html';
-  });
-</script>
+  </script>
 </body>
 </html>
