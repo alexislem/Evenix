@@ -23,7 +23,7 @@ import java.util.Optional;
 @Transactional
 public class AuthServiceImpl implements AuthService {
 
-  private static final String JWT_SECRET = "evenix-secret-change-me"; // ⚠️ aligne-le avec ton filtre
+  private static final String JWT_SECRET = "evenix-secret-change-me"; 
   private static final long   EXPIRATION_MS = 10L * 24 * 60 * 60 * 1000; // 10 jours
 
   private final UtilisateurRepository utilisateurRepository;
@@ -99,7 +99,7 @@ public class AuthServiceImpl implements AuthService {
           .orElseThrow(() -> new EntityNotFoundException("Rôle id=" + roleId + " introuvable"));
     }
 
-    // 2) Sinon on tente le rôle par défaut "UTILISATEUR", sinon "USER"
+    //Sinon on tente le rôle par défaut "UTILISATEUR", sinon "USER"
     Optional<Role> byNom = roleRepository.findByNom("UTILISATEUR");
     if (byNom.isEmpty()) {
       byNom = roleRepository.findByNom("USER");

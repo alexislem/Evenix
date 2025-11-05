@@ -28,7 +28,6 @@ public class UtilisateurServiceImpl implements UtilisateurService{
     @Autowired
     private BCryptPasswordEncoder bCryptPassWordEncoder;
 
-    /* ===== CRUD de base ===== */
 
     @Override
     public List<Utilisateur> getAllUtilisateurs() {
@@ -37,7 +36,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
 
     @Override
     public Optional<Utilisateur> getUtilisateurById(int id) {
-        // ton repo expose Optional<Utilisateur>
+
         return utilisateurRepository.findById(id);
     }
 
@@ -48,7 +47,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
 
     @Override
     public Utilisateur createUtilisateur(Utilisateur utilisateur) {
-        // (Optionnel) bloquer les doublons d'email
+
         if (utilisateur.getEmail() != null && utilisateurRepository.existsByEmail(utilisateur.getEmail())) {
             throw new IllegalArgumentException("Email déjà utilisé : " + utilisateur.getEmail());
         }
@@ -73,7 +72,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
                     utilisateur.setNom(utilisateurDetails.getNom());
                     utilisateur.setPrenom(utilisateurDetails.getPrenom());
                     utilisateur.setDateDeNaissance(utilisateurDetails.getDateDeNaissance());
-                    // Encode le MDP uniquement si fourni (évite double-encodage)
+
                     if (utilisateurDetails.getMotDePasse() != null && !utilisateurDetails.getMotDePasse().isBlank()) {
                         utilisateur.setMotDePasse(bCryptPassWordEncoder.encode(utilisateurDetails.getMotDePasse()));
                     }
@@ -90,9 +89,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
         utilisateurRepository.deleteById(id);
     }
 
-    /* ===== Association rôle <-> utilisateur ===== */
 
-    /** Variante A : par noms (utilise les Optional des repositories) */
     @Override
     public Utilisateur addRoleToUtilisateur(String utilisateurNom, String roleNom) {
         Utilisateur usr = utilisateurRepository.findByNom(utilisateurNom)
@@ -105,7 +102,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
         return utilisateurRepository.save(usr);
     }
 
-    /** Variante B : directement par Optional fournis en paramètre */
+
     @Override
     public Utilisateur addRoleToUtilisateur(Optional<Utilisateur> utilisateurOpt, Optional<Role> roleOpt) {
         Utilisateur usr = utilisateurOpt

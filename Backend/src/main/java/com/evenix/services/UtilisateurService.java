@@ -16,7 +16,6 @@ public interface UtilisateurService {
     Utilisateur updateUtilisateur(int id, Utilisateur utilisateurDetails);
     void deleteUtilisateur(int id);
 
-    // association rôle <-> utilisateur
     Utilisateur addRoleToUtilisateur(String utilisateurNom, String roleNom);
     Utilisateur addRoleToUtilisateur(Optional<Utilisateur> utilisateurOpt, Optional<Role> roleOpt);
     Utilisateur addRoleToUtilisateur(int utilisateurId, int roleId);
