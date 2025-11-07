@@ -1,45 +1,30 @@
 package com.evenix.services;
 
+import com.evenix.dto.request.RegistrationRequest;
+import com.evenix.entities.Role;
 import com.evenix.entities.Utilisateur;
-import com.evenix.repos.UtilisateurRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
-@Service
-public class UtilisateurService {
+public interface UtilisateurService {
+    List<Utilisateur> getAllUtilisateurs();
+    Optional<Utilisateur> getUtilisateurById(int id);
+    Optional<Utilisateur> findUtilisateurByNom(String utilisateurNom);
+    Utilisateur createUtilisateur(Utilisateur utilisateur);
+    Utilisateur saveUtilisateur(Utilisateur utilisateur);
+    Utilisateur updateUtilisateur(int id, Utilisateur utilisateurDetails);
+    void deleteUtilisateur(int id);
 
-    @Autowired
-    private UtilisateurRepository utilisateurRepository;
-
-    public List<Utilisateur> getAllUtilisateurs() {
-        return utilisateurRepository.findAll();
-    }
-
-    public Optional<Utilisateur> getUtilisateurById(int id) {
-        return utilisateurRepository.findById(id);
-    }
-
-    public Utilisateur createUtilisateur(Utilisateur utilisateur) {
-        return utilisateurRepository.save(utilisateur);
-    }
-
-    public Utilisateur updateUtilisateur(int id, Utilisateur utilisateurDetails) {
-        return utilisateurRepository.findById(id).map(utilisateur -> {
-            utilisateur.setNom(utilisateurDetails.getNom());
-            utilisateur.setPrenom(utilisateurDetails.getPrenom());
-            utilisateur.setDateDeNaissance(utilisateurDetails.getDateDeNaissance());
-            utilisateur.setMotDePasse(utilisateurDetails.getMotDePasse());
-            utilisateur.setEmail(utilisateurDetails.getEmail());
-            utilisateur.setEntreprise(utilisateurDetails.getEntreprise());
-            utilisateur.setRole(utilisateurDetails.getRole());
-            return utilisateurRepository.save(utilisateur);
-        }).orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'id : " + id));
-    }
-
-    public void deleteUtilisateur(int id) {
-        utilisateurRepository.deleteById(id);
-    }
+    Utilisateur addRoleToUtilisateur(String utilisateurNom, String roleNom);
+    Utilisateur addRoleToUtilisateur(Optional<Utilisateur> utilisateurOpt, Optional<Role> roleOpt);
+    Utilisateur addRoleToUtilisateur(int utilisateurId, int roleId);
+    Utilisateur registerUtilisateur(RegistrationRequest request);
+    
 }
+
+
+
+
+
+ 

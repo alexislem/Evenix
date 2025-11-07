@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.evenix.entities.Entreprise;
-import com.evenix.services.EntrepriseService;
+import com.evenix.services.EntrepriseServiceImpl;
 
 import java.util.List;
 
@@ -12,9 +12,9 @@ import java.util.List;
 @RequestMapping("/api/entreprise")
 public class EntrepriseController {
 
-	private final EntrepriseService entrepriseService;
+	private final EntrepriseServiceImpl entrepriseService;
 
-	public EntrepriseController(EntrepriseService entrepriseService) {
+	public EntrepriseController(EntrepriseServiceImpl entrepriseService) {
 	        this.entrepriseService = entrepriseService;
 	}
 

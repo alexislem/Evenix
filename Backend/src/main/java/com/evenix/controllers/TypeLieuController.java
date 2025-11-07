@@ -1,7 +1,7 @@
 package com.evenix.controllers;
 
 import com.evenix.dto.TypeLieuDTO;
-import com.evenix.services.TypeLieuService;
+import com.evenix.services.TypeLieuServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +13,7 @@ import java.util.List;
 public class TypeLieuController {
 
     @Autowired
-    private TypeLieuService typeLieuService;
+    private TypeLieuServiceImpl typeLieuService;
 
     @GetMapping
     public List<TypeLieuDTO> getAll() {
