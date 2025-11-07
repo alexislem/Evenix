@@ -35,6 +35,15 @@ public class EvenementServiceImpl implements EvenementService{
                 .collect(Collectors.toList());
     }
     
+    
+    @Override
+	public List<EvenementDTO> getEvenementParVille(String ville) {
+		// TODO Auto-generated method stub
+		List<EvenementDTO> listEvenement = this.getAllEvenements();
+		
+		return null;
+	}
+    
     @Override
     public Optional<EvenementDTO> getEvenementById(int id) {
         return evenementRepository.findById(id).map(this::convertToDTO);
@@ -73,6 +82,8 @@ public class EvenementServiceImpl implements EvenementService{
     public void deleteEvenement(int id) {
         evenementRepository.deleteById(id);
     }
+    
+
 
     // Conversion helpers
 
@@ -124,4 +135,6 @@ public class EvenementServiceImpl implements EvenementService{
 
         return e;
     }
+
+	
 }

@@ -14,6 +14,7 @@ public interface UtilisateurService {
     Utilisateur createUtilisateur(Utilisateur utilisateur);
     Utilisateur saveUtilisateur(Utilisateur utilisateur);
     Utilisateur updateUtilisateur(int id, Utilisateur utilisateurDetails);
+    int getNombresUtilisateurs();
     void deleteUtilisateur(int id);
 
     Utilisateur addRoleToUtilisateur(String utilisateurNom, String roleNom);

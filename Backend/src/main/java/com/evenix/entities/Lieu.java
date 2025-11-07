@@ -24,6 +24,9 @@ public class Lieu {
 
     @Column(name = "LIEU_NbPlaces")
     private int nbplaces;
+    
+    @Column(name = "LIEU_Ville")
+    private String ville;
 
     @ManyToOne
     @JoinColumn(name = "TYP_Id", nullable = false)
@@ -33,13 +36,14 @@ public class Lieu {
 
     public Lieu() {}
 
-    public Lieu(float latitude, float longitude, String nom, String adresse, int nb_places, TypeLieu typeLieu) {
+    public Lieu(float latitude, float longitude, String nom, String adresse, int nb_places, TypeLieu typeLieu, String ville) {
         this.latitude = latitude;
         this.longitude = longitude;
         this.nom = nom;
         this.adresse = adresse;
         this.nbplaces = nb_places;
         this.typeLieu = typeLieu;
+        this.ville = ville;
     }
 
     // Getters/Setters
@@ -94,6 +98,14 @@ public class Lieu {
 
     public void setTypeLieu(TypeLieu typeLieu) {
         this.typeLieu = typeLieu;
+    }
+    
+    public String getVille() {
+    	return this.ville;
+    }
+    
+    public void setVille(String ville) {
+    	this.ville = ville;
     }
 
     // toString

@@ -26,6 +26,11 @@ public class UtilisateurController {
     public List<Utilisateur> getAllUtilisateurs() {
         return utilisateurService.getAllUtilisateurs();
     }
+    
+    @GetMapping("/count")
+    public int getNombresUtilisateurs() {
+    	return utilisateurService.getNombresUtilisateurs();
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Utilisateur> getUtilisateurById(@PathVariable int id) {
@@ -33,6 +38,8 @@ public class UtilisateurController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+    
+
 
     @PostMapping
     public ResponseEntity<Utilisateur> createUtilisateur(@RequestBody Utilisateur utilisateur) {

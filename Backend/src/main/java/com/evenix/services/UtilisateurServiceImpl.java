@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +22,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
 
     @Autowired
     private UtilisateurRepository utilisateurRepository;
+    
 
     @Autowired
     private RoleRepository roleRepository;
@@ -79,6 +81,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
                     utilisateur.setEmail(utilisateurDetails.getEmail());
                     utilisateur.setEntreprise(utilisateurDetails.getEntreprise());
                     utilisateur.setRole(utilisateurDetails.getRole());
+                    utilisateur.setDateModif(LocalDate.now());
                     return utilisateurRepository.save(utilisateur);
                 })
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'id : " + id));
@@ -99,6 +102,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
                 .orElseThrow(() -> new EntityNotFoundException("Rôle introuvable : " + roleNom));
 
         usr.setRole(role); // ManyToOne
+        usr.setDateModif(LocalDate.now());
         return utilisateurRepository.save(usr);
     }
 
@@ -149,7 +153,13 @@ public class UtilisateurServiceImpl implements UtilisateurService{
 
         return utilisateurRepository.save(newUtilisateur);
     }
+    
+    @Override
+    public int getNombresUtilisateurs() {
+    	return utilisateurRepository.findAll().size();
+    }
+    }
 
 
     
-}
+

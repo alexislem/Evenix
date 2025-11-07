@@ -1,6 +1,7 @@
 package com.evenix.entities;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +34,12 @@ public class Utilisateur {
 
     @Column(name = "UTI_Email", unique = true)
     private String email;
+    
+    @Column(name ="UTI_DateCreation")
+    private LocalDate dateCreation;
+    
+    @Column(name = "UTI_DateModif")
+    private LocalDate dateModif;
 
     @ManyToOne
     @JoinColumn(name = "ENT_id", nullable = true)
@@ -41,6 +48,7 @@ public class Utilisateur {
     @ManyToOne
     @JoinColumn(name = "ROL_id", nullable = false)
     private Role role;
+    
 
     @OneToMany(mappedBy = "utilisateur")
     private List<Paiement> paiements = new ArrayList<>();
@@ -65,6 +73,7 @@ public class Utilisateur {
     public void setId(int id) {
     	this.id = id;
     }
+    
 
     public int getId() {
         return id;
@@ -93,6 +102,22 @@ public class Utilisateur {
     public void setDateDeNaissance(Date dateDeNaissance) {
         this.dateDeNaissance = dateDeNaissance;
     }
+    
+    public LocalDate getDateCreation() {
+    	return this.dateCreation;
+    }
+    
+    public void setDateCreation(LocalDate dateCreation) {
+    	this.dateCreation = dateCreation;
+    }
+    
+    public LocalDate getDateModif() {
+    	return this.dateModif;
+    }
+    
+    public void setDateModif(LocalDate dateModif) {
+    	this.dateModif = dateModif;
+    }
 
     public String getMotDePasse() {
         return motDePasse;
@@ -113,6 +138,8 @@ public class Utilisateur {
     public Entreprise getEntreprise() {
         return entreprise;
     }
+    
+    
 
     public void setEntreprise(Entreprise entreprise) {
         this.entreprise = entreprise;
@@ -142,4 +169,5 @@ public class Utilisateur {
                 "; Date de naissance : " + dateDeNaissance +
                 "; Email : " + email + "]";
     }
+
 }
