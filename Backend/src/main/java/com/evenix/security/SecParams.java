@@ -1,8 +1,9 @@
 package com.evenix.security;
 
 public interface SecParams {
-  long   EXP_TIME = 10L * 24 * 60 * 60 * 1000;      
-  String SECRET   = "exampleb@yahoo.com";           
-  String PREFIX   = "Bearer ";
-  String HEADER   = "Authorization";
+public static final long EXP_TIME = 10*24*60*60;
+public static final String SECRET ="exempleb@yahoo.com"; 
+public static final String PREFIX= "Bearer ";
+public static final String HEADER = "Authorization";
 }
+

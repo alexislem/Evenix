@@ -25,6 +25,7 @@ public class EvenixApplication {
 
             createRoleIfMissing(roleService, "ADMIN");
             createRoleIfMissing(roleService, "USER");
+            createRoleIfMissing(roleService, "UTILISATEUR");
 
 
             createUserIfMissing(utilisateurService, roleService, "admin", "123", "ADMIN");
@@ -39,7 +40,6 @@ public class EvenixApplication {
         };
     }
 
-    /* -------- Helpers -------- */
 
     private void createRoleIfMissing(RoleServiceImpl roleService, String roleName) {
         boolean exists = roleService.getAllRoles().stream()

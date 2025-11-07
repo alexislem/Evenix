@@ -2,13 +2,17 @@ package com.evenix.services;
 
 import com.evenix.entities.Role;
 import com.evenix.entities.Utilisateur;
+import com.evenix.exception.EmailAlreadyExistsException;
 import com.evenix.repos.RoleRepository;
 import com.evenix.repos.UtilisateurRepository;
+import com.evenix.dto.request.RegistrationRequest;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,7 +28,6 @@ public class UtilisateurServiceImpl implements UtilisateurService{
     @Autowired
     private BCryptPasswordEncoder bCryptPassWordEncoder;
 
-    /* ===== CRUD de base ===== */
 
     @Override
     public List<Utilisateur> getAllUtilisateurs() {
@@ -33,7 +36,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
 
     @Override
     public Optional<Utilisateur> getUtilisateurById(int id) {
-        // ton repo expose Optional<Utilisateur>
+
         return utilisateurRepository.findById(id);
     }
 
@@ -44,7 +47,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
 
     @Override
     public Utilisateur createUtilisateur(Utilisateur utilisateur) {
-        // (Optionnel) bloquer les doublons d'email
+
         if (utilisateur.getEmail() != null && utilisateurRepository.existsByEmail(utilisateur.getEmail())) {
             throw new IllegalArgumentException("Email déjà utilisé : " + utilisateur.getEmail());
         }
@@ -71,7 +74,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
                     utilisateur.setNom(utilisateurDetails.getNom());
                     utilisateur.setPrenom(utilisateurDetails.getPrenom());
                     utilisateur.setDateDeNaissance(utilisateurDetails.getDateDeNaissance());
-                    // Encode le MDP uniquement si fourni (évite double-encodage)
+
                     if (utilisateurDetails.getMotDePasse() != null && !utilisateurDetails.getMotDePasse().isBlank()) {
                         utilisateur.setMotDePasse(bCryptPassWordEncoder.encode(utilisateurDetails.getMotDePasse()));
                     }
@@ -88,9 +91,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
         utilisateurRepository.deleteById(id);
     }
 
-    /* ===== Association rôle <-> utilisateur ===== */
 
-    /** Variante A : par noms (utilise les Optional des repositories) */
     @Override
     public Utilisateur addRoleToUtilisateur(String utilisateurNom, String roleNom) {
         Utilisateur usr = utilisateurRepository.findByNom(utilisateurNom)
@@ -103,7 +104,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
         return utilisateurRepository.save(usr);
     }
 
-    /** Variante B : directement par Optional fournis en paramètre */
+
     @Override
     public Utilisateur addRoleToUtilisateur(Optional<Utilisateur> utilisateurOpt, Optional<Role> roleOpt) {
         Utilisateur usr = utilisateurOpt
@@ -116,7 +117,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
         return utilisateurRepository.save(usr);
     }
 
-    /* (Optionnel) Variante C : par id (utilise Optional du JpaRepository) */
+
     @Override
     public Utilisateur addRoleToUtilisateur(int utilisateurId, int roleId) {
         Utilisateur usr = utilisateurRepository.findById(utilisateurId)
@@ -128,4 +129,29 @@ public class UtilisateurServiceImpl implements UtilisateurService{
         usr.setRole(role);
         return utilisateurRepository.save(usr);
     }
+    
+    @Override
+    public Utilisateur registerUtilisateur(RegistrationRequest request) {
+
+        if (utilisateurRepository.existsByEmail(request.getEmail())) {
+            throw new EmailAlreadyExistsException("Email déjà existant !");
+        }
+
+
+        Utilisateur newUtilisateur = new Utilisateur();
+        newUtilisateur.setNom(request.getUsername());               
+        newUtilisateur.setEmail(request.getEmail());
+        newUtilisateur.setMotDePasse(bCryptPassWordEncoder.encode(request.getPassword()));
+
+
+        Role roleUser = roleRepository.findByNom("UTILISATEUR")
+            .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Rôle UTILISATEUR introuvable"));
+        newUtilisateur.setRole(roleUser); 
+        
+
+        return utilisateurRepository.save(newUtilisateur);
+    }
+
+
+    
 }

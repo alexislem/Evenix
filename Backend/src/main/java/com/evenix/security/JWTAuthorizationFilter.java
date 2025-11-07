@@ -1,3 +1,4 @@
+// com.evenix.security.JWTAuthorizationFilter
 package com.evenix.security;
 
 import com.auth0.jwt.JWT;
@@ -6,52 +7,56 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 public class JWTAuthorizationFilter extends OncePerRequestFilter {
+
+  private final Algorithm algo;
+
+  public JWTAuthorizationFilter(String secret) {
+    this.algo = Algorithm.HMAC256(secret);
+  }
 
   @Override
   protected void doFilterInternal(HttpServletRequest request,
                                   HttpServletResponse response,
                                   FilterChain filterChain) throws ServletException, IOException {
-
-    String jwt = request.getHeader(SecParams.HEADER); 
-    if (jwt == null || !jwt.startsWith(SecParams.PREFIX)) {
+    String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+    if (!StringUtils.hasText(header) || !header.startsWith("Bearer ")) {
       filterChain.doFilter(request, response);
       return;
     }
 
-
-    String token = jwt.substring(SecParams.PREFIX.length());
-
+    String token = header.substring("Bearer ".length());
     try {
-      var verifier = JWT.require(Algorithm.HMAC256(SecParams.SECRET)).build();
-      var decoded  = verifier.verify(token);
+      var verifier = JWT.require(algo).build();
+      var decoded = verifier.verify(token);
 
       String username = decoded.getSubject();
-      List<String> roles = decoded.getClaim("roles").asList(String.class); // ex: ["ROLE_ADMIN"]
+      String[] roles = decoded.getClaim("roles").asArray(String.class);
 
-      var authorities = roles == null
-          ? List.<SimpleGrantedAuthority>of()
-          : roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+      Collection<SimpleGrantedAuthority> authorities =
+          roles == null ? java.util.List.of()
+                        : Arrays.stream(roles).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
 
-      var auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
-      SecurityContextHolder.getContext().setAuthentication(auth);
+      var authentication =
+          new UsernamePasswordAuthenticationToken(username, null, authorities);
+      SecurityContextHolder.getContext().setAuthentication(authentication);
 
-      filterChain.doFilter(request, response);
-    } catch (Exception e) {
+    } catch (Exception ex) {
+      // Token invalide → on nettoie le contexte et on laisse Spring répondre 401/403
       SecurityContextHolder.clearContext();
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-      response.setContentType("application/json");
-      response.getWriter().write("{\"error\":\"Invalid or expired token\"}");
-      response.getWriter().flush();
     }
+    filterChain.doFilter(request, response);
   }
 }

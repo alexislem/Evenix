@@ -16,8 +16,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
-@Profile("dev")              // <-- active le seed uniquement sur le profil "dev"
-@Transactional               // <-- rend le seed atomique (tout ou rien)
+@Profile("dev")              
+@Transactional               
 public class DataInitializer implements CommandLineRunner {
 
     @Autowired private RoleRepository roleRepository;
@@ -32,7 +32,6 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired private InscriptionRepository inscriptionRepository;
     @Autowired private TypeEvenementRepository typeEvenementRepository;
 
-    // -------- Helpers génériques idempotents (pas de méthodes custom requises) --------
 
     private Role ensureRole(String nom) {
         return roleRepository.findAll().stream()
@@ -74,7 +73,7 @@ public class DataInitializer implements CommandLineRunner {
                     u.setNom(nom);
                     u.setPrenom(prenom);
                     u.setEmail(email);
-                    u.setMotDePasse(motDePasse); // ⚠ idéalement encoder (BCrypt) si Spring Security actif
+                    u.setMotDePasse(motDePasse); 
                     u.setDateDeNaissance(dateNaissance);
                     u.setRole(role);
                     u.setEntreprise(entreprise);
@@ -104,7 +103,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private Lieu ensureLieu(String nom, String adresse, float lat, float lon, int capacite, TypeLieu type) {
-        // Clé métier ici = nom (à adapter si tu préfères une autre clé)
+        
         return lieuRepository.findAll().stream()
                 .filter(l -> nom.equalsIgnoreCase(l.getNom()))
                 .findFirst()
@@ -115,7 +114,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private LieuCulturel ensureLieuCulturel(String nom, float lat, float lon, TypeLieuCulturel type) {
-        // Clé métier ici = nom
+
         return lieuCulturelRepository.findAll().stream()
                 .filter(lc -> nom.equalsIgnoreCase(lc.getNom()))
                 .findFirst()
@@ -130,7 +129,7 @@ public class DataInitializer implements CommandLineRunner {
                                       boolean payant, String description, float prix,
                                       Lieu lieu, Utilisateur organisateur,
                                       Set<TypeEvenement> types, Set<LieuCulturel> lieuxCulturels) {
-        // Clé métier = (titre + début)
+
         return evenementRepository.findAll().stream()
                 .filter(e -> titre.equalsIgnoreCase(e.getNom())
                         && e.getDateDebut() != null
@@ -146,7 +145,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private Inscription ensureInscription(Utilisateur utilisateur, Evenement evenement, ZonedDateTime date) {
-        // Unicité logique: (utilisateur, evenement)
+
         return inscriptionRepository.findAll().stream()
                 .filter(i -> i.getUtilisateur() != null && i.getEvenement() != null
                         && Objects.equals(i.getUtilisateur().getId(), utilisateur.getId())
@@ -156,29 +155,29 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private Paiement ensurePaiement(String reference, float montant, ZonedDateTime date, Utilisateur utilisateur, Evenement evenement) {
-        // Unicité logique: reference
+
         return paiementRepository.findAll().stream()
                 .filter(p -> reference.equalsIgnoreCase(p.getCode()))
                 .findFirst()
                 .orElseGet(() -> paiementRepository.save(new Paiement(montant, date, reference, utilisateur, evenement)));
     }
 
-    // ------------------- Run -------------------
+
 
     @Override
     public void run(String... args) {
 
-        // 1) Rôles
+ 
         Role adminRole        = ensureRole("ADMIN");
         Role userRole         = ensureRole("UTILISATEUR");
         Role organisateurRole = ensureRole("ORGANISATEUR");
 
-        // 2) Entreprises
+
         Entreprise e  = ensureEntreprise("OpenAI France",        "1 rue de l'IA",                     "contact@openai.fr",         "Tech",                "SAS",  "0102030405");
         Entreprise e1 = ensureEntreprise("CyberSecure Solutions", "45 avenue de la Défense",          "contact@cybersecure.fr",    "Cybersécurité",       "SARL", "0145789652");
         Entreprise e2 = ensureEntreprise("GreenTech Innov",       "12 boulevard des Énergies",        "info@greentech-innov.com",  "Énergie renouvelable","SASU", "0178956423");
 
-        // 3) Utilisateurs (emails uniques)
+
         Utilisateur admin = ensureUserByEmail(
                 "admin@evenix.fr", "Admin", "Systeme", "admin123",
                 Date.valueOf("1990-01-01"), adminRole, e
@@ -192,7 +191,7 @@ public class DataInitializer implements CommandLineRunner {
                 Date.valueOf("1988-11-23"), organisateurRole, e2
         );
 
-        // 4) Types de lieux / lieux culturels / types d'événements
+
         TypeLieuCulturel tlcMusee    = ensureTypeLieuCulturel("Musée");
         TypeLieuCulturel tlcTheatre  = ensureTypeLieuCulturel("Théâtre");
         TypeLieuCulturel tlcCinema   = ensureTypeLieuCulturel("Cinéma");
@@ -205,17 +204,17 @@ public class DataInitializer implements CommandLineRunner {
         TypeEvenement teConcert = ensureTypeEvenement("Concert");
         TypeEvenement teAtelier = ensureTypeEvenement("Atelier");
 
-        // 5) Lieux culturels
+       
         LieuCulturel lc1 = ensureLieuCulturel("Musée d'art moderne", 48.8606f, 2.3376f, tlcMusee);
         LieuCulturel lc2 = ensureLieuCulturel("Théâtre national",    45.7578f, 4.8320f, tlcTheatre);
         LieuCulturel lc3 = ensureLieuCulturel("Cinéma Gaumont",      43.6047f, 1.4442f, tlcCinema);
 
-        // 6) Lieux "classiques"
+        
         Lieu l1 = ensureLieu("Salle Alpha",  "10 rue des Arts, Marseille", 43.2965f, 5.3698f, 200, tlSalle);
         Lieu l2 = ensureLieu("Amphi Delta",  "15 avenue Université, Lille", 50.6292f, 3.0573f, 300, tlAmphi);
         Lieu l3 = ensureLieu("Studio B",     "20 boulevard des Studios, Nice", 43.7102f, 7.2620f, 100, tlStudio);
 
-        // 7) Événements (clé = titre + début)
+       
         Evenement ev1 = ensureEvenement(
                 "Conférence IA",
                 ZonedDateTime.now().plusDays(5),
@@ -255,12 +254,12 @@ public class DataInitializer implements CommandLineRunner {
                 setOf(lc3)
         );
 
-        // 8) Inscriptions (unicité logique utilisateur+évènement)
+       
         ensureInscription(user,  ev1, ZonedDateTime.now().minusDays(1));
         ensureInscription(user,  ev2, ZonedDateTime.now().minusHours(12));
         ensureInscription(admin, ev3, ZonedDateTime.now());
 
-        // 9) Paiements (unicité par référence)
+        
         ensurePaiement("PAI123456", 25.0f, ZonedDateTime.now().minusDays(1),  user,  ev1);
         ensurePaiement("PAI123457", 15.0f, ZonedDateTime.now().minusHours(20), user,  ev2);
         ensurePaiement("PAI123458", 25.0f, ZonedDateTime.now().minusHours(6),  admin, ev1);
@@ -268,7 +267,7 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println("[DataInit] Seed terminé sans doublons.");
     }
 
-    // Petit utilitaire pour créer des sets en une ligne
+  
     @SafeVarargs
     private static <T> Set<T> setOf(T... items) {
         return Arrays.stream(items).collect(Collectors.toCollection(LinkedHashSet::new));
