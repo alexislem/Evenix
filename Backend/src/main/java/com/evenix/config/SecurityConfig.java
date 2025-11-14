@@ -49,8 +49,10 @@ public class SecurityConfig {
 	      .requestMatchers(HttpMethod.GET, "/api/utilisateur").permitAll()
 	      .requestMatchers(HttpMethod.POST, "/login").permitAll()
 	      .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+	      .requestMatchers(HttpMethod.GET, "/api/evenement/",  "/api/evenement/**").permitAll()
+	      .requestMatchers(HttpMethod.POST, "/api/evenement").permitAll()
 	      .anyRequest().authenticated()
-	    );
+	    ); 
 
    /* AuthenticationManager authMgr = authConfig.getAuthenticationManager();
 
@@ -70,13 +72,14 @@ public class SecurityConfig {
 	  );
     return http.build();
   }
-
+ 
   @Bean
   CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowedOrigins(List.of(
       "http://localhost:5173","http://127.0.0.1:5173",
-      "http://localhost:3000","http://127.0.0.1:3000"
+      "http://localhost:3000","http://127.0.0.1:3000",
+      "http://localhost"
     ));
     config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
     config.setAllowedHeaders(List.of("Authorization","Content-Type","Accept","X-Requested-With"));
