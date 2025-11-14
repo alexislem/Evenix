@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Connexion – Evenix</title>
+</head>
+<body>
+  <h1>Connexion</h1>
+
+  <form id="login-form">
+    <label>Email :
+      <input type="email" name="email" required>
+    </label><br>
+
+    <label>Mot de passe :
+      <input type="password" name="password" required>
+    </label><br>
+
+    <button type="submit">Se connecter</button>
+  </form>
+
+  <p id="message"></p>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const form = e.target;
+      const body = {
+        email: form.email.value,
+        password: form.password.value
+      };
+
+      const res = await fetch('http://localhost:8080/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const msgEl = document.getElementById('message');
+
+      if (res.ok) {
+        // Récupérer le token : selon ton filtre, il peut être :
+        // - dans l'en-tête Authorization
+        // - ou dans le body JSON
+        const token = res.headers.get('Authorization'); // ex: "Bearer xxx"
+
+        if (token) {
+          localStorage.setItem('token', token);
+          msgEl.textContent = 'Connexion réussie !';
+          // Redirection vers la page des événements
+          // window.location.href = 'evenement.html';
+        } else {
+          msgEl.textContent = 'Connecté, mais aucun token reçu.';
+        }
+      } else {
+        msgEl.textContent = 'Identifiants invalides (' + res.status + ')';
+      }
+    });
+  </script>
+</body>
+</html>

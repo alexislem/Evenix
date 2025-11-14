@@ -184,34 +184,28 @@
     document.getElementById('back-link').href = 'ListeEvenement.html';
 
     // ---------- 2) Géocodage robuste ----------
-    // Catégories strictement culturelles (v2/places)
     const CORE_CULTURE = ["entertainment.museum","tourism.sights","tourism.attraction"];
     const SOFT_EXPANSIONS = [["entertainment.zoo","entertainment.theme_park"],["leisure.park"]];
 
     function guessCityFallback(ev) {
-      // déduire la ville depuis le nom/description (ex: “Paris”)
       const text = `${ev?.nom || ''} ${ev?.description || ''} ${ev?.lieu?.adresse || ''}`;
       if (containsCity(text, 'Paris')) return 'Paris';
-      // ajoute d'autres heuristiques si besoin (Marseille, Lyon…)
       return '';
     }
 
     async function geocodeIfNeeded(ev) {
-      // a) coordonnées directes depuis la BDD
       let lat = Number(ev?.lieu?.latitude), lon = Number(ev?.lieu?.longitude);
       if (Number.isFinite(lat) && Number.isFinite(lon) && lat !== 0 && lon !== 0) {
         console.log('[geo] using DB coords', {lat, lon});
         return { lat, lon };
       }
 
-      // b) géocodage structuré
-      const nom      = (ev?.lieu?.nom || '').trim();                 // ex: "Place de la République"
-      const adresse  = (ev?.lieu?.adresse || '').trim();             // ex: "Place de la République, 75003"
-      const ville    = (ev?.lieu?.ville || '').trim() || guessCityFallback(ev); // ex: "Paris"
-      const cp       = (ev?.lieu?.codePostal || '').toString().trim();          // ex: "75003"
+      const nom      = (ev?.lieu?.nom || '').trim();
+      const adresse  = (ev?.lieu?.adresse || '').trim();
+      const ville    = (ev?.lieu?.ville || '').trim() || guessCityFallback(ev);
+      const cp       = (ev?.lieu?.codePostal || '').toString().trim();
       const pays     = (ev?.lieu?.pays || 'France').trim();
 
-      // Texte principal pour le matching
       const text = [adresse || nom].filter(Boolean).join(', ');
 
       if (!text && !ville) return null;
@@ -297,7 +291,6 @@
         };
       });
 
-      // dédoublonnage
       const seen = new Set();
       pois = pois.filter(p => {
         const key = (p.name + '|' + p.address).toLowerCase();
@@ -306,7 +299,6 @@
         return true;
       });
 
-      // tri et limite
       pois.sort((a,b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
       pois = pois.slice(0, 8);
 

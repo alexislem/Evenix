@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Panier – Evenix</title>
-  <link rel="stylesheet" href="css/Panier.css"><!-- ton CSS si tu veux -->
+  <link rel="stylesheet" href="css/Panier.css">
 </head>
 <body>
   <header class="site-header">
@@ -18,9 +18,9 @@
         <a href="A-propos.html" class="nav-link">A Propos</a>
         <a href="Contact.html" class="nav-link">Contact</a>
         <a href="Panier.html" class="nav-cart" id="cart-link">
-     <span>Panier</span>
-    <span class="cart-badge" id="cart-badge" hidden>0</span>
-  </a>
+          <span>Panier</span>
+          <span class="cart-badge" id="cart-badge" hidden>0</span>
+        </a>
       </nav>
     </div>
   </header>
@@ -56,7 +56,9 @@
 
         <div class="cart-summary">
           <div>Total : <strong id="cart-total">0,00 €</strong></div>
-          <button id="checkout" class="btn btn-primary">Payer</button>
+          <button class="btn btn-primary" id="pay-btn">
+            Payer
+          </button>
         </div>
       </div>
     </div>
@@ -68,15 +70,43 @@
     </div>
   </footer>
 
+  <!-- Garde : on bloque le paiement si l'utilisateur n'est pas connecté -->
+  <script>
+    (function() {
+      function isLoggedIn() {
+        const token = localStorage.getItem('token');
+        console.log('[guard pay] token =', token);
+        // On considère connecté seulement si on a un vrai JWT "Bearer ..."
+        return token && token.startsWith('Bearer ');
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const payBtn = document.getElementById('pay-btn');
+        if (!payBtn) return;
+
+        // On intercepte le clic AVANT les autres listeners
+        payBtn.addEventListener('click', function(e) {
+          if (!isLoggedIn()) {
+            e.preventDefault();
+            e.stopImmediatePropagation(); // empêche tout script de lancer le paiement
+            alert('Vous devez être connecté pour finaliser votre réservation.');
+            window.location.href = 'Connexion.html'; // adapte le nom si besoin
+          }
+        }, true); // true = phase de capture
+      });
+    })();
+  </script>
+
+  <!-- Gestion du panier -->
   <script src="js/cart.js"></script>
   <script>
     const f = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
     function render() {
-      const cart = EvenixCart.read();
-      const rows = document.getElementById('cart-rows');
-      const empty = document.getElementById('cart-empty');
-      const table = document.getElementById('cart-table-wrap');
+      const cart   = EvenixCart.read();
+      const rows   = document.getElementById('cart-rows');
+      const empty  = document.getElementById('cart-empty');
+      const table  = document.getElementById('cart-table-wrap');
       const expire = document.getElementById('expire-info');
 
       // info expiration
@@ -118,23 +148,27 @@
       // bind events ligne
       rows.querySelectorAll('tr').forEach(tr => {
         const id = tr.getAttribute('data-id');
+
         tr.querySelector('.qty-dec').addEventListener('click', () => {
           const input = tr.querySelector('.qty-input');
           input.value = Math.max(1, Number(input.value) - 1);
           EvenixCart.updateQty(id, input.value);
           render();
         });
+
         tr.querySelector('.qty-inc').addEventListener('click', () => {
           const input = tr.querySelector('.qty-input');
           input.value = Math.min(999, Number(input.value) + 1);
           EvenixCart.updateQty(id, input.value);
           render();
         });
+
         tr.querySelector('.qty-input').addEventListener('change', (e) => {
           const v = Math.max(1, Math.min(999, Number(e.target.value || 1)));
           EvenixCart.updateQty(id, v);
           render();
         });
+
         tr.querySelector('.remove').addEventListener('click', () => {
           EvenixCart.remove(id);
           render();
@@ -145,12 +179,6 @@
     document.getElementById('clear-cart')?.addEventListener('click', () => {
       EvenixCart.clear();
       render();
-    });
-
-    document.getElementById('checkout')?.addEventListener('click', () => {
-      // TODO: rediriger vers une page de paiement
-      // pour l’instant on montre un message simple
-      alert('Étape paiement à brancher (Stripe / PayPal / CB).');
     });
 
     document.addEventListener('DOMContentLoaded', render);

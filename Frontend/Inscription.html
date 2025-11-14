@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Inscription – Evenix</title>
+</head>
+<body>
+  <h1>Inscription</h1>
+
+  <form id="register-form">
+    <label>Nom :
+      <input type="text" name="nom" required>
+    </label><br>
+
+    <label>Prénom :
+      <input type="text" name="prenom" required>
+    </label><br>
+
+    <label>Date de naissance :
+      <input type="date" name="dateDeNaissance" required>
+    </label><br>
+
+    <label>Email :
+      <input type="email" name="email" required>
+    </label><br>
+
+    <button type="submit">Créer mon compte</button>
+  </form>
+
+  <p id="message"></p>
+
+  <script>
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+
+      // Rôle par défaut côté front (à adapter à ton projet)
+      const defaultRole = {
+        id: 2,       // ex: ROLE_USER
+        nom: "USER"  // ou le libellé réel dans ta BDD
+      };
+
+      const body = {
+        nom: form.nom.value,
+        prenom: form.prenom.value,
+        dateDeNaissance: form.dateDeNaissance.value, // "yyyy-MM-dd"
+        email: form.email.value,
+        entreprise: null,    // au début tu peux laisser null
+        role: defaultRole
+      };
+
+      const res = await fetch('http://localhost:8080/api/utilisateur', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const msgEl = document.getElementById('message');
+
+      if (res.ok) {
+        msgEl.textContent = 'Compte créé, vous pouvez maintenant vous connecter.';
+        // ex : redirection vers login
+        // window.location.href = 'login.html';
+      } else {
+        const txt = await res.text();
+        msgEl.textContent = 'Erreur inscription (' + res.status + ') : ' + txt;
+      }
+    });
+  </script>
+</body>
+</html>
