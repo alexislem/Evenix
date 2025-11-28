@@ -25,6 +25,8 @@ public class LieuDTO {
 
     @NotNull(message = "Le type de lieu est obligatoire.")
     private TypeLieuDTO typeLieu;
+    
+    private String Ville;
 
     // Constructor
     public LieuDTO() {}
@@ -85,4 +87,12 @@ public class LieuDTO {
     public void setTypeLieu(TypeLieuDTO typeLieu) {
         this.typeLieu = typeLieu;
     }
+
+	public String getVille() {
+		return Ville;
+	}
+
+	public void setVille(String ville) {
+		Ville = ville;
+	}
 }

@@ -44,6 +44,14 @@ public class EvenementServiceImpl implements EvenementService{
 		return null;
 	}
     
+    public Optional<Evenement> findByNom(String nom) {
+        return evenementRepository.findByNom(nom);
+    }
+    
+    public Evenement save(Evenement evenement){
+    	return evenementRepository.save(evenement);
+    }
+    
     @Override
     public Optional<EvenementDTO> getEvenementById(int id) {
         return evenementRepository.findById(id).map(this::convertToDTO);

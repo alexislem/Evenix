@@ -1,6 +1,7 @@
 package com.evenix.controllers;
 
 
+import com.evenix.dto.UtilisateurDTO;
 import com.evenix.entities.Role;
 import com.evenix.entities.Utilisateur;
 import com.evenix.repos.RoleRepository;
@@ -22,8 +23,8 @@ public class UtilisateurController {
     @Autowired
     private RoleRepository roleRepository;
 
-    @GetMapping
-    public List<Utilisateur> getAllUtilisateurs() {
+    @GetMapping("/all")
+    public List<UtilisateurDTO> getAllUtilisateurs() {
         return utilisateurService.getAllUtilisateurs();
     }
     

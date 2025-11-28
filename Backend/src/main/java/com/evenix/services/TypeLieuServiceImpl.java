@@ -1,6 +1,7 @@
 package com.evenix.services;
 
 import com.evenix.dto.TypeLieuDTO;
+import com.evenix.entities.Lieu;
 import com.evenix.entities.TypeLieu;
 import com.evenix.repos.TypeLieuRepository;
 import org.springframework.stereotype.Service;
@@ -36,10 +37,18 @@ public class TypeLieuServiceImpl implements TypeLieuService {
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
+    
+    public TypeLieu save(TypeLieu TypeLieu) {
+        return typeLieuRepository.save(TypeLieu);
+    }
 
     @Override
     public Optional<TypeLieuDTO> getTypeLieuById(int id) {
         return typeLieuRepository.findById(id).map(this::toDTO);
+    }
+    
+    public Optional<TypeLieu> findByLibelle(String nom) {
+        return typeLieuRepository.findByLibelle(nom);
     }
 
     @Override

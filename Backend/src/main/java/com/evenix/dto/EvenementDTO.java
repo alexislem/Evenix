@@ -25,6 +25,7 @@ public class EvenementDTO {
 
     @PositiveOrZero(message = "Le prix doit être positif ou nul.")
     private float prix;
+    
 
     @NotNull(message = "Un utilisateur doit être associé à l'évènement.")
     private UtilisateurDTO utilisateur;
@@ -104,4 +105,5 @@ public class EvenementDTO {
     public void setLieu(LieuDTO lieu) {
         this.lieu = lieu;
     }
+
 }

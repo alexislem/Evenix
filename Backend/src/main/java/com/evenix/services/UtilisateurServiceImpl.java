@@ -5,6 +5,8 @@ import com.evenix.entities.Utilisateur;
 import com.evenix.exception.EmailAlreadyExistsException;
 import com.evenix.repos.RoleRepository;
 import com.evenix.repos.UtilisateurRepository;
+import com.evenix.dto.EntrepriseDTO;
+import com.evenix.dto.UtilisateurDTO;
 import com.evenix.dto.request.RegistrationRequest;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -16,6 +18,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UtilisateurServiceImpl implements UtilisateurService{
@@ -32,8 +35,10 @@ public class UtilisateurServiceImpl implements UtilisateurService{
 
 
     @Override
-    public List<Utilisateur> getAllUtilisateurs() {
-        return utilisateurRepository.findAll();
+    public List<UtilisateurDTO> getAllUtilisateurs() {
+        return utilisateurRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -45,6 +50,11 @@ public class UtilisateurServiceImpl implements UtilisateurService{
     @Override
     public Optional<Utilisateur> findUtilisateurByNom(String utilisateurNom) {
         return utilisateurRepository.findByNom(utilisateurNom);
+    }
+    
+    @Override
+    public Optional<Utilisateur> findUtilisateurByEmail(String utilisateurEmail) {
+        return utilisateurRepository.findByEmail(utilisateurEmail);
     }
 
     @Override
@@ -132,7 +142,7 @@ public class UtilisateurServiceImpl implements UtilisateurService{
         return utilisateurRepository.save(usr);
     }
     
-    @Override
+    /*@Override
     public Utilisateur registerUtilisateur(RegistrationRequest request) {
 
         if (utilisateurRepository.existsByEmail(request.getEmail())) {
@@ -152,11 +162,26 @@ public class UtilisateurServiceImpl implements UtilisateurService{
         
 
         return utilisateurRepository.save(newUtilisateur);
-    }
+    }*/
     
     @Override
     public int getNombresUtilisateurs() {
     	return utilisateurRepository.findAll().size();
+    }
+    
+ // 🔹 Mapping Entity → DTO
+    private UtilisateurDTO convertToDTO(Utilisateur utilisateur) {
+        UtilisateurDTO dto = new UtilisateurDTO();
+        dto.setId(utilisateur.getId());
+        dto.setNom(utilisateur.getNom());
+        dto.setPrenom(utilisateur.getPrenom());
+
+        dto.setEmail(utilisateur.getEmail());
+        dto.setTelephone(utilisateur.getTelephone());
+
+
+        dto.setRole(utilisateur.getRole());
+        return dto;
     }
     }
 

@@ -40,6 +40,12 @@ public class Utilisateur {
     
     @Column(name = "UTI_DateModif")
     private LocalDate dateModif;
+    
+    @Column(name = "UTI_EstConfirme", nullable = true)
+    private boolean estConfirme;
+    
+    @Column(name="UTI_Telephone")
+    private String telephone;
 
     @ManyToOne
     @JoinColumn(name = "ENT_id", nullable = true)
@@ -60,13 +66,15 @@ public class Utilisateur {
 
     public Utilisateur() {}
 
-    public Utilisateur(String nom, String prenom, Date dateDeNaissance, String motDePasse, String email, Role role) {
+    public Utilisateur(String nom, String prenom, Date dateDeNaissance, String motDePasse, String email, Role role, String telephone) {
         this.nom = nom;
         this.prenom = prenom;
         this.dateDeNaissance = dateDeNaissance;
+        this.telephone = telephone;
         this.motDePasse = motDePasse;
         this.email = email;
         this.role = role;
+        this.estConfirme = false;
     }
 
     // Getters/Setters
@@ -88,7 +96,11 @@ public class Utilisateur {
     }
 
     public String getPrenom() {
-        return prenom;
+        return this.prenom;
+    }
+    
+    public String getTelephone() {
+        return this.telephone;
     }
 
     public void setPrenom(String prenom) {
@@ -126,6 +138,10 @@ public class Utilisateur {
     public void setMotDePasse(String motDePasse) {
         this.motDePasse = motDePasse;
     }
+    
+    public void setTelephone(String telephone) {
+    	this.telephone = telephone;
+    }
 
     public String getEmail() {
         return email;
@@ -139,8 +155,6 @@ public class Utilisateur {
         return entreprise;
     }
     
-    
-
     public void setEntreprise(Entreprise entreprise) {
         this.entreprise = entreprise;
     }
@@ -151,6 +165,14 @@ public class Utilisateur {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+    
+    public boolean getEstConfirme() {
+    	return this.estConfirme;
+    }
+    
+    public void setEstConfirme(boolean estConfirme) {
+    	this.estConfirme = estConfirme;
     }
 
     public List<Paiement> getPaiements() {

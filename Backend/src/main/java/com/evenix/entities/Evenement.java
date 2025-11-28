@@ -50,6 +50,8 @@ public class Evenement {
 	@Column (name = "EVE_Prix")
 	private float prix;
 	
+	private String ville;
+	
 	@ManyToMany
 	@JoinTable(
 			name = "EST_DE_TYPE",
@@ -242,6 +244,14 @@ public class Evenement {
 	    if (inscriptions.remove(inscription)) {
 	        inscription.setEvenement(null);
 	    }
+	}
+
+	public String getVille() {
+		return ville;
+	}
+
+	public void setVille(String ville) {
+		this.ville = ville;
 	}
 	
 	

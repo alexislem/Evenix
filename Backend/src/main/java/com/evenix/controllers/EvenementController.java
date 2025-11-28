@@ -17,7 +17,7 @@ public class EvenementController {
         this.evenementService = evenementService;
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public List<EvenementDTO> getAll() {
         return evenementService.getAllEvenements();
     }

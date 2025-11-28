@@ -47,23 +47,24 @@ public class AuthServiceImpl implements AuthService {
       throw new EmailAlreadyExistsException("Email déjà existant !");
     }
 
-
     Utilisateur u = new Utilisateur();
     u.setNom(request.getNom());
     u.setPrenom(request.getPrenom());
     u.setEmail(request.getEmail());
+    u.setTelephone(request.getTelephone());
     u.setDateDeNaissance(request.getDateDeNaissance());
     u.setMotDePasse(passwordEncoder.encode(request.getMotDePasse()));
     u.setDateCreation(LocalDate.now());
 
-
-    Role role = resolveRole(request.getRoleId());
+    // On met UTILISATEUR par défaut
+    Role role = roleRepository.findByNom("UTILISATEUR")
+        .orElseThrow(() -> new EntityNotFoundException("Rôle UTILISATEUR introuvable"));
     u.setRole(role);
-
 
     Utilisateur saved = utilisateurRepository.save(u);
     return UtilisateurMapper.fromEntity(saved);
   }
+
 
   // ---------- LOGIN ----------
   @Override

@@ -1,5 +1,6 @@
 package com.evenix.services;
 
+import com.evenix.dto.UtilisateurDTO;
 import com.evenix.entities.Entreprise;
 import com.evenix.entities.Role;
 import com.evenix.entities.Utilisateur;
@@ -80,7 +81,7 @@ class UtilisateurServiceImplTest {
         logger.info("DÉBUT - testGetAllUtilisateurs");
         when(utilisateurRepository.findAll()).thenReturn(Arrays.asList(utilisateur));
 
-        List<Utilisateur> utilisateurs = utilisateurService.getAllUtilisateurs();
+        List<UtilisateurDTO> utilisateurs = utilisateurService.getAllUtilisateurs();
 
         assertEquals(1, utilisateurs.size());
         assertEquals("Jean", utilisateurs.get(0).getPrenom());

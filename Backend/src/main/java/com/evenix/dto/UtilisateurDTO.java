@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Past;
 
 import java.sql.Date;
 
+import com.evenix.entities.Role;
+
 public class UtilisateurDTO {
 
     private int id;
@@ -24,15 +26,25 @@ public class UtilisateurDTO {
     @NotBlank(message = "L'adresse e-mail est obligatoire.")
     @Email(message = "L'adresse e-mail doit être valide.")
     private String email;
+    
+    private String telephone;
 
     private EntrepriseDTO entreprise;
 
     @NotNull(message = "Le rôle est obligatoire.")
-    private RoleDTO role;
+    private Role role;
 
     // Getters & Setters
     public int getId() {
         return id;
+    }
+    
+    public String getTelephone() {
+        return this.telephone;
+    }
+    
+    public void setTelephone(String telephone) {
+    	this.telephone = telephone;
     }
 
     public void setId(int id) {
@@ -79,11 +91,11 @@ public class UtilisateurDTO {
         this.entreprise = entreprise;
     }
 
-    public RoleDTO getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(RoleDTO role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 }

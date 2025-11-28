@@ -3,6 +3,7 @@ package com.evenix.controllers;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.evenix.dto.EntrepriseDTO;
 import com.evenix.entities.Entreprise;
 import com.evenix.services.EntrepriseServiceImpl;
 
@@ -18,8 +19,8 @@ public class EntrepriseController {
 	        this.entrepriseService = entrepriseService;
 	}
 
-	@GetMapping
-	public List<Entreprise> getAllEntreprises() {
+	@GetMapping("/all")
+	public List<EntrepriseDTO> getAllEntreprises() {
 		return entrepriseService.getAllEntreprises();
 	}
 
