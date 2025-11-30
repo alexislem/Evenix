@@ -20,6 +20,7 @@ import AdminDashboard from '../pages/admin/AdminDashboard';
 import AdminUsers from '../pages/admin/AdminUsers';
 import AdminEntreprises from '../pages/admin/AdminEntreprises';
 import AdminEvents from '../pages/admin/AdminEvents';
+import InscriptionPage from '../pages/InscriptionPage'; // Assurez-vous que l'import est là
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +39,16 @@ export const router = createBrowserRouter([
         path: 'evenements/:id',
         element: <EventDetail />,
       },
+      // --- NOUVELLE ROUTE D'INSCRIPTION ---
+      {
+        path: 'evenements/:id/inscription',
+        element: (
+          <ProtectedRoute>
+            <InscriptionPage />
+          </ProtectedRoute>
+        ),
+      },
+      // ------------------------------------
       {
         path: 'a-propos',
         element: <About />,

@@ -1,163 +1,369 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar, Trash2, MapPin, Euro, Users } from 'lucide-react';
+import { Calendar, Trash2, MapPin, Euro, Users, Edit2, Check, X } from 'lucide-react';
 import { evenementService } from '../../services/evenementService';
-import { Evenement } from '../../types';
+import { Evenement, Lieu, Utilisateur } from '../../types'; 
+
+// Interface pour le formulaire d'édition
+interface EditFormData {
+    nom: string;
+    description: string;
+    dateDebut: string;
+    dateFin: string;
+    prix: number;
+    ville: string; 
+    lieuId: number; 
+    nbPlaces: number; 
+    utilisateurId: number;
+}
 
 const AdminEvents: React.FC = () => {
-  const [evenements, setEvenements] = useState<Evenement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+    const [evenements, setEvenements] = useState<Evenement[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    loadEvenements();
-  }, []);
+    // --- ÉTATS D'ÉDITION ---
+    const [editingEventId, setEditingEventId] = useState<number | null>(null);
+    const [editFormData, setEditFormData] = useState<EditFormData>({} as EditFormData);
 
-  const loadEvenements = async () => {
-    try {
-      const data = await evenementService.getAll();
-      setEvenements(data);
-    } catch (err) {
-      console.error('Erreur lors du chargement des événements', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    useEffect(() => {
+        loadEvenements();
+    }, []);
 
-  const handleDelete = async (id: number, nom: string) => {
-    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer l'événement "${nom}" ?`)) {
-      return;
-    }
+    const loadEvenements = async () => {
+        try {
+            const data = await evenementService.getAll();
+            setEvenements(data);
+        } catch (err) {
+            console.error('Erreur lors du chargement des événements', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    try {
-      await evenementService.delete(id);
-      setEvenements(evenements.filter((e) => e.id !== id));
-    } catch (err) {
-      alert('Erreur lors de la suppression');
-    }
-  };
+    const handleDelete = async (id: number, nom: string) => {
+        if (!window.confirm(`Êtes-vous sûr de vouloir supprimer l'événement "${nom}" ?`)) { return; }
+        try {
+            await evenementService.delete(id);
+            setEvenements(evenements.filter((e) => e.id !== id));
+        } catch (err) {
+            alert('Erreur lors de la suppression');
+        }
+    };
+    
+    // --- FONCTIONS D'ÉDITION ---
 
-  const filteredEvenements = evenements.filter(
-    (event) =>
-      event.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.ville.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.utilisateur.nom.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    const handleEditClick = (event: Evenement) => {
+        setEditingEventId(event.id);
+        
+        // Initialisation des données d'édition
+        setEditFormData({
+            nom: event.nom,
+            description: event.description,
+            // S'assurer que les dates sont au format YYYY-MM-DD pour l'input type="date"
+            dateDebut: event.dateDebut.split('T')[0], 
+            dateFin: event.dateFin.split('T')[0],
+            prix: event.prix,
+            ville: event.ville,
+            lieuId: event.lieu.id,
+            nbPlaces: event.lieu.nbPlaces,
+            utilisateurId: event.utilisateur.id
+        });
+    };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
+    const handleCancelEdit = () => {
+        setEditingEventId(null);
+    };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-white text-xl">Chargement...</div>
-      </div>
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setEditFormData(prev => ({
+            ...prev,
+            // Conversion en nombre pour prix et nbPlaces
+            [name]: name === 'prix' || name === 'nbPlaces' ? Number(value) : value,
+        }));
+    };
+
+    const handleSave = async (eventId: number) => {
+        try {
+            // CORRECTION CRITIQUE ICI :
+            // On ajoute 'T00:00:00Z' (début de journée en UTC) aux dates YYYY-MM-DD pour satisfaire ZonedDateTime.
+            const dateDebutZoned = editFormData.dateDebut + 'T00:00:00Z';
+            const dateFinZoned = editFormData.dateFin + 'T00:00:00Z';
+
+
+            // Construction du payload pour le backend
+            const payload: Partial<Evenement> = {
+                id: eventId,
+                nom: editFormData.nom,
+                description: editFormData.description,
+                dateDebut: dateDebutZoned, // <-- Utilisation du format ZonedDateTime
+                dateFin: dateFinZoned,     // <-- Utilisation du format ZonedDateTime
+                prix: editFormData.prix,
+                ville: editFormData.ville,
+                
+                // Objets imbriqués : on envoie les IDs et les champs modifiables.
+                lieu: {
+                    id: editFormData.lieuId,
+                    nbPlaces: editFormData.nbPlaces,
+                } as Lieu, 
+                
+                utilisateur: { id: editFormData.utilisateurId } as Utilisateur 
+            };
+            
+            // Appel au service update (PUT /api/evenement/{id})
+            const updatedEvent = await evenementService.update(eventId, payload);
+
+            // Mise à jour de l'état local
+            setEvenements(evenements.map((e) =>
+              e.id === eventId ? updatedEvent : e
+            ));
+            
+            setEditingEventId(null);
+
+        } catch (err) {
+            console.error("Erreur de sauvegarde:", err);
+            alert('Erreur lors de la modification de l\'événement');
+        }
+    };
+    
+    // --- FILTRAGE ET FORMATTAGE ---
+
+    const filteredEvenements = evenements.filter(
+        (event) =>
+            event.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            event.ville.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            event.utilisateur.nom.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }
 
-  return (
-    <div className="min-h-screen bg-gray-950 py-12">
-      <div className="container mx-auto px-4 max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Gestion des événements</h1>
-          <p className="text-gray-400">Administrez tous les événements de la plateforme</p>
-        </div>
+    const formatDate = (dateString: string) => {
+        // Gérer le format YYYY-MM-DD ou ZonedDateTime
+        const date = new Date(dateString.includes('T') ? dateString : dateString + 'T00:00:00');
+        return date.toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+        });
+    };
 
-        <div className="mb-6">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Rechercher un événement..."
-            className="w-full md:w-96 px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-        </div>
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+                <div className="text-white text-xl">Chargement...</div>
+            </div>
+        );
+    }
 
-        {filteredEvenements.length === 0 ? (
-          <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center">
-            <Calendar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 text-xl">Aucun événement trouvé</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6">
-            {filteredEvenements.map((event) => (
-              <div
-                key={event.id}
-                className="bg-gray-800 rounded-xl border border-gray-700 p-6 hover:border-purple-500 transition"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-white mb-2">{event.nom}</h3>
-                    <p className="text-gray-400 mb-4">{event.description}</p>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                      <div>
-                        <p className="text-gray-500 text-sm">Dates</p>
-                        <p className="text-white text-sm">
-                          {formatDate(event.dateDebut)}
-                        </p>
-                        <p className="text-gray-400 text-xs">
-                          au {formatDate(event.dateFin)}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-gray-500 text-sm">Lieu</p>
-                        <p className="text-white flex items-center text-sm">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {event.ville}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-gray-500 text-sm">Places</p>
-                        <p className="text-white flex items-center text-sm">
-                          <Users className="w-3 h-3 mr-1" />
-                          {event.lieu.nbPlaces}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-gray-500 text-sm">Prix</p>
-                        <p className="text-green-400 font-semibold flex items-center">
-                          <Euro className="w-3 h-3 mr-1" />
-                          {event.prix} €
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-gray-700 pt-3">
-                      <p className="text-gray-500 text-xs">Organisateur</p>
-                      <p className="text-white">
-                        {event.utilisateur.prenom} {event.utilisateur.nom}
-                      </p>
-                      <p className="text-gray-400 text-sm">{event.utilisateur.email}</p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleDelete(event.id, event.nom)}
-                    className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition ml-4"
-                    title="Supprimer"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+    return (
+        <div className="min-h-screen bg-gray-950 py-12">
+            <div className="container mx-auto px-4 max-w-6xl">
+                <div className="mb-8">
+                    <h1 className="text-4xl font-bold text-white mb-2">Gestion des événements</h1>
+                    <p className="text-gray-400">Administrez tous les événements de la plateforme</p>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
 
-        <div className="mt-6 text-center text-gray-400">
-          Total: {filteredEvenements.length} événement(s)
+                <div className="mb-6">
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Rechercher un événement..."
+                        className="w-full md:w-96 px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                </div>
+
+                {filteredEvenements.length === 0 ? (
+                    <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center">
+                        <Calendar className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                        <p className="text-gray-400 text-xl">Aucun événement trouvé</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 gap-6">
+                        {filteredEvenements.map((event) => {
+                            const isEditing = editingEventId === event.id;
+
+                            return (
+                                <div
+                                    key={event.id}
+                                    className="bg-gray-800 rounded-xl border border-gray-700 p-6 hover:border-purple-500 transition"
+                                >
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                            
+                                            {/* --- NOM ET DESCRIPTION --- */}
+                                            {isEditing ? (
+                                                <div className='mb-4'>
+                                                    <input
+                                                        name="nom"
+                                                        value={editFormData.nom}
+                                                        onChange={handleInputChange}
+                                                        className="text-2xl font-bold text-white bg-gray-700 border border-gray-600 rounded p-1 w-full mb-2"
+                                                    />
+                                                    <textarea
+                                                        name="description"
+                                                        value={editFormData.description}
+                                                        onChange={handleInputChange}
+                                                        className="text-gray-300 bg-gray-700 border border-gray-600 rounded p-1 w-full h-16"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <h3 className="text-2xl font-bold text-white mb-2">{event.nom}</h3>
+                                                    <p className="text-gray-400 mb-4">{event.description}</p>
+                                                </>
+                                            )}
+
+
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                                
+                                                {/* --- DATES --- */}
+                                                <div>
+                                                    <p className="text-gray-500 text-sm">Dates</p>
+                                                    {isEditing ? (
+                                                        <div className='flex flex-col gap-1'>
+                                                            <input
+                                                                type="date"
+                                                                name="dateDebut"
+                                                                value={editFormData.dateDebut}
+                                                                onChange={handleInputChange}
+                                                                className="text-white bg-gray-700 rounded text-sm p-1"
+                                                            />
+                                                            <input
+                                                                type="date"
+                                                                name="dateFin"
+                                                                value={editFormData.dateFin}
+                                                                onChange={handleInputChange}
+                                                                className="text-white bg-gray-700 rounded text-sm p-1"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <p className="text-white text-sm">{formatDate(event.dateDebut)}</p>
+                                                            <p className="text-gray-400 text-xs">au {formatDate(event.dateFin)}</p>
+                                                        </>
+                                                    )}
+                                                </div>
+
+                                                {/* --- LIEU / VILLE --- */}
+                                                <div>
+                                                    <p className="text-gray-500 text-sm">Lieu</p>
+                                                    {isEditing ? (
+                                                        <input
+                                                            name="ville"
+                                                            value={editFormData.ville}
+                                                            onChange={handleInputChange}
+                                                            className="text-white bg-gray-700 border border-gray-600 rounded text-sm p-1 w-full"
+                                                        />
+                                                    ) : (
+                                                        <p className="text-white flex items-center text-sm">
+                                                            <MapPin className="w-3 h-3 mr-1" />
+                                                            {event.ville}
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                {/* --- PLACES --- */}
+                                                <div>
+                                                    <p className="text-gray-500 text-sm">Places</p>
+                                                    {isEditing ? (
+                                                        <input
+                                                            type="number"
+                                                            name="nbPlaces"
+                                                            value={editFormData.nbPlaces}
+                                                            onChange={handleInputChange}
+                                                            className="text-white bg-gray-700 border border-gray-600 rounded text-sm p-1 w-16"
+                                                        />
+                                                    ) : (
+                                                        <p className="text-white flex items-center text-sm">
+                                                            <Users className="w-3 h-3 mr-1" />
+                                                            {event.lieu.nbPlaces}
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                {/* --- PRIX --- */}
+                                                <div>
+                                                    <p className="text-gray-500 text-sm">Prix</p>
+                                                    {isEditing ? (
+                                                        <div className="flex items-center">
+                                                            <input
+                                                                type="number"
+                                                                name="prix"
+                                                                value={editFormData.prix}
+                                                                onChange={handleInputChange}
+                                                                className="text-green-400 bg-gray-700 border border-gray-600 rounded font-semibold p-1 w-16"
+                                                            />
+                                                            <span className="text-green-400 font-semibold ml-1">€</span>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-green-400 font-semibold flex items-center">
+                                                            <Euro className="w-3 h-3 mr-1" />
+                                                            {event.prix} €
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* --- ORGANISATEUR (Lecture seule) --- */}
+                                            <div className="border-t border-gray-700 pt-3">
+                                                <p className="text-gray-500 text-xs">Organisateur</p>
+                                                <p className="text-white">
+                                                    {event.utilisateur.prenom} {event.utilisateur.nom}
+                                                </p>
+                                                <p className="text-gray-400 text-sm">{event.utilisateur.email}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* --- ACTIONS --- */}
+                                        <div className="flex flex-col gap-2 ml-4">
+                                            {isEditing ? (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleSave(event.id)}
+                                                        className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg transition"
+                                                        title="Sauvegarder"
+                                                    >
+                                                        <Check className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={handleCancelEdit}
+                                                        className="bg-gray-600 hover:bg-gray-700 text-white p-2 rounded-lg transition"
+                                                        title="Annuler"
+                                                    >
+                                                        <X className="w-5 h-5" />
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleEditClick(event)}
+                                                        className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition"
+                                                        title="Modifier"
+                                                    >
+                                                        <Edit2 className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(event.id, event.nom)}
+                                                        className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition"
+                                                        title="Supprimer"
+                                                    >
+                                                        <Trash2 className="w-5 h-5" />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                <div className="mt-6 text-center text-gray-400">
+                    Total: {filteredEvenements.length} événement(s)
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default AdminEvents;

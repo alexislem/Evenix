@@ -2,7 +2,7 @@ package com.evenix.entities;
 
 import java.time.ZonedDateTime;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // Changement d'import
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,9 +14,9 @@ import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Inscription {
-	
-	// Attributes 
-	
+    
+    // Attributes 
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column (name = "INS_Id")
@@ -24,12 +24,12 @@ public class Inscription {
 
     @ManyToOne
     @JoinColumn(name = "UTI_Id", nullable = false)
-    @JsonIgnore
+    @JsonIgnoreProperties("inscriptions") // On garde l'utilisateur mais sans ses inscriptions pour éviter la boucle
     private Utilisateur utilisateur;
 
     @ManyToOne
     @JoinColumn(name = "EVE_Id", nullable = false)
-    @JsonIgnore
+    @JsonIgnoreProperties({"inscriptions", "paiements"}) // IMPORTANT: On retire @JsonIgnore ici !
     private Evenement evenement;
 
     @Column (name = "INS_DateInscription")
@@ -43,9 +43,9 @@ public class Inscription {
     public Inscription() {}
     
     public Inscription (Utilisateur utilisateur, Evenement evenement, ZonedDateTime zdtDateInscription) {
-    	this.utilisateur = utilisateur;
-    	this.evenement = evenement;
-    	this.dateInscription = zdtDateInscription;
+        this.utilisateur = utilisateur;
+        this.evenement = evenement;
+        this.dateInscription = zdtDateInscription;
     }
     
     // Getters/setters
@@ -53,53 +53,49 @@ public class Inscription {
         return id;
     }
 
-	public ZonedDateTime getDateInscription() {
-		return this.dateInscription;
-	}
+    public ZonedDateTime getDateInscription() {
+        return this.dateInscription;
+    }
 
-	public void setDateInscription(ZonedDateTime zdtDateInscription) {
-		this.dateInscription = zdtDateInscription;
-	}
-	
-	public ZonedDateTime getDateAnnulation() {
-		return this.dateAnnulation;
-	}
-
-	public void setDateAnnulation(ZonedDateTime zdtDateAnnulation) {
-		this.dateAnnulation = zdtDateAnnulation;
-	}
-	
-	public Utilisateur getUtilisateur() {
-	    return this.utilisateur;
-	}
-
-	public Evenement getEvenement() {
-	    return this.evenement;
-	}
-
-	
-	public void setEvenement(Evenement evenement) {
-	    this.evenement = evenement;
-	}
-
-	public void setUtilisateur(Utilisateur utilisateur) {
-	    this.utilisateur = utilisateur;
-	}
-
-
-	// Functions
-	
-	@Override
-	public String toString() {
-	    String nomUtilisateur = utilisateur != null ? utilisateur.getNom() : "Inconnu";
-	    String nomEvenement = evenement != null ? evenement.getNom() : "Inconnu";
-
-	    return "Inscription de l'utilisateur : " + nomUtilisateur +
-	           "; à l'évènement : " + nomEvenement +
-	           "; Date d'inscription : " + dateInscription + ";";
-	}
-
-	
+    public void setDateInscription(ZonedDateTime zdtDateInscription) {
+        this.dateInscription = zdtDateInscription;
+    }
     
-}
+    public ZonedDateTime getDateAnnulation() {
+        return this.dateAnnulation;
+    }
 
+    public void setDateAnnulation(ZonedDateTime zdtDateAnnulation) {
+        this.dateAnnulation = zdtDateAnnulation;
+    }
+    
+    public Utilisateur getUtilisateur() {
+        return this.utilisateur;
+    }
+
+    public Evenement getEvenement() {
+        return this.evenement;
+    }
+
+    
+    public void setEvenement(Evenement evenement) {
+        this.evenement = evenement;
+    }
+
+    public void setUtilisateur(Utilisateur utilisateur) {
+        this.utilisateur = utilisateur;
+    }
+
+
+    // Functions
+    
+    @Override
+    public String toString() {
+        String nomUtilisateur = utilisateur != null ? utilisateur.getNom() : "Inconnu";
+        String nomEvenement = evenement != null ? evenement.getNom() : "Inconnu";
+
+        return "Inscription de l'utilisateur : " + nomUtilisateur +
+            "; à l'évènement : " + nomEvenement +
+            "; Date d'inscription : " + dateInscription + ";";
+    }
+}

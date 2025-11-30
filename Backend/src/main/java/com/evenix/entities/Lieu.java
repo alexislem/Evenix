@@ -1,5 +1,7 @@
 package com.evenix.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // Import nécessaire
+
 import jakarta.persistence.*;
 
 @Entity
@@ -30,6 +32,8 @@ public class Lieu {
 
     @ManyToOne
     @JoinColumn(name = "TYP_Id", nullable = false)
+    // ⚠️ CORRECTION ICI : On empêche Jackson de sérialiser la liste "lieux" du parent TypeLieu
+    @JsonIgnoreProperties("lieux") 
     private TypeLieu typeLieu;
 
     // Constructors
@@ -101,11 +105,11 @@ public class Lieu {
     }
     
     public String getVille() {
-    	return this.ville;
+        return this.ville;
     }
     
     public void setVille(String ville) {
-    	this.ville = ville;
+        this.ville = ville;
     }
 
     // toString

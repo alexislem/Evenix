@@ -1,6 +1,5 @@
 package com.evenix.controllers;
 
-
 import com.evenix.dto.UtilisateurDTO;
 import com.evenix.entities.Role;
 import com.evenix.entities.Utilisateur;
@@ -12,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map; // <--- AJOUT IMPORTANT ICI
 
 @RestController
 @RequestMapping("/api/utilisateur")
@@ -30,7 +30,7 @@ public class UtilisateurController {
     
     @GetMapping("/count")
     public int getNombresUtilisateurs() {
-    	return utilisateurService.getNombresUtilisateurs();
+        return utilisateurService.getNombresUtilisateurs();
     }
 
     @GetMapping("/{id}")
@@ -39,8 +39,6 @@ public class UtilisateurController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-    
-
 
     @PostMapping
     public ResponseEntity<Utilisateur> createUtilisateur(@RequestBody Utilisateur utilisateur) {
@@ -54,7 +52,6 @@ public class UtilisateurController {
         return ResponseEntity.ok(savedUtilisateur);
     }
 
-    
     @PutMapping("/{id}")
     public ResponseEntity<Utilisateur> updateUtilisateur(@PathVariable int id, @RequestBody Utilisateur utilisateur) {
         try {
@@ -71,4 +68,27 @@ public class UtilisateurController {
         return ResponseEntity.noContent().build();
     }
 
+
+ // Dans UtilisateurController.java
+
+    @PutMapping("/{id}/role")
+    public ResponseEntity<Utilisateur> updateRole(@PathVariable int id, @RequestBody Map<String, Integer> payload) {
+        try {
+            Integer roleId = payload.get("roleId");
+
+            if (roleId == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            // ON UTILISE DIRECTEMENT LA MÉTHODE DU SERVICE DÉDIÉE À CELA
+            // Plus besoin de charger l'utilisateur, de set le role manuellement, etc.
+            Utilisateur updatedUtilisateur = utilisateurService.addRoleToUtilisateur(id, roleId);
+
+            return ResponseEntity.ok(updatedUtilisateur);
+
+        } catch (RuntimeException e) {
+            // Cela capture EntityNotFoundException lancé par le service si l'ID ou le Role n'existe pas
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
 }

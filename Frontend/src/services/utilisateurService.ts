@@ -25,4 +25,9 @@ export const utilisateurService = {
   async delete(id: number): Promise<void> {
     await api.delete(`/api/utilisateur/${id}`);
   },
+
+  async updateRole(id: number, roleId: number): Promise<Utilisateur> {
+    const response = await api.put<Utilisateur>(`api/utilisateur/${id}/role`, { roleId });
+    return response.data;
+  },
 };

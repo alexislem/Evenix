@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Euro, FileText, Save, Image } from 'lucide-react';
+import { Calendar, MapPin, Euro, FileText, Save, Image, AlertCircle } from 'lucide-react';
 import { evenementService } from '../../services/evenementService';
-import {lieuService} from '../../services/lieuService';
-import {Lieu} from '../../types';
+import { lieuService } from '../../services/lieuService';
+import { useAuth } from '../../context/AuthContext';
+import { Lieu } from '../../types';
 
 const CreateEvent: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [loading, setLoading] = useState(false);
   const [lieux, setLieux] = useState<Lieu[]>([]);
   const [lieuxLoading, setLieuxLoading] = useState(true);
   const [error, setError] = useState('');
+  
   const [formData, setFormData] = useState({
     nom: '',
     description: '',
@@ -20,6 +24,7 @@ const CreateEvent: React.FC = () => {
     prix: 0,
     lieuId: 0,
     imageUrl: '',
+    ville: ''
   });
 
   useEffect(() => {
@@ -27,9 +32,12 @@ const CreateEvent: React.FC = () => {
       try {
         const data = await lieuService.getAll();
         setLieux(data);
-        // Option : mettre par défaut le premier lieu
         if (data.length > 0) {
-          setFormData(prev => ({ ...prev, lieuId: data[0].id }));
+          setFormData(prev => ({ 
+            ...prev, 
+            lieuId: data[0].id,
+            ville: data[0].ville || ''
+          }));
         }
       } catch (err) {
         setError('Erreur lors du chargement des lieux');
@@ -41,40 +49,76 @@ const CreateEvent: React.FC = () => {
     loadLieux();
   }, []);
 
+  // --- CORRECTION ICI ---
   const handleChange = (
-  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-) => {
-  const { name, value, type } = e.target;
-  const checked = (e.target as HTMLInputElement).checked;
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
 
-  let newValue: any;
-  if (type === 'checkbox') {
-    newValue = checked;
-  } else if (name === 'prix') {
-    newValue = Number(value);
-  } else if (name === 'lieuId') {
-    newValue = Number(value);  
-  } else {
-    newValue = value;
-  }
+    // Calcul de la nouvelle valeur brute
+    let newValue: any;
+    if (type === 'checkbox') {
+      newValue = checked;
+    } else if (name === 'prix' || name === 'lieuId') {
+      newValue = Number(value);
+    } else {
+      newValue = value;
+    }
 
-  setFormData(prev => ({
-    ...prev,
-    [name]: newValue,
-  }));
-};
+    // Mise à jour de l'état en une seule fois
+    setFormData(prev => {
+      // 1. On crée le nouvel objet avec la valeur modifiée
+      const updatedState = {
+        ...prev,
+        [name]: newValue,
+      };
 
+      // 2. Si c'est le lieu qui a changé, on met aussi à jour la ville
+      if (name === 'lieuId') {
+        const selectedLieu = lieux.find(l => l.id === newValue);
+        if (selectedLieu) {
+          updatedState.ville = selectedLieu.ville || '';
+        }
+      }
+
+      return updatedState;
+    });
+  };
+  // ---------------------
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+    if (!user) {
+        setError("Vous devez être connecté pour créer un événement.");
+        setLoading(false);
+        return;
+    }
+
     try {
-      await evenementService.create(formData);
+      const payload: any = {
+        nom: formData.nom,
+        description: formData.description,
+        payant: formData.payant,
+        prix: formData.payant ? formData.prix : 0,
+        ville: formData.ville,
+        dateDebut: new Date(formData.dateDebut).toISOString(),
+        dateFin: new Date(formData.dateFin).toISOString(),
+        
+        lieu: { id: Number(formData.lieuId) },
+        utilisateur: { id: user.id },
+        
+        // image_url: formData.imageUrl
+      };
+
+      await evenementService.create(payload);
       navigate('/organisateur/evenements');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors de la création');
+      console.error(err);
+      setError(err.response?.data?.message || 'Erreur lors de la création de l\'événement');
     } finally {
       setLoading(false);
     }
@@ -87,7 +131,8 @@ const CreateEvent: React.FC = () => {
           <h1 className="text-3xl font-bold text-white mb-8">Créer un événement</h1>
 
           {error && (
-            <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6">
+            <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6 flex items-center">
+              <AlertCircle className="w-5 h-5 mr-2" />
               {error}
             </div>
           )}
@@ -187,42 +232,55 @@ const CreateEvent: React.FC = () => {
                   name="lieuId"
                   value={formData.lieuId}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                   required
                   disabled={lieuxLoading || lieux.length === 0}
                 >
                   {lieuxLoading && <option>Chargement des lieux...</option>}
                   {!lieuxLoading && lieux.length === 0 && (
-                    <option>Aucun lieu disponible</option>
+                    <option value="">Aucun lieu disponible</option>
                   )}
-                  {!lieuxLoading &&
-                    lieux.map((lieu) => (
-                      <option key={lieu.id} value={lieu.id}>
-                        {lieu.nom} - {lieu.ville} {lieu.adresse} - {lieu.nbPlaces} places
-                      </option>
-                    ))}
+                  {!lieuxLoading && lieux.length > 0 && lieux.map((lieu) => (
+                    <option key={lieu.id} value={lieu.id}>
+                      {lieu.nom} - {lieu.ville} ({lieu.nbPlaces} places)
+                    </option>
+                  ))}
                 </select>
               </div>
               <p className="text-gray-500 text-xs mt-1">Sélectionnez le lieu de l'événement</p>
             </div>
 
+            {/* Champ ville pré-rempli mais modifiable */}
+            <div>
+               <label className="block text-sm font-medium text-gray-300 mb-2">Ville (auto-remplie par le lieu)</label>
+               <input
+                  type="text"
+                  name="ville"
+                  value={formData.ville}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+               />
+            </div>
 
-            <div className="space-y-4">
+
+            <div className="space-y-4 pt-4 border-t border-gray-700">
               <div className="flex items-center">
                 <input
                   type="checkbox"
+                  id="payant"
                   name="payant"
                   checked={formData.payant}
                   onChange={handleChange}
-                  className="w-4 h-4 text-blue-600 bg-gray-900 border-gray-700 rounded focus:ring-blue-500"
+                  className="w-5 h-5 text-blue-600 bg-gray-900 border-gray-700 rounded focus:ring-blue-500 focus:ring-offset-gray-900"
                 />
-                <label className="ml-2 text-sm font-medium text-gray-300">
-                  Événement payant
+                <label htmlFor="payant" className="ml-3 text-sm font-medium text-gray-300 cursor-pointer">
+                  Cet événement est payant
                 </label>
               </div>
 
               {formData.payant && (
-                <div>
+                <div className="animate-fade-in-down">
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Prix (€)
                   </label>
@@ -236,22 +294,22 @@ const CreateEvent: React.FC = () => {
                       min="0"
                       step="0.01"
                       className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="0"
-                      required
+                      placeholder="0.00"
+                      required={formData.payant}
                     />
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex gap-4 pt-4">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-900/20"
               >
                 <Save className="w-5 h-5 mr-2" />
-                {loading ? 'Création...' : 'Créer l\'événement'}
+                {loading ? 'Création en cours...' : 'Créer l\'événement'}
               </button>
               <button
                 type="button"

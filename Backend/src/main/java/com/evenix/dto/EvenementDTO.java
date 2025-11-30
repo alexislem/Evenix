@@ -32,6 +32,8 @@ public class EvenementDTO {
 
     @NotNull(message = "Un lieu doit être associé à l'évènement.")
     private LieuDTO lieu;
+    
+    private String ville; // <--- AJOUTER CE CHAMP MANQUANT
 
     // Getters & Setters
     public int getId() {
@@ -105,5 +107,8 @@ public class EvenementDTO {
     public void setLieu(LieuDTO lieu) {
         this.lieu = lieu;
     }
+    
+    public String getVille() { return ville; }
+    public void setVille(String ville) { this.ville = ville; }
 
 }

@@ -31,16 +31,16 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
                                   HttpServletResponse response,
                                   FilterChain filterChain) throws ServletException, IOException {
 
-    // 1) Récupérer le header Authorization (via SecParams)
+
     String header = request.getHeader(SecParams.HEADER);
 
     if (!StringUtils.hasText(header) || !header.startsWith(SecParams.PREFIX)) {
-      // Pas de token → on laisse passer, ce sera traité comme anonyme
+
       filterChain.doFilter(request, response);
       return;
     }
 
-    // 2) Extraire le token sans le prefix "Bearer "
+
     String token = header.substring(SecParams.PREFIX.length());
 
     try {
@@ -62,14 +62,14 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
 
       SecurityContextHolder.getContext().setAuthentication(authentication);
 
-      // Token OK → on continue la chaîne normalement
+
       filterChain.doFilter(request, response);
 
     } catch (Exception ex) {
-      // Token fourni mais invalide / expiré → 401 direct
+
       SecurityContextHolder.clearContext();
       response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
-      // On NE continue pas la chaîne
+
     }
   }
 }
