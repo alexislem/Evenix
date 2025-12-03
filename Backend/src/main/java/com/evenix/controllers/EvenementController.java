@@ -1,6 +1,7 @@
 package com.evenix.controllers;
 
 import com.evenix.dto.EvenementDTO;
+import com.evenix.entities.Evenement;
 import com.evenix.services.EvenementServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +18,7 @@ public class EvenementController {
         this.evenementService = evenementService;
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public List<EvenementDTO> getAll() {
         return evenementService.getAllEvenements();
     }
@@ -34,9 +35,17 @@ public class EvenementController {
         return ResponseEntity.ok(evenementService.createEvenement(dto));
     }
 
+ // Dans EvenementController.java (exemple)
+
     @PutMapping("/{id}")
-    public ResponseEntity<EvenementDTO> update(@PathVariable int id, @RequestBody EvenementDTO dto) {
-        return ResponseEntity.ok(evenementService.updateEvenement(id, dto));
+    public ResponseEntity<EvenementDTO> updateEvenement(@PathVariable int id, @RequestBody EvenementDTO dto) {
+        try {
+            EvenementDTO updated = evenementService.updateEvenement(id, dto);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            // Gérer EntityNotFoundException ou autre exception si nécessaire
+            return ResponseEntity.notFound().build(); 
+        }
     }
 
     @DeleteMapping("/{id}")

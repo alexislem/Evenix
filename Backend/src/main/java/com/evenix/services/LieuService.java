@@ -1,6 +1,7 @@
 package com.evenix.services;
 
 import com.evenix.dto.LieuDTO;
+import com.evenix.entities.Lieu;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,4 +12,5 @@ public interface LieuService {
     LieuDTO createLieu(LieuDTO dto);
     LieuDTO updateLieu(int id, LieuDTO dto);
     void deleteLieu(int id);
+    Optional<Lieu> getByNom(String nom);
 }

@@ -1,6 +1,7 @@
 package com.evenix.entities;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +34,18 @@ public class Utilisateur {
 
     @Column(name = "UTI_Email", unique = true)
     private String email;
+    
+    @Column(name ="UTI_DateCreation")
+    private LocalDate dateCreation;
+    
+    @Column(name = "UTI_DateModif")
+    private LocalDate dateModif;
+    
+    @Column(name = "UTI_EstConfirme", nullable = true)
+    private boolean estConfirme;
+    
+    @Column(name="UTI_Telephone")
+    private String telephone;
 
     @ManyToOne
     @JoinColumn(name = "ENT_id", nullable = true)
@@ -41,6 +54,7 @@ public class Utilisateur {
     @ManyToOne
     @JoinColumn(name = "ROL_id", nullable = false)
     private Role role;
+    
 
     @OneToMany(mappedBy = "utilisateur")
     private List<Paiement> paiements = new ArrayList<>();
@@ -52,19 +66,22 @@ public class Utilisateur {
 
     public Utilisateur() {}
 
-    public Utilisateur(String nom, String prenom, Date dateDeNaissance, String motDePasse, String email, Role role) {
+    public Utilisateur(String nom, String prenom, Date dateDeNaissance, String motDePasse, String email, Role role, String telephone) {
         this.nom = nom;
         this.prenom = prenom;
         this.dateDeNaissance = dateDeNaissance;
+        this.telephone = telephone;
         this.motDePasse = motDePasse;
         this.email = email;
         this.role = role;
+        this.estConfirme = false;
     }
 
     // Getters/Setters
     public void setId(int id) {
     	this.id = id;
     }
+    
 
     public int getId() {
         return id;
@@ -79,7 +96,11 @@ public class Utilisateur {
     }
 
     public String getPrenom() {
-        return prenom;
+        return this.prenom;
+    }
+    
+    public String getTelephone() {
+        return this.telephone;
     }
 
     public void setPrenom(String prenom) {
@@ -93,6 +114,22 @@ public class Utilisateur {
     public void setDateDeNaissance(Date dateDeNaissance) {
         this.dateDeNaissance = dateDeNaissance;
     }
+    
+    public LocalDate getDateCreation() {
+    	return this.dateCreation;
+    }
+    
+    public void setDateCreation(LocalDate dateCreation) {
+    	this.dateCreation = dateCreation;
+    }
+    
+    public LocalDate getDateModif() {
+    	return this.dateModif;
+    }
+    
+    public void setDateModif(LocalDate dateModif) {
+    	this.dateModif = dateModif;
+    }
 
     public String getMotDePasse() {
         return motDePasse;
@@ -100,6 +137,10 @@ public class Utilisateur {
 
     public void setMotDePasse(String motDePasse) {
         this.motDePasse = motDePasse;
+    }
+    
+    public void setTelephone(String telephone) {
+    	this.telephone = telephone;
     }
 
     public String getEmail() {
@@ -113,7 +154,7 @@ public class Utilisateur {
     public Entreprise getEntreprise() {
         return entreprise;
     }
-
+    
     public void setEntreprise(Entreprise entreprise) {
         this.entreprise = entreprise;
     }
@@ -124,6 +165,14 @@ public class Utilisateur {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+    
+    public boolean getEstConfirme() {
+    	return this.estConfirme;
+    }
+    
+    public void setEstConfirme(boolean estConfirme) {
+    	this.estConfirme = estConfirme;
     }
 
     public List<Paiement> getPaiements() {
@@ -142,4 +191,5 @@ public class Utilisateur {
                 "; Date de naissance : " + dateDeNaissance +
                 "; Email : " + email + "]";
     }
+
 }

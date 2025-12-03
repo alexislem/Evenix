@@ -2,9 +2,12 @@ package com.evenix.services;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // Import important
 
+import com.evenix.dto.EntrepriseDTO;
 import com.evenix.entities.Entreprise;
 import com.evenix.repos.EntrepriseRepository;
 
@@ -18,9 +21,12 @@ public class EntrepriseServiceImpl implements EntrepriseService {
     }
 
     @Override
-    public List<Entreprise> getAllEntreprises() {
-        return entrepriseRepository.findAll();
+    public List<EntrepriseDTO> getAllEntreprises() {
+        return entrepriseRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
+    
 
     @Override
     public Optional<Entreprise> getEntrepriseById(int id) {
@@ -33,11 +39,21 @@ public class EntrepriseServiceImpl implements EntrepriseService {
     }
 
     @Override
+    @Transactional // Ajout de la transaction
     public Entreprise updateEntreprise(int id, Entreprise updatedEntreprise) {
         return entrepriseRepository.findById(id)
-                .map(e -> {
-                    e.setNom(updatedEntreprise.getNom());
-                    return entrepriseRepository.save(e);
+                .map(existing -> {
+                    // ⚠️ MISE À JOUR DE TOUS LES CHAMPS ENVOYÉS PAR LE FRONTEND
+                    existing.setNom(updatedEntreprise.getNom());
+                    existing.setStatutJuridique(updatedEntreprise.getStatutJuridique());
+                    existing.setAdresse(updatedEntreprise.getAdresse());
+                    existing.setSecteurActivite(updatedEntreprise.getSecteurActivite());
+                    existing.setTelephone(updatedEntreprise.getTelephone());
+                    existing.setEmail(updatedEntreprise.getEmail());
+                    
+                    // La méthode save() dans un contexte @Transactional va déclencher l'UPDATE
+                    // même sans saveAndFlush(), mais l'ajouter ne ferait pas de mal si nécessaire.
+                    return entrepriseRepository.save(existing); 
                 })
                 .orElseGet(() -> entrepriseRepository.save(updatedEntreprise));
     }
@@ -46,5 +62,26 @@ public class EntrepriseServiceImpl implements EntrepriseService {
     public void deleteEntreprise(int id) {
         entrepriseRepository.deleteById(id);
     }
-}
+    
+    private EntrepriseDTO convertToDTO(Entreprise e) {
+        EntrepriseDTO dto = new EntrepriseDTO();
+        dto.setId(e.getId());
+        dto.setNom(e.getNom());
+        dto.setStatutJuridique(e.getStatutJuridique());
+        dto.setAdresse(e.getAdresse());
+        dto.setSecteurActivite(e.getSecteurActivite());
+        dto.setTelephone(e.getTelephone());
+        dto.setEmail(e.getEmail());
+        return dto;
+    }
 
+	public Optional<Entreprise> findByNom(String nom) {
+		return entrepriseRepository.findByNom(nom);
+	}
+
+	public void save(Entreprise e) {
+		// TODO Auto-generated method stub
+		entrepriseRepository.save(e);
+	}
+
+}

@@ -102,13 +102,13 @@ public class DataInitializer implements CommandLineRunner {
                 .orElseGet(() -> typeEvenementRepository.save(new TypeEvenement(nom)));
     }
 
-    private Lieu ensureLieu(String nom, String adresse, float lat, float lon, int capacite, TypeLieu type) {
+    private Lieu ensureLieu(String nom, String adresse, float lat, float lon, int capacite, TypeLieu type, String ville) {
         
         return lieuRepository.findAll().stream()
                 .filter(l -> nom.equalsIgnoreCase(l.getNom()))
                 .findFirst()
                 .orElseGet(() -> {
-                    Lieu l = new Lieu(lat, lon, nom, adresse, capacite, type);
+                    Lieu l = new Lieu(lat, lon, nom, adresse, capacite, type, ville);
                     return lieuRepository.save(l);
                 });
     }
@@ -210,9 +210,9 @@ public class DataInitializer implements CommandLineRunner {
         LieuCulturel lc3 = ensureLieuCulturel("Cinéma Gaumont",      43.6047f, 1.4442f, tlcCinema);
 
         
-        Lieu l1 = ensureLieu("Salle Alpha",  "10 rue des Arts, Marseille", 43.2965f, 5.3698f, 200, tlSalle);
-        Lieu l2 = ensureLieu("Amphi Delta",  "15 avenue Université, Lille", 50.6292f, 3.0573f, 300, tlAmphi);
-        Lieu l3 = ensureLieu("Studio B",     "20 boulevard des Studios, Nice", 43.7102f, 7.2620f, 100, tlStudio);
+        Lieu l1 = ensureLieu("Salle Alpha",  "10 rue des Arts, Marseille", 43.2965f, 5.3698f, 200, tlSalle, "Marseille");
+        Lieu l2 = ensureLieu("Amphi Delta",  "15 avenue Université, Lille", 50.6292f, 3.0573f, 300, tlAmphi, "Lille");
+        Lieu l3 = ensureLieu("Studio B",     "20 boulevard des Studios, Nice", 43.7102f, 7.2620f, 100, tlStudio, "Nice");
 
        
         Evenement ev1 = ensureEvenement(

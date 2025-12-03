@@ -16,6 +16,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.Optional;
 
@@ -46,22 +47,24 @@ public class AuthServiceImpl implements AuthService {
       throw new EmailAlreadyExistsException("Email déjà existant !");
     }
 
-
     Utilisateur u = new Utilisateur();
     u.setNom(request.getNom());
     u.setPrenom(request.getPrenom());
     u.setEmail(request.getEmail());
+    u.setTelephone(request.getTelephone());
     u.setDateDeNaissance(request.getDateDeNaissance());
     u.setMotDePasse(passwordEncoder.encode(request.getMotDePasse()));
+    u.setDateCreation(LocalDate.now());
 
-
-    Role role = resolveRole(request.getRoleId());
+    // On met UTILISATEUR par défaut
+    Role role = roleRepository.findByNom("UTILISATEUR")
+        .orElseThrow(() -> new EntityNotFoundException("Rôle UTILISATEUR introuvable"));
     u.setRole(role);
-
 
     Utilisateur saved = utilisateurRepository.save(u);
     return UtilisateurMapper.fromEntity(saved);
   }
+
 
   // ---------- LOGIN ----------
   @Override
@@ -79,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
   // ---------- JWT ----------
   @Override
   public String generateTokenFor(Utilisateur utilisateur) {
-    String usernameSubject = utilisateur.getNom(); // sujet = username (ton écosystème l’utilise comme ça)
+    String usernameSubject = utilisateur.getNom(); // sujet = username
     String roleName = (utilisateur.getRole() != null && utilisateur.getRole().getNom() != null)
         ? "ROLE_" + utilisateur.getRole().getNom()
         : "ROLE_USER";

@@ -25,12 +25,15 @@ public class EvenementDTO {
 
     @PositiveOrZero(message = "Le prix doit être positif ou nul.")
     private float prix;
+    
 
     @NotNull(message = "Un utilisateur doit être associé à l'évènement.")
     private UtilisateurDTO utilisateur;
 
     @NotNull(message = "Un lieu doit être associé à l'évènement.")
     private LieuDTO lieu;
+    
+    private String ville; // <--- AJOUTER CE CHAMP MANQUANT
 
     // Getters & Setters
     public int getId() {
@@ -104,4 +107,8 @@ public class EvenementDTO {
     public void setLieu(LieuDTO lieu) {
         this.lieu = lieu;
     }
+    
+    public String getVille() { return ville; }
+    public void setVille(String ville) { this.ville = ville; }
+
 }

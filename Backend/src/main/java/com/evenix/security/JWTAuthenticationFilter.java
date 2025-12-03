@@ -2,6 +2,9 @@ package com.evenix.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.evenix.dto.UtilisateurDTO;
+import com.evenix.entities.Utilisateur;
+import com.evenix.repos.UtilisateurRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -17,23 +20,32 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-
-
-    private static final String JWT_SECRET = "evenix-secret-change-me";
-    private static final long   EXPIRATION_MS = 10L * 24 * 60 * 60 * 1000;
 
     private final AuthenticationManager authenticationManager;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public JWTAuthenticationFilter(AuthenticationManager authenticationManager) {
-        super();
+    private final Algorithm algorithm;
+    private final long expirationMs;
+
+    private final UtilisateurRepository utilisateurRepository;
+
+    public JWTAuthenticationFilter(AuthenticationManager authenticationManager,
+                                   String jwtSecret,
+                                   long expirationMs,
+                                   UtilisateurRepository utilisateurRepository) {
         this.authenticationManager = authenticationManager;
+        this.algorithm = Algorithm.HMAC256(jwtSecret);
+        this.expirationMs = expirationMs;
+        this.utilisateurRepository = utilisateurRepository;
 
         setFilterProcessesUrl("/api/auth/login");
     }
+
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request,
@@ -41,10 +53,21 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             throws AuthenticationException {
 
         try {
-
             JsonNode node = objectMapper.readTree(request.getInputStream());
-            String username = node.hasNonNull("username") ? node.get("username").asText()
-                             : node.path("nom").asText();
+
+            // On lit d'abord "email", sinon on retombe éventuellement sur username/nom
+            String username = null;
+
+            if (node.hasNonNull("email")) {
+                username = node.get("email").asText();
+            } else if (node.hasNonNull("username")) {
+                username = node.get("username").asText();
+            } else if (node.hasNonNull("nom")) {
+                username = node.get("nom").asText();
+            } else {
+                username = "";
+            }
+
             String password = node.hasNonNull("password") ? node.get("password").asText()
                              : node.path("motDePasse").asText();
 
@@ -58,6 +81,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         }
     }
 
+
     @Override
     protected void successfulAuthentication(HttpServletRequest request,
                                             HttpServletResponse response,
@@ -65,22 +89,46 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                             Authentication authResult)
             throws IOException, ServletException {
 
+        // User Spring Security
         var springUser = (org.springframework.security.core.userdetails.User) authResult.getPrincipal();
 
+        // Rôles -> String[]
         List<String> roles = new ArrayList<>();
         springUser.getAuthorities().forEach(a -> roles.add(a.getAuthority()));
 
+        // Génération du token
         String token = JWT.create()
-                .withSubject(springUser.getUsername())
+                .withSubject(springUser.getUsername()) // ici : email
                 .withArrayClaim("roles", roles.toArray(new String[0]))
-                .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_MS))
-                .sign(Algorithm.HMAC256(JWT_SECRET));
+                .withExpiresAt(new Date(System.currentTimeMillis() + expirationMs))
+                .sign(algorithm);
 
+        // 🔥 Récupération du vrai utilisateur (entité) depuis la base
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(springUser.getUsername())
+                .orElse(null);
 
-        response.addHeader("Authorization", "Bearer " + token);
+        // (optionnel mais recommandé) Conversion en DTO
+        UtilisateurDTO utilisateurDTO = null;
+        if (utilisateur != null) {
+            utilisateurDTO = new UtilisateurDTO();
+                utilisateurDTO.setId(utilisateur.getId());
+                utilisateurDTO.setEmail(utilisateur.getEmail());
+                utilisateurDTO.setNom(utilisateur.getNom());
+                utilisateurDTO.setPrenom(utilisateur.getPrenom());
+                utilisateurDTO.setRole(utilisateur.getRole());
+        }
+
+        // Construction de la réponse JSON
+        Map<String, Object> body = new HashMap<>();
+        body.put("token", token);
+        body.put("utilisateur", utilisateurDTO);
+
+        // Ajout optionnel du header Authorization
+        response.addHeader(SecParams.HEADER, SecParams.PREFIX + token);
+
+        // Envoi JSON
         response.setContentType("application/json");
-        response.getWriter().write("{\"token\":\"" + token + "\"}");
-        response.getWriter().flush();
+        new ObjectMapper().writeValue(response.getWriter(), body);
     }
 
     @Override

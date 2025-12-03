@@ -17,7 +17,7 @@ public class LieuController {
         this.lieuService = lieuService;
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public List<LieuDTO> getAllLieux() {
         return lieuService.getAllLieux();
     }

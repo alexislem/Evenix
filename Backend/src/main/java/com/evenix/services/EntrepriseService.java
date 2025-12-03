@@ -1,12 +1,13 @@
 package com.evenix.services;
 
+import com.evenix.dto.EntrepriseDTO;
 import com.evenix.entities.Entreprise;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface EntrepriseService {
-    List<Entreprise> getAllEntreprises();
+    List<EntrepriseDTO> getAllEntreprises();
 
     Optional<Entreprise> getEntrepriseById(int id);
 

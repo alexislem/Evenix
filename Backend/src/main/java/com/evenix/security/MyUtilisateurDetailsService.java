@@ -5,7 +5,7 @@ import com.evenix.entities.Utilisateur;
 import com.evenix.services.UtilisateurServiceImpl;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User; // ⚠️ attention à l'import
+import org.springframework.security.core.userdetails.User; // Spring Security
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,23 +24,31 @@ public class MyUtilisateurDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        
-        Utilisateur u = utilisateurService.findUtilisateurByNom(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable : " + username));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+
+        Utilisateur u = utilisateurService.findUtilisateurByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable : " + email));
 
         List<GrantedAuthority> auths = new ArrayList<>();
 
-        
         Role r = u.getRole();
         if (r != null && r.getNom() != null && !r.getNom().isBlank()) {
             String authority = r.getNom().startsWith("ROLE_") ? r.getNom() : "ROLE_" + r.getNom();
             auths.add(new SimpleGrantedAuthority(authority));
         }
 
+        boolean enabled = true; // remplace par u.isEnabled() si tu l'as
+        boolean accountNonExpired = true;
+        boolean credentialsNonExpired = true;
+        boolean accountNonLocked = true;
+
         return new User(
-                u.getNom(),         
-                u.getMotDePasse(),  
+                u.getEmail(),          
+                u.getMotDePasse(),     
+                enabled,
+                accountNonExpired,
+                credentialsNonExpired,
+                accountNonLocked,
                 auths
         );
     }

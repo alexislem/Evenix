@@ -27,7 +27,7 @@ public final class UtilisateurMapper {
       RoleDTO roleDTO = new RoleDTO();
       roleDTO.setId(role.getId());
       roleDTO.setNom(role.getNom());
-      dto.setRole(roleDTO);
+      dto.setRole(role);
     }
 
 

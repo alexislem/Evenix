@@ -27,6 +27,12 @@ public class LieuServiceImpl implements LieuService {
     }
 
     @Override
+    public Optional<Lieu> getByNom(String nom) {
+        return lieuRepository.findByNom(nom);
+    }
+
+    
+    @Override
     public Optional<LieuDTO> getLieuById(int id) {
         return lieuRepository.findById(id).map(this::convertToDTO);
     }
@@ -35,6 +41,10 @@ public class LieuServiceImpl implements LieuService {
     public LieuDTO createLieu(LieuDTO dto) {
         Lieu lieu = convertToEntity(dto);
         return convertToDTO(lieuRepository.save(lieu));
+    }
+    
+    public Lieu save(Lieu lieu) {
+        return lieuRepository.save(lieu);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.evenix.repos;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,5 +20,6 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Intege
 	Optional<Utilisateur> findByEmail(String email);
 	Optional<Utilisateur> findByRole(Role role);
 	Optional<Utilisateur> findByEntreprise(Entreprise entreprise);
+	Optional<Utilisateur> findByDateCreation(LocalDate dateCreation);
 	boolean existsByEmail(String email);
 }

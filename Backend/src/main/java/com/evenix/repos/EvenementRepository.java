@@ -22,4 +22,5 @@ public interface EvenementRepository extends JpaRepository<Evenement, Integer> {
 	Optional<Evenement> findByUtilisateur(Utilisateur utilisateur);
 	Optional<Evenement> findByLieu(Lieu lieu);
 	Optional<Evenement> findByTypesEvenement(Set<TypeEvenement> typesEvenements);
+	
 }

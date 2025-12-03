@@ -3,6 +3,8 @@ package com.evenix.entities;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -39,6 +41,7 @@ public class Entreprise {
 	private String email;
 	
 	@OneToMany(mappedBy = "entreprise")
+	@JsonIgnore
 	private List<Utilisateur> utilisateurs = new ArrayList<>();
 	
 	// Constructors
