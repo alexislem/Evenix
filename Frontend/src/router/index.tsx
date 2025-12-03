@@ -10,6 +10,7 @@ import Login from '../pages/Login';
 import Register from '../pages/Register';
 import Profile from '../pages/Profile';
 import UserDashboard from '../pages/UserDashboard';
+import MyRegistrations from '../pages/MyRegistrations';
 
 import OrganizerDashboard from '../pages/organizer/OrganizerDashboard';
 import OrganizerEventsList from '../pages/organizer/OrganizerEventsList';
@@ -18,28 +19,21 @@ import EditEvent from '../pages/organizer/EditEvent';
 
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import AdminUsers from '../pages/admin/AdminUsers';
+import AdminUserDetails from '../pages/admin/AdminUserDetails'; // Import de la nouvelle page
 import AdminEntreprises from '../pages/admin/AdminEntreprises';
 import AdminEvents from '../pages/admin/AdminEvents';
-import InscriptionPage from '../pages/InscriptionPage'; // Assurez-vous que l'import est là
+import InscriptionPage from '../pages/InscriptionPage';
+import ForgotPassword from '../pages/ForgotPassword';
+
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <MainLayout />,
     children: [
-      {
-        index: true,
-        element: <Home />,
-      },
-      {
-        path: 'evenements',
-        element: <EventsList />,
-      },
-      {
-        path: 'evenements/:id',
-        element: <EventDetail />,
-      },
-      // --- NOUVELLE ROUTE D'INSCRIPTION ---
+      { index: true, element: <Home /> },
+      { path: 'evenements', element: <EventsList /> },
+      { path: 'evenements/:id', element: <EventDetail /> },
       {
         path: 'evenements/:id/inscription',
         element: (
@@ -48,19 +42,9 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      // ------------------------------------
-      {
-        path: 'a-propos',
-        element: <About />,
-      },
-      {
-        path: 'login',
-        element: <Login />,
-      },
-      {
-        path: 'register',
-        element: <Register />,
-      },
+      { path: 'a-propos', element: <About /> },
+      { path: 'login', element: <Login /> },
+      { path: 'register', element: <Register /> },
       {
         path: 'profil',
         element: (
@@ -74,6 +58,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <UserDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'mes-inscriptions',
+        element: (
+          <ProtectedRoute>
+            <MyRegistrations />
           </ProtectedRoute>
         ),
       },
@@ -125,6 +117,16 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      // --- NOUVELLE ROUTE DÉTAILS ---
+      {
+        path: 'admin/utilisateurs/:id',
+        element: (
+          <ProtectedRoute requiredRoles={['ADMIN']}>
+            <AdminUserDetails />
+          </ProtectedRoute>
+        ),
+      },
+      // -----------------------------
       {
         path: 'admin/entreprises',
         element: (
@@ -140,6 +142,11 @@ export const router = createBrowserRouter([
             <AdminEvents />
           </ProtectedRoute>
         ),
+      },
+
+      {
+        path: 'forgot-password',
+        element: <ForgotPassword />,
       },
     ],
   },

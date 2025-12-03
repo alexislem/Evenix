@@ -1,55 +1,53 @@
 package com.evenix.services;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
+import com.evenix.dto.RoleDTO;
 import com.evenix.entities.Role;
 import com.evenix.repos.RoleRepository;
+import com.evenix.services.RoleService;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-public class RoleServiceImpl implements RoleService{
-    private final RoleRepository roleRepository;
+public class RoleServiceImpl implements RoleService {
 
-    public RoleServiceImpl(RoleRepository roleRepository) {
-        this.roleRepository = roleRepository;
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Override
+    public List<RoleDTO> getAllRoles() {
+        return roleRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
-    /* Récupérer tous les rôles */
     @Override
-    public List<Role> getAllRoles() {
-        return roleRepository.findAll();
-    }
-
-    /* Récupérer un rôle par son id */
-    @Override
-    public Role getRoleById(int id) {
+    public RoleDTO getRoleById(int id) {
         return roleRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Role non trouvé avec id=" + id));
+                .map(this::convertToDTO)
+                .orElseThrow(() -> new EntityNotFoundException("Rôle non trouvé"));
     }
 
-    /* Créer un rôle */
     @Override
-    public Role createRole(Role role) {
-        return roleRepository.save(role);
+    public RoleDTO createRole(RoleDTO dto) {
+        Role role = new Role();
+        role.setNom(dto.getNom());
+        return convertToDTO(roleRepository.save(role));
     }
 
-    /* Mettre à jour un rôle existant */
-    @Override
-    public Role updateRole(int id, Role updatedRole) {
-        return roleRepository.findById(id)
-                .map(existing -> {
-                    existing.setNom(updatedRole.getNom());
-                    return roleRepository.save(existing);
-                })
-                .orElseThrow(() -> new EntityNotFoundException("Role non trouvé avec id=" + id));
-    }
-
-    /* Supprimer un rôle */
     @Override
     public void deleteRole(int id) {
         roleRepository.deleteById(id);
+    }
+
+    private RoleDTO convertToDTO(Role role) {
+        RoleDTO dto = new RoleDTO();
+        dto.setId(role.getId());
+        dto.setNom(role.getNom());
+        return dto;
     }
 }

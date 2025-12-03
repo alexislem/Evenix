@@ -18,9 +18,32 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await login({ email, motDePasse });
-      navigate('/dashboard');
+      // 1. On attend la réponse de la connexion
+      // (AuthContext a été modifié précédemment pour renvoyer la réponse complète)
+      const response = await login({ email, motDePasse });
+
+      // 2. On récupère le rôle de l'utilisateur
+      // La structure correspond à votre LoginData.java : { token, utilisateur: { role: { nom: ... } } }
+      const role = response?.utilisateur?.role?.nom;
+
+      console.log("Connexion réussie, Rôle détecté :", role);
+
+      // 3. Redirection intelligente selon les routes définies dans votre router
+      switch (role) {
+        case 'ADMIN':
+          navigate('/admin/dashboard');
+          break;
+        case 'ORGANISATEUR':
+          navigate('/organisateur/dashboard');
+          break;
+        case 'PARTICIPANT':
+        default:
+          navigate('/dashboard'); // Dashboard par défaut pour les utilisateurs
+          break;
+      }
+
     } catch (err: any) {
+      console.error("Erreur de connexion:", err);
       setError(err.response?.data?.message || 'Email ou mot de passe incorrect');
     } finally {
       setLoading(false);
@@ -92,6 +115,12 @@ const Login: React.FC = () => {
             >
               {loading ? 'Connexion...' : 'Se connecter'}
             </button>
+
+            <div className="flex items-center justify-end mb-6">
+              <Link to="/forgot-password" className="text-sm text-blue-400 hover:text-blue-300">
+                Mot de passe oublié ?
+              </Link>
+            </div>
           </form>
 
           <div className="mt-6 text-center">

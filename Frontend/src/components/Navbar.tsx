@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, LogIn, LogOut, User, LayoutDashboard } from 'lucide-react';
+import {LogIn, LogOut, User, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar: React.FC = () => {
@@ -17,7 +17,11 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center space-x-2 text-xl font-bold hover:text-blue-400 transition">
-            <Calendar className="w-8 h-8" />
+            <img 
+               src="https://i.imgur.com/6qJHk1w.png" 
+               alt="Logo Evenix" 
+               className="w-12 h-12 object-contain drop-shadow-2xl"
+             />
             <span>Evenix</span>
           </Link>
 

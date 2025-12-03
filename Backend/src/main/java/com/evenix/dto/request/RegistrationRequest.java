@@ -1,6 +1,8 @@
 package com.evenix.dto.request;
 
 import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class RegistrationRequest {
   private String nom;
@@ -8,7 +10,10 @@ public class RegistrationRequest {
   private String email;
   private String motDePasse;
   private String telephone;
-  private Date dateDeNaissance;  // optionnel dans le JSON
+  private String questionSecurite; // Ex: "Quel est le nom de votre premier animal ?"
+  private String reponseSecurite; // Haché via BCrypt
+  private LocalDate dateDeNaissance;  // optionnel dans le JSON
+  private LocalDateTime dateCreation;
   private Integer roleId;        // optionnel, si null → rôle par défaut
 
   public String getNom() { return nom; }
@@ -26,11 +31,29 @@ public class RegistrationRequest {
   public String getTelephone() { return telephone; }
   public void setTelephone(String telephone) { this.telephone = telephone; }
 
-  public Date getDateDeNaissance() { return dateDeNaissance; }
-  public void setDateDeNaissance(Date dateDeNaissance) {
+  public LocalDate getDateDeNaissance() { return dateDeNaissance; }
+  public void setDateDeNaissance(LocalDate dateDeNaissance) {
     this.dateDeNaissance = dateDeNaissance;
   }
 
   public Integer getRoleId() { return roleId; }
   public void setRoleId(Integer roleId) { this.roleId = roleId; }
+public LocalDateTime getDateCreation() {
+	return dateCreation;
+}
+public void setDateCreation(LocalDateTime dateCreation) {
+	this.dateCreation = dateCreation;
+}
+public String getQuestionSecurite() {
+	return questionSecurite;
+}
+public void setQuestionSecurite(String questionSecurite) {
+	this.questionSecurite = questionSecurite;
+}
+public String getReponseSecurite() {
+	return reponseSecurite;
+}
+public void setReponseSecurite(String reponseSecurite) {
+	this.reponseSecurite = reponseSecurite;
+}
 }

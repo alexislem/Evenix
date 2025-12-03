@@ -1,0 +1,30 @@
+package com.evenix.services;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
+import com.evenix.entities.Role;
+
+@Service
+public interface RoleService {
+    
+    List<Role> getAllRoles();
+    
+    Optional<Role> getRoleById(int id);
+    
+    Role createRole(Role role);
+    
+    Role updateRole(int id, Role updatedRole);
+    
+    void deleteRole(int id);
+    
+    Optional<Role> getRoleByNom(String nom);
+    
+    boolean existsByNom(String nom);
+    
+    List<Role> getRolesByNomContaining(String nomPartiel);
+    
+    long countRoles();
+}

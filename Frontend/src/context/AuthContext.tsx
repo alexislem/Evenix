@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Utilisateur, LoginRequest, RegistrationRequest } from '../types';
+import { Utilisateur, LoginRequest, RegistrationRequest, AuthResponse } from '../types';
 import { authService } from '../services/authService';
 
 interface AuthContextType {
@@ -9,9 +9,16 @@ interface AuthContextType {
   isAdmin: boolean;
   isOrganisateur: boolean;
   isParticipant: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
+  
+  // Modifié : retourne une Promise<any> pour permettre la redirection dans Login.tsx
+  login: (credentials: LoginRequest) => Promise<any>; 
+  
   register: (data: RegistrationRequest) => Promise<void>;
   logout: () => void;
+  
+  // Ajouté : Nécessaire pour Profile.tsx
+  updateUser: (data: Utilisateur) => void; 
+  
   loading: boolean;
 }
 
@@ -34,23 +41,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = async (credentials: LoginRequest) => {
+    // authService.login renvoie { token, utilisateur }
     const response = await authService.login(credentials);
+    
+    // On stocke
     authService.storeAuthData(response.token, response.utilisateur);
     setToken(response.token);
     setUser(response.utilisateur);
+    
+    // IMPORTANT : On retourne la réponse pour que le composant Login puisse lire le rôle
+    return response; 
   };
 
   const register = async (data: RegistrationRequest) => {
-    const response = await authService.register(data);
-    authService.storeAuthData(response.token, response.utilisateur);
-    setToken(response.token);
-    setUser(response.utilisateur);
+    // authService.register renvoie l'utilisateur créé, mais PAS de token
+    // On ne connecte donc PAS l'utilisateur automatiquement ici.
+    await authService.register(data);
+    
+    // Optionnel : Vous pourriez déclencher un login automatique ici si vous modifiez le backend
+    // pour renvoyer un token lors de l'inscription, mais pour l'instant on ne fait rien.
   };
 
   const logout = () => {
     authService.logout();
     setToken(null);
     setUser(null);
+  };
+
+  // --- NOUVELLE FONCTION ---
+  const updateUser = (updatedUser: Utilisateur) => {
+    setUser(updatedUser);
+    // On met à jour le localStorage pour ne pas perdre les infos au refresh
+    // On réutilise le token actuel s'il existe
+    if (token) {
+        authService.storeAuthData(token, updatedUser);
+    }
   };
 
   const hasRole = (roleName: string): boolean => {
@@ -67,6 +92,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     login,
     register,
     logout,
+    updateUser, // Ne pas oublier de l'exposer
     loading,
   };
 

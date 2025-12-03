@@ -1,27 +1,26 @@
 import { api } from '../utils/api';
-import { Inscription } from '../types'; // Assurez-vous d'avoir le type Inscription
+import { Inscription } from '../types';
 
 export const inscriptionService = {
+  
   // Créer une inscription
-  async create(utilisateurId: number, evenementId: number) {
-    const payload = {
-      utilisateurId: utilisateurId,
-      evenementId: evenementId,
-      dateInscription: new Date().toISOString()
-    };
-    const response = await api.post('/api/inscription', payload);
+  // Le backend utilise @RequestParam, donc on passe les IDs dans l'URL
+  async create(utilisateurId: number, evenementId: number): Promise<Inscription> {
+    const response = await api.post<Inscription>(
+      `/api/inscription?userId=${utilisateurId}&eventId=${evenementId}`
+    );
     return response.data;
   },
 
   // Récupérer toutes les inscriptions d'un utilisateur
-  // (Nécessite un endpoint backend correspondant, ex: GET /api/inscription/utilisateur/{id})
+  // Route backend : GET /api/inscription/user/{userId}
   async getByUser(utilisateurId: number): Promise<Inscription[]> {
-    const response = await api.get<Inscription[]>(`/api/inscription/utilisateur/${utilisateurId}`);
+    const response = await api.get<Inscription[]>(`/api/inscription/user/${utilisateurId}`);
     return response.data;
   },
 
   // Supprimer une inscription (Désinscription)
-  async delete(inscriptionId: number) {
+  async delete(inscriptionId: number): Promise<void> {
     await api.delete(`/api/inscription/${inscriptionId}`);
   }
 };

@@ -1,26 +1,14 @@
 package com.evenix.repos;
 
-import java.time.ZonedDateTime;
-import java.util.List; // Import obligatoire
-import java.util.Optional;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import com.evenix.entities.Evenement;
 import com.evenix.entities.Inscription;
-import com.evenix.entities.Utilisateur;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 
-@Repository
 public interface InscriptionRepository extends JpaRepository<Inscription, Integer> {
-    // ⚠️ CORRECTION MAJEURE ICI : On retourne une LISTE
-    List<Inscription> findByUtilisateur(Utilisateur utilisateur);
     
-    Optional<Inscription> findById(int id);
+    // Récupérer l'historique des inscriptions d'un utilisateur (pour son tableau de bord)
+    List<Inscription> findByUtilisateurId(int utilisateurId);
     
-    // On retourne aussi une liste ici (plusieurs inscrits par événement)
-    List<Inscription> findByEvenement(Evenement evenement); 
-    
-    Optional<Inscription> findByDateInscription(ZonedDateTime dateinscription);
-    Optional<Inscription> findByDateAnnulation(ZonedDateTime dateannulation);
+    // Récupérer toutes les inscriptions pour un événement donné (pour l'organisateur)
+    List<Inscription> findByEvenementId(int evenementId);
 }

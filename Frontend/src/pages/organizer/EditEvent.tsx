@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Calendar, MapPin, Euro, FileText, Save, Image } from 'lucide-react';
+import { Calendar, MapPin, Euro, FileText, Save, Image, AlertCircle } from 'lucide-react';
 import { evenementService } from '../../services/evenementService';
+import { lieuService } from '../../services/lieuService'; // Import du service Lieu
+import { Lieu, CreateEventRequest } from '../../types';
 
 const EditEvent: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState('');
+  
+  // On stocke la liste des lieux pour le selecteur
+  const [lieux, setLieux] = useState<Lieu[]>([]);
+
   const [formData, setFormData] = useState({
     nom: '',
     description: '',
@@ -16,31 +23,51 @@ const EditEvent: React.FC = () => {
     dateFin: '',
     payant: false,
     prix: 0,
-    lieuId: 1,
+    lieuId: 0,
     imageUrl: '',
+    ville: ''
   });
 
   useEffect(() => {
     if (id) {
-      loadEvent();
+      loadData();
     }
   }, [id]);
 
-  const loadEvent = async () => {
+  const loadData = async () => {
     try {
-      const event = await evenementService.getById(Number(id));
+      setLoadingData(true);
+      
+      // 1. On charge l'événement ET la liste des lieux en parallèle
+      const [event, lieuxData] = await Promise.all([
+        evenementService.getById(Number(id)),
+        lieuService.getAll()
+      ]);
+
+      setLieux(lieuxData);
+
+      // Helper pour formater la date pour l'input datetime-local (YYYY-MM-DDTHH:mm)
+      const formatDateForInput = (dateStr: string) => {
+        if (!dateStr) return '';
+        return new Date(dateStr).toISOString().slice(0, 16);
+      };
+
+      // 2. On pré-remplit le formulaire
       setFormData({
         nom: event.nom,
         description: event.description,
-        dateDebut: event.dateDebut.slice(0, 16),
-        dateFin: event.dateFin.slice(0, 16),
-        payant: event.payant,
+        dateDebut: formatDateForInput(event.dateDebut),
+        dateFin: formatDateForInput(event.dateFin),
+        payant: event.prix > 0, // On déduit si c'est payant
         prix: event.prix,
-        lieuId: event.lieu.id,
-        imageUrl: event.image_url || '',
+        lieuId: event.lieu?.id || 0,
+        imageUrl: event.imageUrl || '',
+        ville: event.lieu?.ville || ''
       });
+
     } catch (err) {
-      setError('Événement introuvable');
+      console.error(err);
+      setError('Impossible de charger les données de l\'événement');
     } finally {
       setLoadingData(false);
     }
@@ -51,10 +78,31 @@ const EditEvent: React.FC = () => {
   ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    const newValue = type === 'checkbox' ? checked : type === 'number' ? Number(value) : value;
-    setFormData({
-      ...formData,
-      [name]: newValue,
+
+    let newValue: any;
+    if (type === 'checkbox') {
+      newValue = checked;
+    } else if (name === 'prix' || name === 'lieuId') {
+      newValue = Number(value);
+    } else {
+      newValue = value;
+    }
+
+    setFormData(prev => {
+      const updatedState = {
+        ...prev,
+        [name]: newValue,
+      };
+
+      // Mise à jour dynamique de la ville si on change le lieu
+      if (name === 'lieuId') {
+        const selectedLieu = lieux.find(l => l.id === newValue);
+        if (selectedLieu) {
+          updatedState.ville = selectedLieu.ville || '';
+        }
+      }
+
+      return updatedState;
     });
   };
 
@@ -63,10 +111,33 @@ const EditEvent: React.FC = () => {
     setError('');
     setLoading(true);
 
+    // Récupération de l'objet Lieu complet (nécessaire pour le backend)
+    const selectedLieu = lieux.find(l => l.id === formData.lieuId);
+    if (!selectedLieu) {
+        setError("Lieu invalide");
+        setLoading(false);
+        return;
+    }
+
     try {
-      await evenementService.update(Number(id), formData);
+      const payload: CreateEventRequest = {
+        nom: formData.nom,
+        description: formData.description,
+        dateDebut: new Date(formData.dateDebut).toISOString(),
+        dateFin: new Date(formData.dateFin).toISOString(),
+        prix: formData.payant ? formData.prix : 0,
+        ville: formData.ville,
+        imageUrl: formData.imageUrl,
+        
+        // On envoie l'objet Lieu complet
+        lieu: selectedLieu,
+        types: [] // À gérer si vous ajoutez l'édition des types
+      };
+
+      await evenementService.update(Number(id), payload);
       navigate('/organisateur/evenements');
     } catch (err: any) {
+      console.error(err);
       setError(err.response?.data?.message || 'Erreur lors de la modification');
     } finally {
       setLoading(false);
@@ -88,12 +159,15 @@ const EditEvent: React.FC = () => {
           <h1 className="text-3xl font-bold text-white mb-8">Modifier l'événement</h1>
 
           {error && (
-            <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6">
+            <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6 flex items-center">
+              <AlertCircle className="w-5 h-5 mr-2" />
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* NOM */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Nom de l'événement
@@ -111,6 +185,7 @@ const EditEvent: React.FC = () => {
               </div>
             </div>
 
+            {/* DESCRIPTION */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Description
@@ -128,6 +203,7 @@ const EditEvent: React.FC = () => {
               </div>
             </div>
 
+            {/* IMAGE URL */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 URL de l'image
@@ -143,9 +219,9 @@ const EditEvent: React.FC = () => {
                   placeholder="https://exemple.com/image.jpg"
                 />
               </div>
-              <p className="text-gray-500 text-xs mt-1">Optionnel : URL d'une image pour illustrer l'événement</p>
             </div>
 
+            {/* DATES */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -156,7 +232,7 @@ const EditEvent: React.FC = () => {
                   name="dateDebut"
                   value={formData.dateDebut}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 [color-scheme:dark]"
                   required
                 />
               </div>
@@ -170,12 +246,13 @@ const EditEvent: React.FC = () => {
                   name="dateFin"
                   value={formData.dateFin}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 [color-scheme:dark]"
                   required
                 />
               </div>
             </div>
 
+            {/* LIEU */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Lieu
@@ -186,31 +263,49 @@ const EditEvent: React.FC = () => {
                   name="lieuId"
                   value={formData.lieuId}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                   required
                 >
-                  <option value="1">Lieu par défaut</option>
+                  <option value={0}>Sélectionner un lieu</option>
+                  {lieux.map((lieu) => (
+                    <option key={lieu.id} value={lieu.id}>
+                      {lieu.nom} - {lieu.ville} ({lieu.capaciteMax} places)
+                    </option>
+                  ))}
                 </select>
               </div>
-              <p className="text-gray-500 text-xs mt-1">Sélectionnez le lieu de l'événement</p>
             </div>
 
-            <div className="space-y-4">
+            {/* VILLE (ReadOnly) */}
+            <div>
+               <label className="block text-sm font-medium text-gray-300 mb-2">Ville (auto-remplie)</label>
+               <input
+                 type="text"
+                 name="ville"
+                 value={formData.ville}
+                 readOnly
+                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-400 focus:outline-none cursor-not-allowed"
+               />
+            </div>
+
+            {/* PRIX */}
+            <div className="space-y-4 pt-4 border-t border-gray-700">
               <div className="flex items-center">
                 <input
                   type="checkbox"
+                  id="payant"
                   name="payant"
                   checked={formData.payant}
                   onChange={handleChange}
-                  className="w-4 h-4 text-blue-600 bg-gray-900 border-gray-700 rounded focus:ring-blue-500"
+                  className="w-5 h-5 text-blue-600 bg-gray-900 border-gray-700 rounded focus:ring-blue-500"
                 />
-                <label className="ml-2 text-sm font-medium text-gray-300">
-                  Événement payant
+                <label htmlFor="payant" className="ml-3 text-sm font-medium text-gray-300 cursor-pointer">
+                  Cet événement est payant
                 </label>
               </div>
 
               {formData.payant && (
-                <div>
+                <div className="animate-fade-in-down">
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Prix (€)
                   </label>
@@ -224,18 +319,19 @@ const EditEvent: React.FC = () => {
                       min="0"
                       step="0.01"
                       className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
+                      required={formData.payant}
                     />
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="flex gap-4">
+            {/* BOUTONS */}
+            <div className="flex gap-4 pt-4">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20"
               >
                 <Save className="w-5 h-5 mr-2" />
                 {loading ? 'Enregistrement...' : 'Enregistrer les modifications'}

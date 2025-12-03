@@ -1,9 +1,10 @@
 package com.evenix.controllers;
 
-import com.evenix.entities.Role;
-import com.evenix.services.RoleServiceImpl;
+import com.evenix.dto.RoleDTO;
+import com.evenix.services.RoleService;
+
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,40 +12,39 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/role")
-@CrossOrigin(origins = "http://localhost")
+@CrossOrigin
 public class RoleController {
 
-    private final RoleServiceImpl roleService;
-    public RoleController(RoleServiceImpl roleService) { this.roleService = roleService; }
+    @Autowired
+    private RoleService roleService;
 
-    @GetMapping
-    public List<Role> getAllRoles() {
-        return roleService.getAllRoles();
+    @GetMapping("/all")
+    public ResponseEntity<List<RoleDTO>> getAllRoles() {
+        return ResponseEntity.ok(roleService.getAllRoles());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Role> getRoleById(@PathVariable int id) {
-        return ResponseEntity.ok(roleService.getRoleById(id));
+    public ResponseEntity<RoleDTO> getRoleById(@PathVariable int id) {
+        try {
+            return ResponseEntity.ok(roleService.getRoleById(id));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
+    // Généralement réservé aux ADMINS
     @PostMapping
-    public ResponseEntity<Role> createRole(@RequestBody Role role) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(roleService.createRole(role));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Role> updateRole(@PathVariable int id, @RequestBody Role updatedRole) {
-        return ResponseEntity.ok(roleService.updateRole(id, updatedRole));
+    public ResponseEntity<RoleDTO> createRole(@RequestBody RoleDTO dto) {
+        return ResponseEntity.ok(roleService.createRole(dto));
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteRole(@PathVariable int id) {
-        roleService.deleteRole(id);
-    }
-
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<Void> handleNotFound(EntityNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    public ResponseEntity<Void> deleteRole(@PathVariable int id) {
+        try {
+            roleService.deleteRole(id);
+            return ResponseEntity.noContent().build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

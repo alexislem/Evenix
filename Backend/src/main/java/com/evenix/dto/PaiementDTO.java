@@ -1,74 +1,27 @@
 package com.evenix.dto;
 
-import java.time.ZonedDateTime;
-
-import jakarta.validation.constraints.*;
+import java.time.LocalDateTime;
 
 public class PaiementDTO {
-    
     private int id;
+    private double montant;
+    private LocalDateTime datePaiement;
+    private String moyenPaiement;
+    private String statut;
+    private int inscriptionId; // On garde juste l'ID pour éviter les boucles infinies
 
-    @Positive(message = "Le montant doit être un nombre positif.")
-    private float montant;
+    public PaiementDTO() {}
 
-    @NotNull(message = "La date du paiement est obligatoire.")
-    private ZonedDateTime date;
-
-    @NotBlank(message = "Le code de paiement est obligatoire.")
-    private String code;
-
-    @Positive(message = "L'identifiant utilisateur doit être un entier positif.")
-    private int utilisateurId;
-
-    @Positive(message = "L'identifiant événement doit être un entier positif.")
-    private int evenementId;
-
-    // Getters / Setters
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public float getMontant() {
-        return montant;
-    }
-
-    public void setMontant(float montant) {
-        this.montant = montant;
-    }
-
-    public ZonedDateTime getDate() {
-        return date;
-    }
-
-    public void setDate(ZonedDateTime date) {
-        this.date = date;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public int getUtilisateurId() {
-        return utilisateurId;
-    }
-
-    public void setUtilisateurId(int utilisateurId) {
-        this.utilisateurId = utilisateurId;
-    }
-
-    public int getEvenementId() {
-        return evenementId;
-    }
-
-    public void setEvenementId(int evenementId) {
-        this.evenementId = evenementId;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public double getMontant() { return montant; }
+    public void setMontant(double montant) { this.montant = montant; }
+    public LocalDateTime getDatePaiement() { return datePaiement; }
+    public void setDatePaiement(LocalDateTime datePaiement) { this.datePaiement = datePaiement; }
+    public String getMoyenPaiement() { return moyenPaiement; }
+    public void setMoyenPaiement(String moyenPaiement) { this.moyenPaiement = moyenPaiement; }
+    public String getStatut() { return statut; }
+    public void setStatut(String statut) { this.statut = statut; }
+    public int getInscriptionId() { return inscriptionId; }
+    public void setInscriptionId(int inscriptionId) { this.inscriptionId = inscriptionId; }
 }

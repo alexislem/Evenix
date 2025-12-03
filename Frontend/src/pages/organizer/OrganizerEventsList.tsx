@@ -110,13 +110,13 @@ const OrganizerEventsList: React.FC = () => {
                         <p className="text-gray-500 text-sm">Lieu</p>
                         <p className="text-white flex items-center">
                           <MapPin className="w-4 h-4 mr-1" />
-                          {event.ville}
+                          {event.lieu.ville}
                         </p>
                       </div>
 
                       <div>
                         <p className="text-gray-500 text-sm">Places</p>
-                        <p className="text-white text-xl font-semibold">{event.lieu.nbPlaces}</p>
+                        <p className="text-white text-xl font-semibold">{event.lieu.capaciteMax}</p>
                       </div>
 
                       <div>

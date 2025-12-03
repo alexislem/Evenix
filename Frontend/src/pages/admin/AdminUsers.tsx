@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Trash2, Mail, Phone, Edit2, Check, X } from 'lucide-react';
+import { Trash2, Mail, Phone, Edit2, Check, X, Eye } from 'lucide-react'; // Ajout de Eye
+import { useNavigate } from 'react-router-dom'; // Ajout du hook
 import { utilisateurService } from '../../services/utilisateurService';
-import { entrepriseService } from '../../services/entrepriseService'; // Import du service
+import { entrepriseService } from '../../services/entrepriseService';
 import { Utilisateur, Entreprise } from '../../types';
 
 // Interface pour le formulaire d'édition
@@ -11,12 +12,13 @@ interface EditFormData {
   email: string;
   telephone: string;
   roleId: number;
-  entrepriseId: number | string; // string pour gérer le cas "aucune entreprise" ("")
+  entrepriseId: number | string;
 }
 
 const AdminUsers: React.FC = () => {
+  const navigate = useNavigate(); // Hook de navigation
   const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
-  const [entreprises, setEntreprises] = useState<Entreprise[]>([]); // État pour la liste des entreprises
+  const [entreprises, setEntreprises] = useState<Entreprise[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -32,7 +34,6 @@ const AdminUsers: React.FC = () => {
 
   const loadData = async () => {
     try {
-      // On charge les utilisateurs ET les entreprises en parallèle
       const [usersData, entreprisesData] = await Promise.all([
         utilisateurService.getAll(),
         entrepriseService.getAll()
@@ -53,9 +54,9 @@ const AdminUsers: React.FC = () => {
       nom: user.nom,
       prenom: user.prenom,
       email: user.email,
-      telephone: user.telephone || '', // Gérer le null
-      roleId: user.role.id, // On utilise l'ID directement
-      entrepriseId: user.entreprise ? user.entreprise.id : '' // ID de l'entreprise ou vide
+      telephone: user.telephone || '',
+      roleId: user.role.id,
+      entrepriseId: user.entreprise ? user.entreprise.id : ''
     });
   };
 
@@ -75,21 +76,17 @@ const AdminUsers: React.FC = () => {
   // --- Sauvegarde globale ---
   const handleSave = async (userId: number) => {
     try {
-      // Construction de l'objet pour le backend
-      // Le backend s'attend à recevoir des objets imbriqués pour Role et Entreprise
       const payload: any = {
         nom: editFormData.nom,
         prenom: editFormData.prenom,
         email: editFormData.email,
         telephone: editFormData.telephone,
-        role: { id: Number(editFormData.roleId) }, // Objet Role avec ID
-        entreprise: editFormData.entrepriseId ? { id: Number(editFormData.entrepriseId) } : null // Objet Entreprise avec ID ou null
+        role: { id: Number(editFormData.roleId) },
+        entreprise: editFormData.entrepriseId ? { id: Number(editFormData.entrepriseId) } : null
       };
 
-      // Appel au service update (PUT /api/utilisateur/{id})
       const updatedUser = await utilisateurService.update(userId, payload);
 
-      // Mise à jour de l'état local
       setUtilisateurs(utilisateurs.map((u) =>
         u.id === userId ? updatedUser : u
       ));
@@ -288,6 +285,15 @@ const AdminUsers: React.FC = () => {
                             </>
                           ) : (
                             <>
+                              {/* BOUTON DÉTAILS (Nouvelle page) */}
+                              <button
+                                onClick={() => navigate(`/admin/utilisateurs/${user.id}`)}
+                                className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg transition"
+                                title="Voir détails et inscriptions"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+
                               <button
                                 onClick={() => handleEditClick(user)}
                                 className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition"

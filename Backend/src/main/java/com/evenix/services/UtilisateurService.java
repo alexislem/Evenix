@@ -1,33 +1,22 @@
 package com.evenix.services;
 
 import com.evenix.dto.UtilisateurDTO;
-import com.evenix.dto.request.RegistrationRequest;
-import com.evenix.entities.Role;
-import com.evenix.entities.Utilisateur;
-
 import java.util.List;
 import java.util.Optional;
 
 public interface UtilisateurService {
     List<UtilisateurDTO> getAllUtilisateurs();
-    Optional<Utilisateur> getUtilisateurById(int id);
-    Optional<Utilisateur> findUtilisateurByNom(String utilisateurNom);
-    Optional<Utilisateur> findUtilisateurByEmail(String utilisateurEmail);
-    Utilisateur createUtilisateur(Utilisateur utilisateur);
-    Utilisateur saveUtilisateur(Utilisateur utilisateur);
-    Utilisateur updateUtilisateur(int id, Utilisateur utilisateurDetails);
-    int getNombresUtilisateurs();
-    void deleteUtilisateur(int id);
-
-    Utilisateur addRoleToUtilisateur(String utilisateurNom, String roleNom);
-    Utilisateur addRoleToUtilisateur(Optional<Utilisateur> utilisateurOpt, Optional<Role> roleOpt);
-    Utilisateur addRoleToUtilisateur(int utilisateurId, int roleId);
-    //Utilisateur registerUtilisateur(RegistrationRequest request);
+    UtilisateurDTO getUtilisateurById(int id);
+    UtilisateurDTO getUtilisateurByEmail(String email);
     
+    // Création (Inscription)
+    UtilisateurDTO createUtilisateur(UtilisateurDTO utilisateurDTO, String passwordBrut);
+    
+    // Mise à jour (Profil)
+    UtilisateurDTO updateUtilisateur(int id, UtilisateurDTO utilisateurDTO);
+    
+    void deleteUtilisateur(int id);
+    
+    // Méthode utilitaire pour changer le mot de passe séparement si besoin
+    void changePassword(int id, String newPassword);
 }
-
-
-
-
-
- 

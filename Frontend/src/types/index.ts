@@ -1,22 +1,6 @@
 export interface Role {
   id: number;
-  nom: 'ADMIN' | 'PARTICIPANT' | 'ORGANISATEUR';
-}
-
-export interface TypeLieu {
-  id: number;
-  libelle: string;
-}
-
-export interface Lieu {
-  id: number;
   nom: string;
-  adresse: string;
-  ville: string;
-  nbPlaces: number;
-  latitude?: number;
-  longitude?: number;
-  typeLieu: TypeLieu;
 }
 
 export interface TypeEvenement {
@@ -24,14 +8,24 @@ export interface TypeEvenement {
   nom: string;
 }
 
+export interface Lieu {
+  id: number;
+  nom: string;
+  adresse: string;
+  ville: string;
+  codePostal?: string;
+  latitude?: number;
+  longitude?: number;
+  typeLieu?: string;
+  googlePlaceId?: string;
+  capaciteMax: number;
+}
+
 export interface Entreprise {
   id: number;
   nom: string;
   adresse: string;
   email: string;
-  telephone: string;
-  secteurActivite?: string;
-  statutJuridique?: string;
 }
 
 export interface Utilisateur {
@@ -51,13 +45,12 @@ export interface Evenement {
   description: string;
   dateDebut: string;
   dateFin: string;
-  payant: boolean;
-  prix: number;
-  image_url?: string;
   ville: string;
+  prix: number;
+  imageUrl?: string; 
   lieu: Lieu;
   utilisateur: Utilisateur;
-  types?: TypeEvenement[];
+  types: TypeEvenement[];
 }
 
 export interface Inscription {
@@ -70,11 +63,11 @@ export interface Inscription {
 
 export interface Paiement {
   id: number;
-  code: string;
-  date: string;
   montant: number;
-  evenement: Evenement;
-  utilisateur: Utilisateur;
+  datePaiement: string;
+  moyenPaiement: string;
+  statut: string;
+  inscriptionId: number;
 }
 
 export interface LoginRequest {
@@ -82,6 +75,7 @@ export interface LoginRequest {
   motDePasse: string;
 }
 
+// Mise à jour pour inclure les champs de sécurité
 export interface RegistrationRequest {
   nom: string;
   prenom: string;
@@ -89,6 +83,8 @@ export interface RegistrationRequest {
   motDePasse: string;
   telephone?: string;
   dateDeNaissance?: string;
+  questionSecurite?: string; // Nouveau
+  reponseSecurite?: string;  // Nouveau
 }
 
 export interface AuthResponse {
@@ -101,28 +97,21 @@ export interface CreateEventRequest {
   description: string;
   dateDebut: string;
   dateFin: string;
-  payant: boolean;
   prix: number;
-  lieuId: number;
-  imageUrl?: string;
-  typeEvenementIds?: number[];
-}
-
-export interface CreateLieuRequest {
-  nom: string;
-  adresse: string;
   ville: string;
-  nbPlaces: number;
-  latitude?: number;
-  longitude?: number;
-  typeLieuId: number;
+  imageUrl?: string;
+  lieu: Partial<Lieu>; 
+  types: { id: number }[];
 }
 
 export interface CreateEntrepriseRequest {
   nom: string;
-  adresseSiege: string;
+  adresse: string;
   email: string;
-  telephone: string;
-  secteurActivite?: string;
-  statutJuridique?: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
 }

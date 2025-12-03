@@ -1,26 +1,18 @@
 package com.evenix.repos;
 
-import java.time.ZonedDateTime;
-import java.util.Optional;
-import java.util.Set;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-
 import com.evenix.entities.Evenement;
-import com.evenix.entities.Lieu;
-import com.evenix.entities.TypeEvenement;
-import com.evenix.entities.Utilisateur;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 
-@RepositoryRestResource(path = "rest")
 public interface EvenementRepository extends JpaRepository<Evenement, Integer> {
-	Optional<Evenement> findById(int id);
-	Optional<Evenement> findByNom(String nom);
-	Optional<Evenement> findByDateDebut(ZonedDateTime dateDebut);
-	Optional<Evenement> findByDateFin(ZonedDateTime dateFin);
-	Optional<Evenement> findByPrix(float prix);
-	Optional<Evenement> findByUtilisateur(Utilisateur utilisateur);
-	Optional<Evenement> findByLieu(Lieu lieu);
-	Optional<Evenement> findByTypesEvenement(Set<TypeEvenement> typesEvenements);
-	
+    
+    // Récupérer tous les événements créés par un organisateur spécifique
+    List<Evenement> findByUtilisateurId(int utilisateurId);
+    
+    // CORRECTION ICI : On cherche via la propriété "ville" de l'objet "lieu"
+    // Anciennement : findByVille(String ville);
+    List<Evenement> findByLieuVille(String ville);
+    
+    // Recherche par nom (insensible à la casse)
+    List<Evenement> findByNomContainingIgnoreCase(String nom);
 }

@@ -12,8 +12,9 @@ export const evenementService = {
     return response.data;
   },
 
-  async create(data: CreateEventRequest): Promise<Evenement> {
-    const response = await api.post<Evenement>('/api/evenement', data);
+  // Modification : Le backend attend organisateurId en paramètre d'URL
+  async create(data: CreateEventRequest, organisateurId: number): Promise<Evenement> {
+    const response = await api.post<Evenement>(`/api/evenement?organisateurId=${organisateurId}`, data);
     return response.data;
   },
 
@@ -25,4 +26,10 @@ export const evenementService = {
   async delete(id: number): Promise<void> {
     await api.delete(`/api/evenement/${id}`);
   },
+
+  // Ajout : Méthode nécessaire pour l'OrganizerDashboard
+  async getByOrganisateur(orgId: number): Promise<Evenement[]> {
+    const response = await api.get<Evenement[]>(`/api/evenement/organisateur/${orgId}`);
+    return response.data;
+  }
 };
