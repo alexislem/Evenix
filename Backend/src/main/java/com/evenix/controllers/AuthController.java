@@ -3,7 +3,7 @@ package com.evenix.controllers;
 import com.evenix.dto.*;
 import com.evenix.dto.request.RegistrationRequest;
 import com.evenix.entities.Utilisateur;
-import com.evenix.mappers.UtilisateurMapper; // Si vous l'utilisez, sinon mappage manuel
+//import com.evenix.mappers.UtilisateurMapper; // Si vous l'utilisez, sinon mappage manuel
 import com.evenix.services.AuthService;
 import com.evenix.services.UtilisateurService;
 

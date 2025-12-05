@@ -12,9 +12,11 @@ import com.evenix.mappers.UtilisateurMapper;
 import com.evenix.repos.RoleRepository;
 import com.evenix.repos.UtilisateurRepository;
 import com.evenix.security.SecParams;
-import com.evenix.services.AuthService;
+//import com.evenix.services.AuthService;
 
 import jakarta.persistence.EntityNotFoundException;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -35,6 +38,9 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EmailService emailService;
+    
     public AuthServiceImpl(UtilisateurRepository utilisateurRepository,
                            RoleRepository roleRepository,
                            PasswordEncoder passwordEncoder) {
@@ -77,10 +83,21 @@ public class AuthServiceImpl implements AuthService {
         Role role = roleRepository.findByNom("PARTICIPANT")
                 .orElseThrow(() -> new EntityNotFoundException("Rôle PARTICIPANT introuvable."));
         u.setRole(role);
+        
+        // Générer le token de confirmation
+        String token = UUID.randomUUID().toString();
+        u.setConfirmationToken(token);
+        u.setTokenCreationDate(LocalDateTime.now());
 
         Utilisateur saved = utilisateurRepository.save(u);
+       
+        emailService.sendConfirmationEmail(saved.getEmail(), token);
+        
         return UtilisateurMapper.fromEntity(saved);
-    }
+}
+    
+    
+    
 
     // ==========================================
     // CONNEXION

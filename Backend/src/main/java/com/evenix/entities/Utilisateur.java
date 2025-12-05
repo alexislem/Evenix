@@ -60,6 +60,11 @@ public class Utilisateur {
     @Column(name = "reponse_securite")
     private String reponseSecurite; // Haché via BCrypt
 
+    @Column(unique = true)
+    private String confirmationToken;
+    private LocalDateTime tokenCreationDate;
+    private boolean emailConfirmed = false;
+    
     // Constructeurs
 
     public Utilisateur() {}
@@ -112,4 +117,25 @@ public class Utilisateur {
 		this.reponseSecurite = reponseSecurite;
 	}
 	public String getReponseSecurite() { return reponseSecurite; }
+
+	public LocalDateTime getTokenCreationDate() {
+		return tokenCreationDate;
+	}
+
+	public void setTokenCreationDate(LocalDateTime tokenCreationDate) {
+		this.tokenCreationDate = tokenCreationDate;
+	}
+
+	public boolean isEmailConfirmed() {
+		return emailConfirmed;
+	}
+
+	public void setEmailConfirmed(boolean emailConfirmed) {
+		this.emailConfirmed = emailConfirmed;
+	}
+
+	public void setConfirmationToken(String token) {
+		// TODO Auto-generated method stub
+		
+	}
 }

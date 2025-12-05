@@ -1,15 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {MapPin, Clock, ArrowLeft, Trash2, ExternalLink, Ticket, AlertCircle } from 'lucide-react';
 import { inscriptionService } from '../services/inscriptionService';
 import { useAuth } from '../context/AuthContext';
 import { Inscription } from '../types';
+
+
 
 const MyRegistrations: React.FC = () => {
   const { user } = useAuth();
   const [inscriptions, setInscriptions] = useState<Inscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+// Fonction pour obtenir le dashboard correct selon le rôle
+  const getDashboardRoute = () => {
+    const role = user?.role?.nom;
+    switch (role) {
+      case 'ADMIN':
+        return '/admin/dashboard';
+      case 'ORGANISATEUR':
+        return '/organisateur/dashboard';
+      case 'PARTICIPANT':
+      default:
+        return '/dashboard';
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -84,7 +100,7 @@ const MyRegistrations: React.FC = () => {
         
         {/* En-tête avec bouton retour */}
         <div className="flex items-center mb-8">
-            <Link to="/dashboard" className="text-gray-400 hover:text-white mr-4 transition">
+            <Link to={getDashboardRoute()} className="text-gray-400 hover:text-white mr-4 transition">
                 <ArrowLeft className="w-6 h-6" />
             </Link>
             <div>

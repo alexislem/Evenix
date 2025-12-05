@@ -12,6 +12,9 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Intege
     // Utilisé parfois pour la recherche par nom
     Optional<Utilisateur> findByNom(String nom);
     
+    //Pour confirmation Email
+    Optional<Utilisateur> findByConfirmationToken(String token);
+
     // Utilisé lors de l'inscription pour vérifier si l'email est pris
     boolean existsByEmail(String email);
 }
