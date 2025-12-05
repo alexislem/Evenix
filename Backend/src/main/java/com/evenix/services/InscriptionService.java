@@ -1,14 +1,11 @@
 package com.evenix.services;
 
-import java.time.ZonedDateTime;
+import com.evenix.dto.InscriptionDTO;
 import java.util.List;
-import com.evenix.entities.Inscription;
 
 public interface InscriptionService {
-    Inscription createInscription(int utilisateurId, int evenementId, ZonedDateTime dateInscription);
-    
-    // Le service doit promettre de renvoyer une Liste
-    List<Inscription> getInscriptionsByUtilisateurId(int utilisateurId);
-    
-    void deleteInscription(int inscriptionId);
+    InscriptionDTO inscrireUtilisateur(int utilisateurId, int evenementId);
+    void annulerInscription(int inscriptionId);
+    List<InscriptionDTO> getInscriptionsByUtilisateur(int utilisateurId);
+    List<InscriptionDTO> getInscriptionsByEvenement(int evenementId);
 }

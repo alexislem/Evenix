@@ -1,17 +1,17 @@
 package com.evenix.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
-
 public class TypeEvenementDTO {
-
-    @Positive(message = "L'identifiant doit être un entier positif.")
+    
     private int id;
-
-    @NotBlank(message = "Le nom du type d'événement est obligatoire.")
     private String nom;
 
-    // Getters/Setters
+    public TypeEvenementDTO() {}
+
+    public TypeEvenementDTO(int id, String nom) {
+        this.id = id;
+        this.nom = nom;
+    }
+
     public int getId() {
         return id;
     }

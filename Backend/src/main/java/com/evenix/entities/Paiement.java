@@ -1,107 +1,92 @@
 package com.evenix.entities;
 
-import java.time.ZonedDateTime;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
-@JsonIgnoreProperties({"utilisateur", "evenement"}) // empêche les boucles avec Jackson
+@Table(name = "paiement")
 public class Paiement {
 
-    // Attributs
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "PAI_Id")
     private int id;
 
-    @Column(name = "PAI_Montant")
-    private float montant;
+    @Column(name = "montant", nullable = false)
+    private double montant;
 
-    @Column(name = "PAI_Date")
-    private ZonedDateTime date;
+    @Column(name = "date_paiement", nullable = false)
+    private LocalDateTime datePaiement;
 
-    @Column(name = "PAI_Code")
-    private String code;
+    @Column(name = "moyen_paiement") // EX: CARTE, PAYPAL, VIREMENT
+    private String moyenPaiement;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "UTI_Id", nullable = false)
-    private Utilisateur utilisateur;
+    @Column(name = "statut") // EX: SUCCES, ECHEC, REMBOURSE
+    private String statut;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "EVE_Id", nullable = false)
-    private Evenement evenement;
+    // Relations
+    @OneToOne
+    @JoinColumn(name = "inscription_id", nullable = false, unique = true)
+    private Inscription inscription;
 
-    // Constructeurs
-
-    public Paiement() {}
-
-    public Paiement(float montant, ZonedDateTime date, String code, Utilisateur utilisateur, Evenement evenement) {
-        this.montant = montant;
-        this.date = date;
-        this.code = code;
-        this.utilisateur = utilisateur;
-        this.evenement = evenement;
+    public Paiement() {
+        this.datePaiement = LocalDateTime.now();
     }
 
-    // Getters/Setters
+    public Paiement(double montant, String moyenPaiement, String statut, Inscription inscription) {
+        this.montant = montant;
+        this.moyenPaiement = moyenPaiement;
+        this.statut = statut;
+        this.inscription = inscription;
+        this.datePaiement = LocalDateTime.now();
+    }
+
+    // Getters et Setters
 
     public int getId() {
         return id;
     }
 
-    public float getMontant() {
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public double getMontant() {
         return montant;
     }
 
-    public void setMontant(float montant) {
+    public void setMontant(double montant) {
         this.montant = montant;
     }
 
-    public ZonedDateTime getDate() {
-        return date;
+    public LocalDateTime getDatePaiement() {
+        return datePaiement;
     }
 
-    public void setDate(ZonedDateTime date) {
-        this.date = date;
+    public void setDatePaiement(LocalDateTime datePaiement) {
+        this.datePaiement = datePaiement;
     }
 
-    public String getCode() {
-        return code;
+    public String getMoyenPaiement() {
+        return moyenPaiement;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void setMoyenPaiement(String moyenPaiement) {
+        this.moyenPaiement = moyenPaiement;
     }
 
-    public Utilisateur getUtilisateur() {
-        return utilisateur;
+    public String getStatut() {
+        return statut;
     }
 
-    public void setUtilisateur(Utilisateur utilisateur) {
-        this.utilisateur = utilisateur;
+    public void setStatut(String statut) {
+        this.statut = statut;
     }
 
-    public Evenement getEvenement() {
-        return evenement;
+    public Inscription getInscription() {
+        return inscription;
     }
 
-    public void setEvenement(Evenement evenement) {
-        this.evenement = evenement;
-    }
-
-    // Méthode utilitaire
-
-    @Override
-    public String toString() {
-        String nomUtilisateur = (utilisateur != null) ? utilisateur.getNom() : "N/A";
-        String nomEvenement = (evenement != null) ? evenement.getNom() : "N/A";
-
-        return "Paiement [montant=" + montant +
-               ", date=" + date +
-               ", code=" + code +
-               ", utilisateur=" + nomUtilisateur +
-               ", evenement=" + nomEvenement + "]";
+    public void setInscription(Inscription inscription) {
+        this.inscription = inscription;
     }
 }

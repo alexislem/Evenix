@@ -31,7 +31,7 @@ const EventDetail: React.FC = () => {
       if (user) {
         try {
             const inscriptions = await inscriptionService.getByUser(user.id);
-            // ⚠️ CHANGEMENT ICI : On cherche une inscription SANS date d'annulation
+            // ⚠️ CHANGEMENT : On cherche une inscription SANS date d'annulation
             const existingInscription = inscriptions.find(ins => 
                 ins.evenement && 
                 ins.evenement.id === Number(id) && 
@@ -55,6 +55,7 @@ const EventDetail: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: 'numeric',
       month: 'long',
@@ -62,6 +63,14 @@ const EventDetail: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  // Helper pour la localisation
+  const getEventLocation = () => {
+    if (!evenement) return '';
+    if (evenement.lieu?.ville) return evenement.lieu.ville;
+    if (evenement.lieu?.adresse) return evenement.lieu.adresse.split(',').pop()?.trim();
+    return 'Lieu à définir';
   };
 
   const handleInscriptionClick = () => {
@@ -106,6 +115,8 @@ const EventDetail: React.FC = () => {
     );
   }
 
+  const isPayant = evenement.prix > 0;
+
   return (
     <div className="min-h-screen bg-gray-950 py-12">
       <div className="container mx-auto px-4 max-w-4xl">
@@ -118,10 +129,10 @@ const EventDetail: React.FC = () => {
         </Link>
 
         <div className="bg-gray-800 rounded-2xl overflow-hidden border border-gray-700 shadow-2xl">
-          {evenement.image_url ? (
+          {evenement.imageUrl ? (
             <div className="h-64 relative overflow-hidden">
               <img
-                src={evenement.image_url}
+                src={evenement.imageUrl}
                 alt={evenement.nom}
                 className="w-full h-full object-cover"
               />
@@ -133,13 +144,13 @@ const EventDetail: React.FC = () => {
           )}
 
           <div className="p-8">
-            <div className="flex justify-between items-start mb-6">
-                <h1 className="text-4xl font-bold text-white">{evenement.nom}</h1>
+            <div className="flex flex-col md:flex-row justify-between items-start mb-6 gap-4">
+                <h1 className="text-3xl md:text-4xl font-bold text-white">{evenement.nom}</h1>
                 
                 {userInscriptionId ? (
                     <button
                         onClick={handleUnsubscribe}
-                        className="hidden md:flex items-center bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl transition transform hover:scale-105 shadow-lg shadow-red-900/20"
+                        className="w-full md:w-auto flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl transition transform hover:scale-105 shadow-lg shadow-red-900/20"
                     >
                         <LogOut className="w-5 h-5 mr-2" />
                         Se désinscrire
@@ -147,7 +158,7 @@ const EventDetail: React.FC = () => {
                 ) : (
                     <button
                         onClick={handleInscriptionClick}
-                        className="hidden md:flex items-center bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition transform hover:scale-105 shadow-lg shadow-green-900/20"
+                        className="w-full md:w-auto flex items-center justify-center bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition transform hover:scale-105 shadow-lg shadow-green-900/20"
                     >
                         <Ticket className="w-5 h-5 mr-2" />
                         S'inscrire
@@ -177,8 +188,10 @@ const EventDetail: React.FC = () => {
                   <MapPin className="w-5 h-5 mr-3 text-red-400 mt-1" />
                   <div>
                     <p className="text-gray-400 text-sm">Lieu</p>
-                    <p className="text-white font-medium">{evenement.lieu.nom}</p>
-                    <p className="text-gray-300 text-sm">{evenement.lieu.adresse}, {evenement.lieu.ville}</p>
+                    <p className="text-white font-medium">{evenement.lieu?.nom || 'Nom du lieu non spécifié'}</p>
+                    <p className="text-gray-300 text-sm">
+                        {evenement.lieu?.adresse}, {getEventLocation()}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -188,7 +201,9 @@ const EventDetail: React.FC = () => {
                   <Euro className="w-5 h-5 mr-3 text-green-400 mt-1" />
                   <div>
                     <p className="text-gray-400 text-sm">Prix</p>
-                    <p className="text-white font-medium text-2xl">{evenement.payant ? `${evenement.prix} €` : 'Gratuit'}</p>
+                    <p className="text-white font-medium text-2xl">
+                        {isPayant ? `${evenement.prix} €` : 'Gratuit'}
+                    </p>
                   </div>
                 </div>
 
@@ -196,30 +211,11 @@ const EventDetail: React.FC = () => {
                   <Users className="w-5 h-5 mr-3 text-yellow-400 mt-1" />
                   <div>
                     <p className="text-gray-400 text-sm">Places disponibles</p>
-                    <p className="text-white font-medium">{evenement.lieu.nbPlaces}</p>
+                    <p className="text-white font-medium">{evenement.lieu?.capaciteMax || 0}</p>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* --- BOUTON MOBILE --- */}
-            {userInscriptionId ? (
-                <button
-                    onClick={handleUnsubscribe}
-                    className="md:hidden w-full flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-xl mb-8 transition shadow-lg"
-                >
-                    <LogOut className="w-5 h-5 mr-2" />
-                    Se désinscrire
-                </button>
-            ) : (
-                <button
-                    onClick={handleInscriptionClick}
-                    className="md:hidden w-full flex items-center justify-center bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-xl mb-8 transition shadow-lg"
-                >
-                    <Ticket className="w-5 h-5 mr-2" />
-                    S'inscrire à l'événement
-                </button>
-            )}
 
             <div className="border-t border-gray-700 pt-6 mb-6">
               <h2 className="text-2xl font-semibold text-white mb-4">Description</h2>
@@ -230,17 +226,17 @@ const EventDetail: React.FC = () => {
               <h3 className="text-xl font-semibold text-white mb-4">Organisateur</h3>
               <div className="space-y-3">
                 <p className="text-white font-medium text-lg">
-                  {evenement.utilisateur.prenom} {evenement.utilisateur.nom}
+                  {evenement.utilisateur?.prenom} {evenement.utilisateur?.nom}
                 </p>
                 <div className="flex items-center text-gray-300">
                   <Mail className="w-4 h-4 mr-2 text-blue-400" />
-                  <span>{evenement.utilisateur.email}</span>
+                  <span>{evenement.utilisateur?.email || 'Non renseigné'}</span>
                 </div>
                 <div className="flex items-center text-gray-300">
                   <Phone className="w-4 h-4 mr-2 text-green-400" />
-                  <span>{evenement.utilisateur.telephone}</span>
+                  <span>{evenement.utilisateur?.telephone || 'Non renseigné'}</span>
                 </div>
-                {evenement.utilisateur.entreprise && (
+                {evenement.utilisateur?.entreprise && (
                   <div className="flex items-center text-gray-300">
                     <Building className="w-4 h-4 mr-2 text-yellow-400" />
                     <span>{evenement.utilisateur.entreprise.nom}</span>

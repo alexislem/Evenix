@@ -1,101 +1,93 @@
 package com.evenix.entities;
 
-import java.time.ZonedDateTime;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // Changement d'import
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "inscription")
 public class Inscription {
-    
-    // Attributes 
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column (name = "INS_Id")
     private int id;
 
+    @Column(name = "date_inscription", nullable = false)
+    private LocalDateTime dateInscription;
+
+    @Column(name = "statut") // EX: CONFIRMEE, ANNULEE, EN_ATTENTE
+    private String statut;
+
+    // Relations
     @ManyToOne
-    @JoinColumn(name = "UTI_Id", nullable = false)
-    @JsonIgnoreProperties("inscriptions") // On garde l'utilisateur mais sans ses inscriptions pour éviter la boucle
+    @JoinColumn(name = "utilisateur_id", nullable = false)
     private Utilisateur utilisateur;
 
     @ManyToOne
-    @JoinColumn(name = "EVE_Id", nullable = false)
-    @JsonIgnoreProperties({"inscriptions", "paiements"}) // IMPORTANT: On retire @JsonIgnore ici !
+    @JoinColumn(name = "evenement_id", nullable = false)
     private Evenement evenement;
 
-    @Column (name = "INS_DateInscription")
-    private ZonedDateTime dateInscription;
-    
-    @Column (name = "INS_DateAnnulation", nullable = true)
-    private ZonedDateTime dateAnnulation;
-    
-    // Constructors
-    
-    public Inscription() {}
-    
-    public Inscription (Utilisateur utilisateur, Evenement evenement, ZonedDateTime zdtDateInscription) {
+    @OneToOne(mappedBy = "inscription", cascade = CascadeType.ALL)
+    private Paiement paiement;
+
+    public Inscription() {
+        this.dateInscription = LocalDateTime.now();
+        this.statut = "EN_ATTENTE";
+    }
+
+    public Inscription(Utilisateur utilisateur, Evenement evenement) {
         this.utilisateur = utilisateur;
         this.evenement = evenement;
-        this.dateInscription = zdtDateInscription;
+        this.dateInscription = LocalDateTime.now();
+        this.statut = "EN_ATTENTE";
     }
-    
-    // Getters/setters
+
+    // Getters et Setters
+
     public int getId() {
         return id;
     }
 
-    public ZonedDateTime getDateInscription() {
-        return this.dateInscription;
+    public void setId(int id) {
+        this.id = id;
     }
 
-    public void setDateInscription(ZonedDateTime zdtDateInscription) {
-        this.dateInscription = zdtDateInscription;
-    }
-    
-    public ZonedDateTime getDateAnnulation() {
-        return this.dateAnnulation;
+    public LocalDateTime getDateInscription() {
+        return dateInscription;
     }
 
-    public void setDateAnnulation(ZonedDateTime zdtDateAnnulation) {
-        this.dateAnnulation = zdtDateAnnulation;
+    public void setDateInscription(LocalDateTime dateInscription) {
+        this.dateInscription = dateInscription;
     }
-    
+
+    public String getStatut() {
+        return statut;
+    }
+
+    public void setStatut(String statut) {
+        this.statut = statut;
+    }
+
     public Utilisateur getUtilisateur() {
-        return this.utilisateur;
-    }
-
-    public Evenement getEvenement() {
-        return this.evenement;
-    }
-
-    
-    public void setEvenement(Evenement evenement) {
-        this.evenement = evenement;
+        return utilisateur;
     }
 
     public void setUtilisateur(Utilisateur utilisateur) {
         this.utilisateur = utilisateur;
     }
 
+    public Evenement getEvenement() {
+        return evenement;
+    }
 
-    // Functions
-    
-    @Override
-    public String toString() {
-        String nomUtilisateur = utilisateur != null ? utilisateur.getNom() : "Inconnu";
-        String nomEvenement = evenement != null ? evenement.getNom() : "Inconnu";
+    public void setEvenement(Evenement evenement) {
+        this.evenement = evenement;
+    }
 
-        return "Inscription de l'utilisateur : " + nomUtilisateur +
-            "; à l'évènement : " + nomEvenement +
-            "; Date d'inscription : " + dateInscription + ";";
+    public Paiement getPaiement() {
+        return paiement;
+    }
+
+    public void setPaiement(Paiement paiement) {
+        this.paiement = paiement;
     }
 }

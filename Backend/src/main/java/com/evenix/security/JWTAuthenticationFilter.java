@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.evenix.dto.UtilisateurDTO;
 import com.evenix.entities.Utilisateur;
+import com.evenix.mappers.UtilisateurMapper;
 import com.evenix.repos.UtilisateurRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,9 +44,9 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         this.expirationMs = expirationMs;
         this.utilisateurRepository = utilisateurRepository;
 
+        // URL sur laquelle ce filtre s'active
         setFilterProcessesUrl("/api/auth/login");
     }
-
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request,
@@ -53,11 +54,11 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             throws AuthenticationException {
 
         try {
+            // Lecture du corps de la requête (Attention : cela consomme le flux d'entrée !)
             JsonNode node = objectMapper.readTree(request.getInputStream());
 
-            // On lit d'abord "email", sinon on retombe éventuellement sur username/nom
+            // Gestion flexible de l'identifiant (email, username ou nom)
             String username = null;
-
             if (node.hasNonNull("email")) {
                 username = node.get("email").asText();
             } else if (node.hasNonNull("username")) {
@@ -68,6 +69,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 username = "";
             }
 
+            // Gestion flexible du mot de passe
             String password = node.hasNonNull("password") ? node.get("password").asText()
                              : node.path("motDePasse").asText();
 
@@ -81,7 +83,6 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         }
     }
 
-
     @Override
     protected void successfulAuthentication(HttpServletRequest request,
                                             HttpServletResponse response,
@@ -89,45 +90,35 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                             Authentication authResult)
             throws IOException, ServletException {
 
-        // User Spring Security
+        // 1. Récupération de l'utilisateur Spring Security (UserDetails)
         var springUser = (org.springframework.security.core.userdetails.User) authResult.getPrincipal();
 
-        // Rôles -> String[]
+        // 2. Extraction des rôles
         List<String> roles = new ArrayList<>();
         springUser.getAuthorities().forEach(a -> roles.add(a.getAuthority()));
 
-        // Génération du token
+        // 3. Génération du Token JWT
         String token = JWT.create()
-                .withSubject(springUser.getUsername()) // ici : email
+                .withSubject(springUser.getUsername()) // email
                 .withArrayClaim("roles", roles.toArray(new String[0]))
                 .withExpiresAt(new Date(System.currentTimeMillis() + expirationMs))
                 .sign(algorithm);
 
-        // 🔥 Récupération du vrai utilisateur (entité) depuis la base
+        // 4. Récupération de l'utilisateur complet en base
         Utilisateur utilisateur = utilisateurRepository.findByEmail(springUser.getUsername())
                 .orElse(null);
 
-        // (optionnel mais recommandé) Conversion en DTO
-        UtilisateurDTO utilisateurDTO = null;
-        if (utilisateur != null) {
-            utilisateurDTO = new UtilisateurDTO();
-                utilisateurDTO.setId(utilisateur.getId());
-                utilisateurDTO.setEmail(utilisateur.getEmail());
-                utilisateurDTO.setNom(utilisateur.getNom());
-                utilisateurDTO.setPrenom(utilisateur.getPrenom());
-                utilisateurDTO.setRole(utilisateur.getRole());
-        }
+        // 5. Transformation en DTO propre via le Mapper
+        UtilisateurDTO utilisateurDTO = UtilisateurMapper.fromEntity(utilisateur);
 
-        // Construction de la réponse JSON
+        // 6. Construction de la réponse JSON
         Map<String, Object> body = new HashMap<>();
         body.put("token", token);
         body.put("utilisateur", utilisateurDTO);
 
-        // Ajout optionnel du header Authorization
-        response.addHeader(SecParams.HEADER, SecParams.PREFIX + token);
-
-        // Envoi JSON
+        // Envoi de la réponse
         response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         new ObjectMapper().writeValue(response.getWriter(), body);
     }
 
@@ -138,7 +129,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             throws IOException, ServletException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
-        response.getWriter().write("{\"error\":\"Authentication failed\"}");
+        response.getWriter().write("{\"message\":\"Email ou mot de passe incorrect\"}");
         response.getWriter().flush();
     }
 }

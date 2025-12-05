@@ -20,6 +20,7 @@ public final class UtilisateurMapper {
     dto.setPrenom(u.getPrenom());
     dto.setEmail(u.getEmail());
     dto.setDateDeNaissance(u.getDateDeNaissance());
+    dto.setTelephone(u.getTelephone());
 
     // Role
     Role role = u.getRole();
@@ -27,15 +28,17 @@ public final class UtilisateurMapper {
       RoleDTO roleDTO = new RoleDTO();
       roleDTO.setId(role.getId());
       roleDTO.setNom(role.getNom());
-      dto.setRole(role);
+      dto.setRole(roleDTO); // Correction ici : on passe bien le DTO
     }
 
-
+    // Entreprise
     Entreprise ent = u.getEntreprise();
     if (ent != null) {
       EntrepriseDTO entDTO = new EntrepriseDTO();
       entDTO.setId(ent.getId());
       entDTO.setNom(ent.getNom());
+      entDTO.setAdresse(ent.getAdresse()); // Ajout pour être complet
+      entDTO.setEmail(ent.getEmail());     // Ajout pour être complet
       dto.setEntreprise(entDTO);
     }
 

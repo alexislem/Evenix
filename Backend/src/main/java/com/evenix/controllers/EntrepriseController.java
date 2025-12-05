@@ -1,48 +1,49 @@
 package com.evenix.controllers;
 
+import com.evenix.dto.EntrepriseDTO;
+import com.evenix.services.EntrepriseService;
+
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import com.evenix.dto.EntrepriseDTO; // Utilisé dans le Service
-import com.evenix.entities.Entreprise;
-import com.evenix.services.EntrepriseServiceImpl;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/entreprise")
+@CrossOrigin
 public class EntrepriseController {
 
-	private final EntrepriseServiceImpl entrepriseService;
+    @Autowired
+    private EntrepriseService entrepriseService;
 
-	public EntrepriseController(EntrepriseServiceImpl entrepriseService) {
-		this.entrepriseService = entrepriseService;
-	}
+    @GetMapping("/all")
+    public ResponseEntity<List<EntrepriseDTO>> getAllEntreprises() {
+        return ResponseEntity.ok(entrepriseService.getAllEntreprises());
+    }
 
-	@GetMapping("/all")
-	public List<EntrepriseDTO> getAllEntreprises() {
-		return entrepriseService.getAllEntreprises();
-	}
+    @GetMapping("/{id}")
+    public ResponseEntity<EntrepriseDTO> getEntrepriseById(@PathVariable int id) {
+        try {
+            return ResponseEntity.ok(entrepriseService.getEntrepriseById(id));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
-	@GetMapping("/{id}")
-	public ResponseEntity<Entreprise> getEntrepriseById(@PathVariable int id) {
-		return entrepriseService.getEntrepriseById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
-	}
+    @PostMapping
+    public ResponseEntity<EntrepriseDTO> createEntreprise(@RequestBody EntrepriseDTO dto) {
+        return ResponseEntity.ok(entrepriseService.createEntreprise(dto));
+    }
 
-	@PostMapping
-	public Entreprise createEntreprise(@RequestBody Entreprise entreprise) {
-		return entrepriseService.createEntreprise(entreprise);
-	}
-
-	@PutMapping("/{id}") // <-- CIBLE DE LA REQUÊTE FRONTEND
-	// ⚠️ Il faut capturer l'Entité et renvoyer l'Entité mise à jour
-	public Entreprise updateEntreprise(@PathVariable int id, @RequestBody Entreprise updatedEntreprise) {
-        // Le service est responsable de trouver l'Entité existante, la mettre à jour, et la sauvegarder.
-		return entrepriseService.updateEntreprise(id, updatedEntreprise);
-	}
-
-	@DeleteMapping("/{id}")
-	public void deleteEntreprise(@PathVariable int id) {
-		entrepriseService.deleteEntreprise(id);
-	}
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteEntreprise(@PathVariable int id) {
+        try {
+            entrepriseService.deleteEntreprise(id);
+            return ResponseEntity.noContent().build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

@@ -1,65 +1,109 @@
 package com.evenix.services;
 
-import java.time.ZonedDateTime;
-import java.util.List;
+import com.evenix.dto.*;
+import com.evenix.entities.*;
+import com.evenix.repos.*;
+import com.evenix.services.InscriptionService;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.evenix.entities.Evenement;
-import com.evenix.entities.Inscription;
-import com.evenix.entities.Utilisateur;
-import com.evenix.repos.EvenementRepository;
-import com.evenix.repos.InscriptionRepository;
-import com.evenix.repos.UtilisateurRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class InscriptionServiceImpl implements InscriptionService {
 
     @Autowired
     private InscriptionRepository inscriptionRepository;
-
     @Autowired
     private UtilisateurRepository utilisateurRepository;
-
     @Autowired
     private EvenementRepository evenementRepository;
 
     @Override
-    public Inscription createInscription(int utilisateurId, int evenementId, ZonedDateTime dateInscription) {
-        Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable avec l'ID : " + utilisateurId));
-
-        Evenement evenement = evenementRepository.findById(evenementId)
-                .orElseThrow(() -> new IllegalArgumentException("Évènement introuvable avec l'ID : " + evenementId));
-
-        // Vérification si déjà inscrit et actif
-        boolean alreadyRegistered = inscriptionRepository.findByUtilisateur(utilisateur).stream()
-                .anyMatch(i -> i.getEvenement().getId() == evenementId && i.getDateAnnulation() == null);
+    public InscriptionDTO inscrireUtilisateur(int utilisateurId, int evenementId) {
+        Utilisateur user = utilisateurRepository.findById(utilisateurId)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
         
-        if (alreadyRegistered) {
-             throw new IllegalArgumentException("L'utilisateur est déjà inscrit à cet événement.");
+        Evenement event = evenementRepository.findById(evenementId)
+                .orElseThrow(() -> new EntityNotFoundException("Événement non trouvé"));
+
+        // Vérification Capacité
+        if (event.getLieu() != null) {
+            int capaciteMax = event.getLieu().getCapaciteMax();
+            int inscritsActuels = event.getInscriptions().size(); // Attention, peut être lourd si beaucoup d'inscrits, préférer un count SQL
+            if (inscritsActuels >= capaciteMax) {
+                throw new IllegalStateException("L'événement est complet !");
+            }
         }
 
-        Inscription inscription = new Inscription(utilisateur, evenement, dateInscription);
-        return inscriptionRepository.save(inscription);
-    }
+        // Vérification doublon
+        boolean dejaInscrit = event.getInscriptions().stream()
+                .anyMatch(i -> i.getUtilisateur().getId() == utilisateurId);
+        if (dejaInscrit) {
+            throw new IllegalArgumentException("Utilisateur déjà inscrit à cet événement");
+        }
 
-    @Override
-    public List<Inscription> getInscriptionsByUtilisateurId(int utilisateurId) {
-        Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+        Inscription inscription = new Inscription(user, event);
+        inscription.setStatut("CONFIRMEE"); // Ou EN_ATTENTE si paiement requis
         
-        return inscriptionRepository.findByUtilisateur(utilisateur);
+        Inscription saved = inscriptionRepository.save(inscription);
+        return convertToDTO(saved);
     }
 
     @Override
-    public void deleteInscription(int inscriptionId) {
-        // Modification pour désinscription logique (soft delete)
+    public void annulerInscription(int inscriptionId) {
         Inscription inscription = inscriptionRepository.findById(inscriptionId)
-                .orElseThrow(() -> new IllegalArgumentException("Inscription introuvable avec l'ID : " + inscriptionId));
+                .orElseThrow(() -> new EntityNotFoundException("Inscription introuvable"));
         
-        inscription.setDateAnnulation(ZonedDateTime.now());
-        inscriptionRepository.save(inscription);
+        // Logique métier : suppression ou changement de statut
+        // inscription.setStatut("ANNULEE");
+        // inscriptionRepository.save(inscription);
+        
+        // Ou suppression physique
+        inscriptionRepository.delete(inscription);
+    }
+
+    @Override
+    public List<InscriptionDTO> getInscriptionsByUtilisateur(int utilisateurId) {
+        return inscriptionRepository.findByUtilisateurId(utilisateurId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<InscriptionDTO> getInscriptionsByEvenement(int evenementId) {
+        return inscriptionRepository.findByEvenementId(evenementId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private InscriptionDTO convertToDTO(Inscription entity) {
+        InscriptionDTO dto = new InscriptionDTO();
+        dto.setId(entity.getId());
+        dto.setDateInscription(entity.getDateInscription());
+        dto.setStatut(entity.getStatut());
+
+        // Mapping Event (Simplifié)
+        EvenementDTO eventDto = new EvenementDTO();
+        eventDto.setId(entity.getEvenement().getId());
+        eventDto.setNom(entity.getEvenement().getNom());
+        eventDto.setDateDebut(entity.getEvenement().getDateDebut());
+        dto.setEvenement(eventDto);
+
+        // Mapping User (Simplifié)
+        UtilisateurDTO userDto = new UtilisateurDTO();
+        userDto.setId(entity.getUtilisateur().getId());
+        userDto.setNom(entity.getUtilisateur().getNom());
+        userDto.setPrenom(entity.getUtilisateur().getPrenom());
+        userDto.setEmail(entity.getUtilisateur().getEmail());
+        dto.setUtilisateur(userDto);
+
+        return dto;
     }
 }

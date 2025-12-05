@@ -1,62 +1,79 @@
 package com.evenix.services;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.stereotype.Service;
-
 import com.evenix.dto.PaiementDTO;
-import com.evenix.entities.Evenement;
+import com.evenix.entities.Inscription;
 import com.evenix.entities.Paiement;
-import com.evenix.entities.Utilisateur;
-import com.evenix.repos.EvenementRepository;
+import com.evenix.repos.InscriptionRepository;
 import com.evenix.repos.PaiementRepository;
-import com.evenix.repos.UtilisateurRepository;
+import com.evenix.services.PaiementService;
+
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-public class PaiementServiceImpl implements PaiementService{
+@Transactional
+public class PaiementServiceImpl implements PaiementService {
 
-    private final PaiementRepository paiementRepository;
-    private final UtilisateurRepository utilisateurRepository;
-    private final EvenementRepository evenementRepository;
-
-    public PaiementServiceImpl(PaiementRepository paiementRepository,
-                           UtilisateurRepository utilisateurRepository,
-                           EvenementRepository evenementRepository) {
-        this.paiementRepository = paiementRepository;
-        this.utilisateurRepository = utilisateurRepository;
-        this.evenementRepository = evenementRepository;
-    }
-    
-    @Override
-    public List<Paiement> getAllPaiements() {
-        return paiementRepository.findAll();
-    }
+    @Autowired
+    private PaiementRepository paiementRepository;
+    @Autowired
+    private InscriptionRepository inscriptionRepository;
 
     @Override
-    public Optional<Paiement> getPaiementById(int id) {
-        return paiementRepository.findById(id);
-    }
+    public PaiementDTO traiterPaiement(PaiementDTO dto) {
+        // 1. Récupérer l'inscription concernée
+        Inscription inscription = inscriptionRepository.findById(dto.getInscriptionId())
+                .orElseThrow(() -> new EntityNotFoundException("Inscription introuvable"));
 
-    @Override
-    public Paiement createPaiement(PaiementDTO dto) {
-        Utilisateur utilisateur = utilisateurRepository.findById(dto.getUtilisateurId())
-            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-        Evenement evenement = evenementRepository.findById(dto.getEvenementId())
-            .orElseThrow(() -> new RuntimeException("Evenement non trouvé"));
-
+        // 2. Créer le paiement
         Paiement paiement = new Paiement();
         paiement.setMontant(dto.getMontant());
-        paiement.setDate(dto.getDate());
-        paiement.setCode(dto.getCode());
-        paiement.setUtilisateur(utilisateur);
-        paiement.setEvenement(evenement);
+        paiement.setMoyenPaiement(dto.getMoyenPaiement());
+        paiement.setStatut("SUCCES"); // On suppose un succès pour l'instant (simulation)
+        paiement.setDatePaiement(LocalDateTime.now());
+        paiement.setInscription(inscription);
 
-        return paiementRepository.save(paiement);
+        // 3. Mettre à jour le statut de l'inscription
+        inscription.setStatut("CONFIRMEE");
+        inscriptionRepository.save(inscription);
+
+        // 4. Sauvegarder le paiement
+        Paiement saved = paiementRepository.save(paiement);
+        return convertToDTO(saved);
     }
 
     @Override
-    public void deletePaiement(int id) {
-        paiementRepository.deleteById(id);
+    public PaiementDTO getPaiementById(int id) {
+        return paiementRepository.findById(id)
+                .map(this::convertToDTO)
+                .orElseThrow(() -> new EntityNotFoundException("Paiement non trouvé"));
+    }
+
+    @Override
+    public List<PaiementDTO> getAllPaiements() {
+        return paiementRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private PaiementDTO convertToDTO(Paiement entity) {
+        PaiementDTO dto = new PaiementDTO();
+        dto.setId(entity.getId());
+        dto.setMontant(entity.getMontant());
+        dto.setDatePaiement(entity.getDatePaiement());
+        dto.setMoyenPaiement(entity.getMoyenPaiement());
+        dto.setStatut(entity.getStatut());
+        
+        if (entity.getInscription() != null) {
+            dto.setInscriptionId(entity.getInscription().getId());
+        }
+        
+        return dto;
     }
 }

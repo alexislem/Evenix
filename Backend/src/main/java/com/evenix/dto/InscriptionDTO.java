@@ -1,63 +1,29 @@
 package com.evenix.dto;
 
-import jakarta.validation.constraints.NotNull;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 public class InscriptionDTO {
-
     private int id;
-
-    @NotNull(message = "La date d'inscription est obligatoire.")
-    private ZonedDateTime dateInscription;
-
-    // La date d'annulation peut être null (par défaut), donc pas d'annotation ici.
-    private ZonedDateTime dateAnnulation;
-
-    @NotNull(message = "Un utilisateur est requis pour l'inscription.")
+    private LocalDateTime dateInscription;
+    private String statut;
+    
+    // Relations simplifiées ou complètes selon le besoin d'affichage
     private UtilisateurDTO utilisateur;
-
-    @NotNull(message = "Un évènement est requis pour l'inscription.")
     private EvenementDTO evenement;
+    private PaiementDTO paiement;
 
-    // GETTERS & SETTERS
+    public InscriptionDTO() {}
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public ZonedDateTime getDateInscription() {
-        return dateInscription;
-    }
-
-    public void setDateInscription(ZonedDateTime dateInscription) {
-        this.dateInscription = dateInscription;
-    }
-
-    public ZonedDateTime getDateAnnulation() {
-        return dateAnnulation;
-    }
-
-    public void setDateAnnulation(ZonedDateTime dateAnnulation) {
-        this.dateAnnulation = dateAnnulation;
-    }
-
-    public UtilisateurDTO getUtilisateur() {
-        return utilisateur;
-    }
-
-    public void setUtilisateur(UtilisateurDTO utilisateur) {
-        this.utilisateur = utilisateur;
-    }
-
-    public EvenementDTO getEvenement() {
-        return evenement;
-    }
-
-    public void setEvenement(EvenementDTO evenement) {
-        this.evenement = evenement;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public LocalDateTime getDateInscription() { return dateInscription; }
+    public void setDateInscription(LocalDateTime dateInscription) { this.dateInscription = dateInscription; }
+    public String getStatut() { return statut; }
+    public void setStatut(String statut) { this.statut = statut; }
+    public UtilisateurDTO getUtilisateur() { return utilisateur; }
+    public void setUtilisateur(UtilisateurDTO utilisateur) { this.utilisateur = utilisateur; }
+    public EvenementDTO getEvenement() { return evenement; }
+    public void setEvenement(EvenementDTO evenement) { this.evenement = evenement; }
+    public PaiementDTO getPaiement() { return paiement; }
+    public void setPaiement(PaiementDTO paiement) { this.paiement = paiement; }
 }

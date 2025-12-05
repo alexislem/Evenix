@@ -1,54 +1,48 @@
 package com.evenix.controllers;
 
-import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Map;
+import com.evenix.dto.InscriptionDTO;
+import com.evenix.services.InscriptionService;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.evenix.entities.Inscription;
-import com.evenix.services.InscriptionServiceImpl;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/inscription")
+@CrossOrigin
 public class InscriptionController {
 
     @Autowired
-    private InscriptionServiceImpl inscriptionService;
+    private InscriptionService inscriptionService;
 
     @PostMapping
-    public ResponseEntity<Inscription> createInscription(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<?> inscrireUtilisateur(@RequestParam int userId, @RequestParam int eventId) {
         try {
-            int utilisateurId = ((Number) payload.get("utilisateurId")).intValue();
-            int evenementId = ((Number) payload.get("evenementId")).intValue();
-            ZonedDateTime dateInscription = ZonedDateTime.parse((String) payload.get("dateInscription"));
-
-            Inscription inscription = inscriptionService.createInscription(utilisateurId, evenementId, dateInscription);
-            return ResponseEntity.ok(inscription);
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    // Endpoint GET qui retourne la LISTE
-    @GetMapping("/utilisateur/{id}")
-    public ResponseEntity<List<Inscription>> getInscriptionsByUser(@PathVariable int id) {
-        try {
-            List<Inscription> inscriptions = inscriptionService.getInscriptionsByUtilisateurId(id);
-            return ResponseEntity.ok(inscriptions);
-        } catch (RuntimeException e) {
+            InscriptionDTO dto = inscriptionService.inscrireUtilisateur(userId, eventId);
+            return ResponseEntity.ok(dto);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            // Renvoie 400 si complet ou déjà inscrit
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteInscription(@PathVariable int id) {
-        inscriptionService.deleteInscription(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> annulerInscription(@PathVariable int id) {
+        try {
+            inscriptionService.annulerInscription(id);
+            return ResponseEntity.noContent().build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<InscriptionDTO>> getByUser(@PathVariable int userId) {
+        return ResponseEntity.ok(inscriptionService.getInscriptionsByUtilisateur(userId));
     }
 }

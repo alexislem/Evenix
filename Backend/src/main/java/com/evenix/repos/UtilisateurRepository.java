@@ -1,25 +1,17 @@
 package com.evenix.repos;
 
-import java.sql.Date;
-import java.time.LocalDate;
+import com.evenix.entities.Utilisateur;
+import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-
-import com.evenix.entities.Entreprise;
-import com.evenix.entities.Role;
-import com.evenix.entities.Utilisateur;
-
-@RepositoryRestResource(path = "rest")
 public interface UtilisateurRepository extends JpaRepository<Utilisateur, Integer> {
-	Optional<Utilisateur> findByNom(String Nom);
-	Optional<Utilisateur> findByPrenom(String Prenom);
-	Optional<Utilisateur> findById(int id);
-	Optional<Utilisateur> findByDateDeNaissance(Date dateNaissance);
-	Optional<Utilisateur> findByEmail(String email);
-	Optional<Utilisateur> findByRole(Role role);
-	Optional<Utilisateur> findByEntreprise(Entreprise entreprise);
-	Optional<Utilisateur> findByDateCreation(LocalDate dateCreation);
-	boolean existsByEmail(String email);
+    
+    // Utilisé pour le login (recherche par email)
+    Optional<Utilisateur> findByEmail(String email);
+    
+    // Utilisé parfois pour la recherche par nom
+    Optional<Utilisateur> findByNom(String nom);
+    
+    // Utilisé lors de l'inscription pour vérifier si l'email est pris
+    boolean existsByEmail(String email);
 }

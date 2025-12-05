@@ -1,7 +1,6 @@
 package com.evenix.config;
 
 import com.evenix.repos.UtilisateurRepository;
-import com.evenix.security.JWTAuthenticationFilter;
 import com.evenix.security.JWTAuthorizationFilter;
 import com.evenix.security.SecParams;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,12 +32,12 @@ public class SecurityConfig {
     public SecurityConfig(UtilisateurRepository utilisateurRepository) {
         this.utilisateurRepository = utilisateurRepository;
     }
+
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http,
                                     AuthenticationConfiguration authConfig) throws Exception {
 
         AuthenticationManager authMgr = authConfig.getAuthenticationManager();
-
 
         http
             .csrf(csrf -> csrf.disable())
@@ -48,29 +47,36 @@ public class SecurityConfig {
 
         http
             .authorizeHttpRequests(auth -> auth
+                // --- ROUTES PUBLIQUES (Tout le monde) ---
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/evenement/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/entreprise/all").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/lieu/all").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/type-evenement/all").permitAll()
+                
+                // ✅ AJOUT CRUCIAL : Autoriser l'affichage des erreurs pour tout le monde
+                .requestMatchers("/error").permitAll()
 
-                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-                .requestMatchers(HttpMethod.GET,  "/api/auth/confirm").permitAll() 
-                .requestMatchers(HttpMethod.GET,  "/api/evenement/**").permitAll() 
-                .requestMatchers(HttpMethod.GET,  "/api/entreprise/all").permitAll() 
-                //.requestMatchers(HttpMethod.GET,  "/api/utilisateur/**").permitAll() 
-                .requestMatchers("/api/utilisateur/**").hasRole("ADMIN")
+                // --- UTILISATEURS ---
+                .requestMatchers(HttpMethod.GET, "/api/utilisateur/all").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/utilisateur/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/utilisateur/**").authenticated()
+
+                // --- GESTION ÉVÉNEMENTS ---
+                .requestMatchers(HttpMethod.POST, "/api/evenement/**").hasAnyRole("ORGANISATEUR", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/evenement/**").hasAnyRole("ORGANISATEUR", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/evenement/**").hasAnyRole("ORGANISATEUR", "ADMIN")
+
+                // --- AUTRES ---
+                .requestMatchers(HttpMethod.POST, "/api/lieu/**").hasAnyRole("ORGANISATEUR", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/entreprise/**").hasRole("ADMIN")
+
+                // --- CORS PREFLIGHT ---
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // Exemple : si tu veux que la route de création utilisateur
-                // passe uniquement par /api/auth/register :
-                // on NE laisse pas /api/utilisateur public.
-                // .requestMatchers(HttpMethod.POST, "/api/utilisateur").hasRole("ADMIN")
-                // .requestMatchers(HttpMethod.GET,  "/api/utilisateur/**").hasRole("ADMIN")
-
+                // --- TOUT LE RESTE ---
                 .anyRequest().authenticated()
             );
-
-        JWTAuthenticationFilter jwtAuthFilter =
-                new JWTAuthenticationFilter(authMgr, jwtSecret, SecParams.EXPIRATION_MS,utilisateurRepository);
-
-        http.addFilterAt(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         JWTAuthorizationFilter jwtAuthorizationFilter = new JWTAuthorizationFilter(jwtSecret);
         http.addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -84,7 +90,6 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
             "http://localhost:5173","http://127.0.0.1:5173",
             "http://localhost:3000","http://127.0.0.1:3000"
-            // "https://evenix.fr" à ajouter ou nom de domaine correspondant pour nous
         ));
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization","Content-Type","Accept","X-Requested-With"));
