@@ -135,7 +135,6 @@ public class Utilisateur {
 	}
 
 	public void setConfirmationToken(String token) {
-		// TODO Auto-generated method stub
 		
 	}
 }

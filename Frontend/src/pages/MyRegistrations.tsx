@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {MapPin, Clock, ArrowLeft, Trash2, ExternalLink, Ticket, AlertCircle } from 'lucide-react';
 import { inscriptionService } from '../services/inscriptionService';
 import { useAuth } from '../context/AuthContext';
