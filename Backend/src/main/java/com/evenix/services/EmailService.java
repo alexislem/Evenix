@@ -18,6 +18,7 @@ public class EmailService {
         String url = "http://localhost:8080/api/auth/confirm?token=" + token;
 
         SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom("evenix.event@gmail.com");
         msg.setTo(email);
         msg.setSubject("Confirmation de votre compte");
         msg.setText("Cliquez pour confirmer votre compte : " + url);
