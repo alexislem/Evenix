@@ -1,6 +1,8 @@
 package com.evenix.services;
 
 import com.evenix.dto.EvenementDTO;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EvenementService {
@@ -10,4 +12,6 @@ public interface EvenementService {
     EvenementDTO updateEvenement(int id, EvenementDTO evenementDTO);
     void deleteEvenement(int id);
     List<EvenementDTO> getEvenementsByOrganisateur(int organisateurId);
+    List<EvenementDTO> getEvenementsBetweenDates(LocalDateTime start, LocalDateTime end);
+
 }

@@ -54,6 +54,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/lieu/all").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/type-evenement/all").permitAll()
                 
+                // --- AJOUT IMAGES/UPLOAD
+                .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll() // afficher les images
+                .requestMatchers(HttpMethod.POST, "/api/uploads/**").hasAnyRole("ORGANISATEUR", "ADMIN") // uploader
+                
                 // ✅ AJOUT CRUCIAL : Autoriser l'affichage des erreurs pour tout le monde
                 .requestMatchers("/error").permitAll()
 

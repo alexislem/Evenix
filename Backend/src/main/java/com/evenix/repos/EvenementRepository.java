@@ -2,6 +2,8 @@ package com.evenix.repos;
 
 import com.evenix.entities.Evenement;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EvenementRepository extends JpaRepository<Evenement, Integer> {
@@ -15,4 +17,7 @@ public interface EvenementRepository extends JpaRepository<Evenement, Integer> {
     
     // Recherche par nom (insensible à la casse)
     List<Evenement> findByNomContainingIgnoreCase(String nom);
+    
+    List<Evenement> findByDateDebutBetween(LocalDateTime start, LocalDateTime end);
+
 }

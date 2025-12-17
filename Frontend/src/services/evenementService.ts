@@ -22,7 +22,7 @@ export const evenementService = {
    */
   async getAll(): Promise<Evenement[]> {
     // Appel GET vers /api/evenement/all
-    const response = await api.get<Evenement[]>('/api/evenement/all');
+    const response = await api.get<Evenement[]>('/evenements');
     return response.data;
   },
 
@@ -33,7 +33,7 @@ export const evenementService = {
    */
   async getById(id: number): Promise<Evenement> {
     // Appel GET vers /api/evenement/{id}
-    const response = await api.get<Evenement>(`/api/evenement/${id}`);
+    const response = await api.get<Evenement>(`/evenements/${id}`);
     return response.data;
   },
 

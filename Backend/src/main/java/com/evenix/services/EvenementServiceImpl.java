@@ -11,21 +11,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 public class EvenementServiceImpl implements EvenementService {
 
     @Autowired
     private EvenementRepository evenementRepository;
     @Autowired
     private UtilisateurRepository utilisateurRepository;
-    
+
     // On injecte le Service au lieu du Repository pour bénéficier du dédoublonnage Google
     @Autowired
-    private LieuServiceImpl lieuService; 
+    private LieuServiceImpl lieuService;
 
     @Override
     public List<EvenementDTO> getAllEvenements() {
@@ -37,29 +37,33 @@ public class EvenementServiceImpl implements EvenementService {
     @Override
     public EvenementDTO getEvenementById(int id) {
         Evenement evenement = evenementRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Événement non trouvé id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Événement introuvable"));
         return convertToDTO(evenement);
     }
 
     @Override
+    @Transactional
     public EvenementDTO createEvenement(EvenementDTO dto, int organisateurId) {
+
         Utilisateur organisateur = utilisateurRepository.findById(organisateurId)
                 .orElseThrow(() -> new EntityNotFoundException("Organisateur non trouvé"));
 
         Evenement evenement = new Evenement();
         updateEntityFromDTO(evenement, dto);
-        
+
         evenement.setUtilisateur(organisateur);
 
         // GESTION DU LIEU VIA LE SERVICE (Google Maps & Dédoublonnage)
         if (dto.getLieu() != null) {
             // 1. On crée ou récupère le lieu via le service (vérifie googlePlaceId)
             LieuDTO savedLieuDto = lieuService.createLieu(dto.getLieu());
-            
+
             // 2. On récupère l'entité brute pour faire la liaison JPA
             // (Nécessite la méthode getLieuEntityById dans LieuService)
-            Lieu lieuEntity = lieuService.getLieuEntityById(savedLieuDto.getId());
-            evenement.setLieu(lieuEntity);
+            Lieu savedLieuEntity = lieuService.getLieuEntityById(savedLieuDto.getId());
+
+            // 3. On lie l'événement à ce lieu
+            evenement.setLieu(savedLieuEntity);
         }
 
         Evenement saved = evenementRepository.save(evenement);
@@ -67,19 +71,21 @@ public class EvenementServiceImpl implements EvenementService {
     }
 
     @Override
+    @Transactional
     public EvenementDTO updateEvenement(int id, EvenementDTO dto) {
-        Evenement existing = evenementRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Événement non trouvé"));
+        Evenement evenement = evenementRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Événement introuvable"));
 
-        updateEntityFromDTO(existing, dto);
+        updateEntityFromDTO(evenement, dto);
 
+        // Mise à jour du lieu via le service (dédoublonnage + Google)
         if (dto.getLieu() != null) {
-             LieuDTO savedLieuDto = lieuService.createLieu(dto.getLieu());
-             Lieu lieuEntity = lieuService.getLieuEntityById(savedLieuDto.getId());
-             existing.setLieu(lieuEntity);
+            LieuDTO savedLieuDto = lieuService.createLieu(dto.getLieu());
+            Lieu savedLieuEntity = lieuService.getLieuEntityById(savedLieuDto.getId());
+            evenement.setLieu(savedLieuEntity);
         }
 
-        Evenement updated = evenementRepository.save(existing);
+        Evenement updated = evenementRepository.save(evenement);
         return convertToDTO(updated);
     }
 
@@ -94,6 +100,13 @@ public class EvenementServiceImpl implements EvenementService {
     @Override
     public List<EvenementDTO> getEvenementsByOrganisateur(int organisateurId) {
         return evenementRepository.findByUtilisateurId(organisateurId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EvenementDTO> getEvenementsBetweenDates(LocalDateTime start, LocalDateTime end) {
+        return evenementRepository.findByDateDebutBetween(start, end).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -118,9 +131,8 @@ public class EvenementServiceImpl implements EvenementService {
         dto.setDateFin(entity.getDateFin());
         dto.setPrix(entity.getPrix());
         dto.setImageUrl(entity.getImageUrl());
-        
 
-        // Mapping Utilisateur
+        // Mapping UTILISATEUR (organisateur)
         if (entity.getUtilisateur() != null) {
             UtilisateurDTO userDto = new UtilisateurDTO();
             userDto.setId(entity.getUtilisateur().getId());
@@ -129,25 +141,23 @@ public class EvenementServiceImpl implements EvenementService {
             dto.setUtilisateur(userDto);
         }
 
-        // Mapping COMPLET du Lieu (C'est ici que la correction est appliquée)
+        // Mapping COMPLET du Lieu
         if (entity.getLieu() != null) {
             Lieu l = entity.getLieu();
             LieuDTO lieuDto = new LieuDTO();
-            
+
             lieuDto.setId(l.getId());
             lieuDto.setNom(l.getNom());
             lieuDto.setAdresse(l.getAdresse());
-            lieuDto.setVille(l.getVille());           // Ajouté
-            lieuDto.setCodePostal(l.getCodePostal()); // Ajouté
-            lieuDto.setLatitude(l.getLatitude());     // Ajouté
-            lieuDto.setLongitude(l.getLongitude());   // Ajouté
-            lieuDto.setTypeLieu(l.getTypeLieu());     // Ajouté
-            lieuDto.setGooglePlaceId(l.getGooglePlaceId()); // Ajouté
+            lieuDto.setVille(l.getVille());
+            lieuDto.setCodePostal(l.getCodePostal());
+            lieuDto.setLatitude(l.getLatitude());
+            lieuDto.setLongitude(l.getLongitude());
+            lieuDto.setTypeLieu(l.getTypeLieu());
+            lieuDto.setGooglePlaceId(l.getGooglePlaceId());
             lieuDto.setCapaciteMax(l.getCapaciteMax());
-            
+
             dto.setLieu(lieuDto);
-            
-            // On remplit aussi la ville au niveau de l'événement pour faciliter l'affichage frontend
         }
 
         return dto;

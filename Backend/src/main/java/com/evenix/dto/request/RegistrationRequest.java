@@ -1,14 +1,25 @@
 package com.evenix.dto.request;
 
-import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public class RegistrationRequest {
   private String nom;
   private String prenom;
   private String email;
+
+  @NotBlank(message = "Le mot de passe est obligatoire")
+  @Size(min = 12, message = "Le mot de passe doit contenir au moins 12 caractères")
+  @Pattern(
+      regexp = "^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\\-=[\\]{};':\"\\\\|,.<>/?]).*$",
+      message = "Le mot de passe doit contenir au moins une majuscule et un caractère spécial"
+  )
   private String motDePasse;
+
   private String telephone;
   private String questionSecurite; // Ex: "Quel est le nom de votre premier animal ?"
   private String reponseSecurite; // Haché via BCrypt
@@ -38,22 +49,13 @@ public class RegistrationRequest {
 
   public Integer getRoleId() { return roleId; }
   public void setRoleId(Integer roleId) { this.roleId = roleId; }
-public LocalDateTime getDateCreation() {
-	return dateCreation;
-}
-public void setDateCreation(LocalDateTime dateCreation) {
-	this.dateCreation = dateCreation;
-}
-public String getQuestionSecurite() {
-	return questionSecurite;
-}
-public void setQuestionSecurite(String questionSecurite) {
-	this.questionSecurite = questionSecurite;
-}
-public String getReponseSecurite() {
-	return reponseSecurite;
-}
-public void setReponseSecurite(String reponseSecurite) {
-	this.reponseSecurite = reponseSecurite;
-}
+
+  public LocalDateTime getDateCreation() { return dateCreation; }
+  public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
+
+  public String getQuestionSecurite() { return questionSecurite; }
+  public void setQuestionSecurite(String questionSecurite) { this.questionSecurite = questionSecurite; }
+
+  public String getReponseSecurite() { return reponseSecurite; }
+  public void setReponseSecurite(String reponseSecurite) { this.reponseSecurite = reponseSecurite; }
 }
