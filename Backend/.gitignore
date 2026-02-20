@@ -38,3 +38,10 @@ java-main/
 *~main
 *.orig
 
+*.class
+bin/
+src/bin/
+**/src/bin/
+target/
+*~HEAD
+*~main
