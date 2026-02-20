@@ -1,107 +1,51 @@
 package com.evenix.dto;
 
-import jakarta.validation.constraints.*;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 public class EvenementDTO {
-
     private int id;
-
-    @NotBlank(message = "Le nom est obligatoire.")
-    @Size(max = 100, message = "Le nom ne peut pas dépasser 100 caractères.")
     private String nom;
-
-    @NotNull(message = "La date de début est obligatoire.")
-    private ZonedDateTime dateDebut;
-
-    @NotNull(message = "La date de fin est obligatoire.")
-    private ZonedDateTime dateFin;
-
-    @NotNull(message = "Le champ payant est obligatoire.")
-    private Boolean payant;
-
-    @Size(max = 500, message = "La description ne peut pas dépasser 500 caractères.")
     private String description;
-
-    @PositiveOrZero(message = "Le prix doit être positif ou nul.")
-    private float prix;
-
-    @NotNull(message = "Un utilisateur doit être associé à l'évènement.")
+    private LocalDateTime dateDebut;
+    private LocalDateTime dateFin;
+    private double prix;
+    private String ville;
+    
+    // ✅ NOUVEAU CHAMP
+    private String imageUrl;
+    
     private UtilisateurDTO utilisateur;
-
-    @NotNull(message = "Un lieu doit être associé à l'évènement.")
     private LieuDTO lieu;
+    private Set<TypeEvenementDTO> types = new HashSet<>();
 
-    // Getters & Setters
-    public int getId() {
-        return id;
-    }
+    public EvenementDTO() {}
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    // ... autres getters/setters ...
 
-    public String getNom() {
-        return nom;
-    }
-
-    public void setNom(String nom) {
-        this.nom = nom;
-    }
-
-    public ZonedDateTime getDateDebut() {
-        return dateDebut;
-    }
-
-    public void setDateDebut(ZonedDateTime dateDebut) {
-        this.dateDebut = dateDebut;
-    }
-
-    public ZonedDateTime getDateFin() {
-        return dateFin;
-    }
-
-    public void setDateFin(ZonedDateTime dateFin) {
-        this.dateFin = dateFin;
-    }
-
-    public Boolean getPayant() {
-        return payant;
-    }
-
-    public void setPayant(Boolean payant) {
-        this.payant = payant;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public float getPrix() {
-        return prix;
-    }
-
-    public void setPrix(float prix) {
-        this.prix = prix;
-    }
-
-    public UtilisateurDTO getUtilisateur() {
-        return utilisateur;
-    }
-
-    public void setUtilisateur(UtilisateurDTO utilisateur) {
-        this.utilisateur = utilisateur;
-    }
-
-    public LieuDTO getLieu() {
-        return lieu;
-    }
-
-    public void setLieu(LieuDTO lieu) {
-        this.lieu = lieu;
-    }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    
+    // Rappel des autres getters/setters pour que le fichier soit valide
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public LocalDateTime getDateDebut() { return dateDebut; }
+    public void setDateDebut(LocalDateTime dateDebut) { this.dateDebut = dateDebut; }
+    public LocalDateTime getDateFin() { return dateFin; }
+    public void setDateFin(LocalDateTime dateFin) { this.dateFin = dateFin; }
+    public double getPrix() { return prix; }
+    public void setPrix(double prix) { this.prix = prix; }
+    public String getVille() { return ville; }
+    public void setVille(String ville) { this.ville = ville; }
+    public UtilisateurDTO getUtilisateur() { return utilisateur; }
+    public void setUtilisateur(UtilisateurDTO utilisateur) { this.utilisateur = utilisateur; }
+    public LieuDTO getLieu() { return lieu; }
+    public void setLieu(LieuDTO lieu) { this.lieu = lieu; }
+    public Set<TypeEvenementDTO> getTypes() { return types; }
+    public void setTypes(Set<TypeEvenementDTO> types) { this.types = types; }
 }

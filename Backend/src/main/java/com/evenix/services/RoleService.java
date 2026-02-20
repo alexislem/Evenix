@@ -1,13 +1,11 @@
 package com.evenix.services;
 
-import com.evenix.entities.Role;
-
+import com.evenix.dto.RoleDTO;
 import java.util.List;
 
 public interface RoleService {
-    List<Role> getAllRoles();
-    Role getRoleById(int id);
-    Role createRole(Role role);
-    Role updateRole(int id, Role updatedRole);
+    List<RoleDTO> getAllRoles();
+    RoleDTO getRoleById(int id);
+    RoleDTO createRole(RoleDTO roleDTO);
     void deleteRole(int id);
 }

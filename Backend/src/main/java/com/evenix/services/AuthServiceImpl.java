@@ -7,103 +7,162 @@ import com.evenix.dto.UtilisateurDTO;
 import com.evenix.dto.request.RegistrationRequest;
 import com.evenix.entities.Role;
 import com.evenix.entities.Utilisateur;
-import com.evenix.exception.EmailAlreadyExistsException;
+import com.evenix.exception.EmailAlreadyExistsException; // Assurez-vous d'avoir créé cette exception ou utilisez IllegalArgumentException
 import com.evenix.mappers.UtilisateurMapper;
 import com.evenix.repos.RoleRepository;
 import com.evenix.repos.UtilisateurRepository;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
+import com.evenix.security.SecParams;
+//import com.evenix.services.AuthService;
 
+import jakarta.persistence.EntityNotFoundException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.Optional;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 @Transactional
 public class AuthServiceImpl implements AuthService {
 
-  private static final String JWT_SECRET = "evenix-secret-change-me"; 
-  private static final long   EXPIRATION_MS = 10L * 24 * 60 * 60 * 1000; // 10 jours
+    @Value("${evenix.jwt.secret}")
+    private String jwtSecret;
 
-  private final UtilisateurRepository utilisateurRepository;
-  private final RoleRepository roleRepository;
-  private final BCryptPasswordEncoder passwordEncoder;
+    private final UtilisateurRepository utilisateurRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
-  public AuthServiceImpl(UtilisateurRepository utilisateurRepository,
-                         RoleRepository roleRepository,
-                         BCryptPasswordEncoder passwordEncoder) {
-    this.utilisateurRepository = utilisateurRepository;
-    this.roleRepository = roleRepository;
-    this.passwordEncoder = passwordEncoder;
-  }
-
-  // ---------- REGISTER ----------
-  @Override
-  public UtilisateurDTO register(RegistrationRequest request) {
-
-    if (utilisateurRepository.findByEmail(request.getEmail()).isPresent()) {
-      throw new EmailAlreadyExistsException("Email déjà existant !");
+    @Autowired
+    private EmailService emailService;
+    
+    public AuthServiceImpl(UtilisateurRepository utilisateurRepository,
+                           RoleRepository roleRepository,
+                           PasswordEncoder passwordEncoder) {
+        this.utilisateurRepository = utilisateurRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
+    // ==========================================
+    // INSCRIPTION
+    // ==========================================
+    @Override
+    public UtilisateurDTO register(RegistrationRequest request) {
 
-    Utilisateur u = new Utilisateur();
-    u.setNom(request.getNom());
-    u.setPrenom(request.getPrenom());
-    u.setEmail(request.getEmail());
-    u.setDateDeNaissance(request.getDateDeNaissance());
-    u.setMotDePasse(passwordEncoder.encode(request.getMotDePasse()));
+        // 1. Vérification unicité email
+        if (utilisateurRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new EmailAlreadyExistsException("Cet email est déjà utilisé.");
+        }
 
+        Utilisateur u = new Utilisateur();
+        u.setNom(request.getNom());
+        u.setPrenom(request.getPrenom());
+        u.setEmail(request.getEmail());
+        u.setTelephone(request.getTelephone());
+        u.setDateDeNaissance(request.getDateDeNaissance());
+        u.setDateCreation(LocalDateTime.now());
+        u.setEstConfirme(false); // Par défaut, en attente de validation (si implémenté)
 
-    Role role = resolveRole(request.getRoleId());
-    u.setRole(role);
+        // 2. Hachage du mot de passe
+        u.setMotDePasse(passwordEncoder.encode(request.getMotDePasse()));
 
+        // 3. Gestion de la Sécurité (Question/Réponse)
+        // On stocke la question en clair, mais la réponse est hachée comme un mot de passe !
+        if (request.getQuestionSecurite() != null && request.getReponseSecurite() != null) {
+            u.setQuestionSecurite(request.getQuestionSecurite());
+            u.setReponseSecurite(passwordEncoder.encode(request.getReponseSecurite()));
+        }
 
-    Utilisateur saved = utilisateurRepository.save(u);
-    return UtilisateurMapper.fromEntity(saved);
-  }
+        // 4. Rôle par défaut : PARTICIPANT
+        Role role = roleRepository.findByNom("PARTICIPANT")
+                .orElseThrow(() -> new EntityNotFoundException("Rôle PARTICIPANT introuvable."));
+        u.setRole(role);
+        
+        // Générer le token de confirmation
+        String token = UUID.randomUUID().toString();
+        u.setConfirmationToken(token);
+        u.setTokenCreationDate(LocalDateTime.now());
 
-  // ---------- LOGIN ----------
-  @Override
-  public Utilisateur login(LoginRequest request) {
-    Utilisateur u = utilisateurRepository
-        .findByEmail(request.getEmail())
-        .orElseThrow(() -> new EntityNotFoundException("Utilisateur introuvable"));
+        Utilisateur saved = utilisateurRepository.save(u);
+       
+        emailService.sendConfirmationEmail(saved.getEmail(), token);
+        
+        return UtilisateurMapper.fromEntity(saved);
+}
+    
+    
+    
 
-    if (!passwordEncoder.matches(request.getMotDePasse(), u.getMotDePasse())) {
-      throw new IllegalArgumentException("Identifiants incorrects");
+    // ==========================================
+    // CONNEXION
+    // ==========================================
+    @Override
+    public Utilisateur login(LoginRequest request) {
+        Utilisateur u = utilisateurRepository
+                .findByEmail(request.getEmail())
+                .orElseThrow(() -> new EntityNotFoundException("Email ou mot de passe incorrect."));
+
+        if (!passwordEncoder.matches(request.getMotDePasse(), u.getMotDePasse())) {
+            throw new IllegalArgumentException("Email ou mot de passe incorrect.");
+        }
+        return u;
     }
-    return u;
-  }
 
-  // ---------- JWT ----------
-  @Override
-  public String generateTokenFor(Utilisateur utilisateur) {
-    String usernameSubject = utilisateur.getNom(); // sujet = username (ton écosystème l’utilise comme ça)
-    String roleName = (utilisateur.getRole() != null && utilisateur.getRole().getNom() != null)
-        ? "ROLE_" + utilisateur.getRole().getNom()
-        : "ROLE_USER";
+    // ==========================================
+    // GÉNÉRATION TOKEN JWT
+    // ==========================================
+    @Override
+    public String generateTokenFor(Utilisateur utilisateur) {
+        // Le sujet DOIT être l'email (car UserDetailsService charge par email)
+        String subject = utilisateur.getEmail(); 
 
-    return JWT.create()
-        .withSubject(usernameSubject)
-        .withArrayClaim("roles", new String[]{roleName})
-        .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_MS))
-        .sign(Algorithm.HMAC256(JWT_SECRET));
-  }
+        String roleName = "ROLE_USER"; 
+        if (utilisateur.getRole() != null && utilisateur.getRole().getNom() != null) {
+            String nom = utilisateur.getRole().getNom().toUpperCase();
+            roleName = nom.startsWith("ROLE_") ? nom : "ROLE_" + nom;
+        }
 
-  // ---------- Helpers ----------
-  private Role resolveRole(int roleId) {
-    // 1) Si un roleId est fourni, on le prend
-    if (roleId > 0) {
-      return roleRepository.findById(roleId)
-          .orElseThrow(() -> new EntityNotFoundException("Rôle id=" + roleId + " introuvable"));
+        return JWT.create()
+                .withSubject(subject)
+                .withArrayClaim("roles", new String[]{roleName})
+                .withClaim("userId", utilisateur.getId()) // Pratique pour le front
+                .withExpiresAt(new Date(System.currentTimeMillis() + SecParams.EXPIRATION_MS))
+                .sign(Algorithm.HMAC256(jwtSecret));
     }
 
-    //Sinon on tente le rôle par défaut "UTILISATEUR", sinon "USER"
-    Optional<Role> byNom = roleRepository.findByNom("UTILISATEUR");
-    if (byNom.isEmpty()) {
-      byNom = roleRepository.findByNom("USER");
+    // ==========================================
+    // MOT DE PASSE OUBLIÉ
+    // ==========================================
+
+
+    public Map<String, String> getSecurityQuestion(String email) {
+        Utilisateur u = utilisateurRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Aucun compte trouvé avec cet email."));
+
+        if (u.getQuestionSecurite() == null || u.getQuestionSecurite().isEmpty()) {
+            throw new IllegalArgumentException("Aucune question de sécurité n'a été configurée pour ce compte.");
+        }
+
+        return Map.of("question", u.getQuestionSecurite());
     }
-    return byNom.orElseThrow(() -> new EntityNotFoundException("Rôle UTILISATEUR introuvable"));
-  }
+
+    public void resetPassword(String email, String reponseSecurite, String nouveauMotDePasse) {
+        Utilisateur u = utilisateurRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur introuvable."));
+
+        // Vérification de la réponse secrète (comparaison de hachage)
+        if (u.getReponseSecurite() == null || !passwordEncoder.matches(reponseSecurite, u.getReponseSecurite())) {
+            throw new IllegalArgumentException("Réponse de sécurité incorrecte.");
+        }
+
+        // Mise à jour du mot de passe
+        u.setMotDePasse(passwordEncoder.encode(nouveauMotDePasse));
+        utilisateurRepository.save(u);
+    }
 }

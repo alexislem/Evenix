@@ -38,26 +38,10 @@ java-main/
 *~main
 *.orig
 
-# Java compiled
 *.class
 bin/
-**/bin/
 src/bin/
 **/src/bin/
-
-# Maven
 target/
-**/target/
-
-# Frontend / Node
-node_modules/
-dist/
-.vite/
-*.log
-
-# Visual Studio (si présent côté Front)
-.vs/
-
-# merge backups
 *~HEAD
 *~main

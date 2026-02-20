@@ -1,25 +1,31 @@
 package com.evenix.dto.request;
 
-import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-/**
- * DTO d'inscription plus complet (facultatif) :
- * - Si 'username' est fourni, on le mappe vers Utilisateur.nom
- * - Sinon on prend 'nom'
- */
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 public class RegistrationRequest {
-  private String username;      // alias de 'nom'
-  private String nom;           // alternatif
+  private String nom;
   private String prenom;
   private String email;
-  private String motDePasse;    // alias de 'password'
-  private String password;      // alternatif
-  private Date dateDeNaissance;
-  private Integer roleId;       // peut être null -> on mettra USER par défaut
 
-  // getters/setters
-  public String getUsername() { return username; }
-  public void setUsername(String username) { this.username = username; }
+  @NotBlank(message = "Le mot de passe est obligatoire")
+  @Size(min = 12, message = "Le mot de passe doit contenir au moins 12 caractères")
+  @Pattern(
+      regexp = "^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\\-=[\\]{};':\"\\\\|,.<>/?]).*$",
+      message = "Le mot de passe doit contenir au moins une majuscule et un caractère spécial"
+  )
+  private String motDePasse;
+
+  private String telephone;
+  private String questionSecurite; // Ex: "Quel est le nom de votre premier animal ?"
+  private String reponseSecurite; // Haché via BCrypt
+  private LocalDate dateDeNaissance;  // optionnel dans le JSON
+  private LocalDateTime dateCreation;
+  private Integer roleId;        // optionnel, si null → rôle par défaut
 
   public String getNom() { return nom; }
   public void setNom(String nom) { this.nom = nom; }
@@ -33,12 +39,23 @@ public class RegistrationRequest {
   public String getMotDePasse() { return motDePasse; }
   public void setMotDePasse(String motDePasse) { this.motDePasse = motDePasse; }
 
-  public String getPassword() { return password; }
-  public void setPassword(String password) { this.password = password; }
+  public String getTelephone() { return telephone; }
+  public void setTelephone(String telephone) { this.telephone = telephone; }
 
-  public Date getDateDeNaissance() { return dateDeNaissance; }
-  public void setDateDeNaissance(Date dateDeNaissance) { this.dateDeNaissance = dateDeNaissance; }
+  public LocalDate getDateDeNaissance() { return dateDeNaissance; }
+  public void setDateDeNaissance(LocalDate dateDeNaissance) {
+    this.dateDeNaissance = dateDeNaissance;
+  }
 
   public Integer getRoleId() { return roleId; }
   public void setRoleId(Integer roleId) { this.roleId = roleId; }
+
+  public LocalDateTime getDateCreation() { return dateCreation; }
+  public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
+
+  public String getQuestionSecurite() { return questionSecurite; }
+  public void setQuestionSecurite(String questionSecurite) { this.questionSecurite = questionSecurite; }
+
+  public String getReponseSecurite() { return reponseSecurite; }
+  public void setReponseSecurite(String reponseSecurite) { this.reponseSecurite = reponseSecurite; }
 }

@@ -1,8 +1,9 @@
 package com.evenix.config;
 
-import com.evenix.security.JWTAuthenticationFilter;
+import com.evenix.repos.UtilisateurRepository;
 import com.evenix.security.JWTAuthorizationFilter;
-
+import com.evenix.security.SecParams;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,70 +25,83 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-  @Bean
-  SecurityFilterChain filterChain(HttpSecurity http,
-                                  AuthenticationConfiguration authConfig) throws Exception {
+    @Value("${evenix.jwt.secret}")
+    private String jwtSecret;
+    private final UtilisateurRepository utilisateurRepository;
 
-    /*http
-      .csrf(csrf -> csrf.disable())
-      .cors(Customizer.withDefaults())
-      .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-      .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/login", "/api/auth/login","/register**").permitAll()
-        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-        .anyRequest().authenticated()
-      );
-*/
-	  
-	  http
-	    .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-	    .csrf(csrf -> csrf.disable())
-	    .cors(Customizer.withDefaults())
-	    .authorizeHttpRequests(auth -> auth
-	      .requestMatchers("/api/auth/**").permitAll()
-	      .requestMatchers(HttpMethod.POST, "/api/utilisateur").permitAll()
-	      .requestMatchers(HttpMethod.GET, "/api/utilisateur").permitAll()
-	      .requestMatchers(HttpMethod.POST, "/login").permitAll()
-	      .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-	      .requestMatchers(HttpMethod.GET, "/api/evenement/",  "/api/evenement/**").permitAll()
-	      .requestMatchers(HttpMethod.POST, "/api/evenement").permitAll()
-	      .anyRequest().authenticated()
-	    ); 
+    public SecurityConfig(UtilisateurRepository utilisateurRepository) {
+        this.utilisateurRepository = utilisateurRepository;
+    }
 
-   /* AuthenticationManager authMgr = authConfig.getAuthenticationManager();
+    @Bean
+    SecurityFilterChain filterChain(HttpSecurity http,
+                                    AuthenticationConfiguration authConfig) throws Exception {
+
+        AuthenticationManager authMgr = authConfig.getAuthenticationManager();
+
+        http
+            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
 
-    JWTAuthenticationFilter jwtAuthFilter = new JWTAuthenticationFilter(authMgr);
+        http
+            .authorizeHttpRequests(auth -> auth
+                // --- ROUTES PUBLIQUES (Tout le monde) ---
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/evenement/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/entreprise/all").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/lieu/all").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/type-evenement/all").permitAll()
+                
+                // --- AJOUT IMAGES/UPLOAD
+                .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll() // afficher les images
+                .requestMatchers(HttpMethod.POST, "/api/uploads/**").hasAnyRole("ORGANISATEUR", "ADMIN") // uploader
+                
+                // ✅ AJOUT CRUCIAL : Autoriser l'affichage des erreurs pour tout le monde
+                .requestMatchers("/error").permitAll()
 
-    http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-*/
-	  
-	  AuthenticationManager authMgr = authConfig.getAuthenticationManager();
-	  http.addFilterBefore(new JWTAuthenticationFilter(authMgr), UsernamePasswordAuthenticationFilter.class);
-	  
+                // --- UTILISATEURS ---
+                .requestMatchers(HttpMethod.GET, "/api/utilisateur/all").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/utilisateur/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/utilisateur/**").authenticated()
 
-	  http.addFilterBefore(
-	      new JWTAuthorizationFilter("evenix-secret-change-me"), // même secret que pour signer !
-	      UsernamePasswordAuthenticationFilter.class
-	  );
-    return http.build();
-  }
- 
-  @Bean
-  CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOrigins(List.of(
-      "http://localhost:5173","http://127.0.0.1:5173",
-      "http://localhost:3000","http://127.0.0.1:3000",
-      "http://localhost"
-    ));
-    config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
-    config.setAllowedHeaders(List.of("Authorization","Content-Type","Accept","X-Requested-With"));
-    config.setExposedHeaders(List.of("Authorization","Location"));
-    config.setAllowCredentials(true);
+                // --- GESTION ÉVÉNEMENTS ---
+                .requestMatchers(HttpMethod.POST, "/api/evenement/**").hasAnyRole("ORGANISATEUR", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/evenement/**").hasAnyRole("ORGANISATEUR", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/evenement/**").hasAnyRole("ORGANISATEUR", "ADMIN")
 
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", config);
-    return source;
-  }
+                // --- AUTRES ---
+                .requestMatchers(HttpMethod.POST, "/api/lieu/**").hasAnyRole("ORGANISATEUR", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/entreprise/**").hasRole("ADMIN")
+
+                // --- CORS PREFLIGHT ---
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                // --- TOUT LE RESTE ---
+                .anyRequest().authenticated()
+            );
+
+        JWTAuthorizationFilter jwtAuthorizationFilter = new JWTAuthorizationFilter(jwtSecret);
+        http.addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(
+            "http://localhost:5173","http://127.0.0.1:5173",
+            "http://localhost:3000","http://127.0.0.1:3000"
+        ));
+        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization","Content-Type","Accept","X-Requested-With"));
+        config.setExposedHeaders(List.of(SecParams.HEADER,"Location"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 }

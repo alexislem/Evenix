@@ -1,45 +1,36 @@
 package com.evenix.controllers;
 
-import java.util.List;
+import com.evenix.dto.PaiementDTO;
+import com.evenix.services.PaiementService;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.evenix.dto.PaiementDTO;
-import com.evenix.entities.Paiement;
-import com.evenix.services.PaiementServiceImpl;
-
 @RestController
 @RequestMapping("/api/paiement")
+@CrossOrigin
 public class PaiementController {
 
-    private final PaiementServiceImpl paiementService;
+    @Autowired
+    private PaiementService paiementService;
 
-    public PaiementController(PaiementServiceImpl paiementService) {
-        this.paiementService = paiementService;
-    }
-
-    @GetMapping
-    public List<Paiement> getAllPaiements() {
-        return paiementService.getAllPaiements();
+    @PostMapping("/traiter")
+    public ResponseEntity<PaiementDTO> traiterPaiement(@RequestBody PaiementDTO paiementDTO) {
+        try {
+            PaiementDTO result = paiementService.traiterPaiement(paiementDTO);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Paiement> getPaiementById(@PathVariable int id) {
-        return paiementService.getPaiementById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping
-    public ResponseEntity<Paiement> createPaiement(@RequestBody PaiementDTO dto) {
-        Paiement created = paiementService.createPaiement(dto);
-        return ResponseEntity.ok(created);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePaiement(@PathVariable int id) {
-        paiementService.deletePaiement(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<PaiementDTO> getPaiement(@PathVariable int id) {
+        try {
+            return ResponseEntity.ok(paiementService.getPaiementById(id));
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

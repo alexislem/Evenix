@@ -1,34 +1,31 @@
 package com.evenix.services;
 
-import com.evenix.dto.EvenementDTO;
-import com.evenix.dto.LieuDTO;
-import com.evenix.dto.UtilisateurDTO;
-import com.evenix.entities.Evenement;
-import com.evenix.entities.Lieu;
-import com.evenix.entities.Utilisateur;
-import com.evenix.repos.EvenementRepository;
-import com.evenix.repos.LieuRepository;
-import com.evenix.repos.UtilisateurRepository;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
+import com.evenix.dto.*;
+import com.evenix.entities.*;
+import com.evenix.repos.*;
+import com.evenix.services.EvenementService;
+import com.evenix.services.LieuService; // On utilise le service pour la logique métier
 
-import java.time.ZonedDateTime;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class EvenementServiceImpl implements EvenementService {
 
-    private final EvenementRepository evenementRepository;
-    private final LieuRepository lieuRepository;
-    private final UtilisateurRepository utilisateurRepository;
+    @Autowired
+    private EvenementRepository evenementRepository;
+    @Autowired
+    private UtilisateurRepository utilisateurRepository;
 
-    public EvenementServiceImpl(EvenementRepository evenementRepository, LieuRepository lieuRepository, UtilisateurRepository utilisateurRepository) {
-        this.evenementRepository = evenementRepository;
-        this.lieuRepository = lieuRepository;
-        this.utilisateurRepository = utilisateurRepository;
-    }
+    // On injecte le Service au lieu du Repository pour bénéficier du dédoublonnage Google
+    @Autowired
+    private LieuServiceImpl lieuService;
 
     @Override
     public List<EvenementDTO> getAllEvenements() {
@@ -38,103 +35,131 @@ public class EvenementServiceImpl implements EvenementService {
     }
 
     @Override
-    public Optional<EvenementDTO> getEvenementById(int id) {
-        return evenementRepository.findById(id).map(this::convertToDTO);
+    public EvenementDTO getEvenementById(int id) {
+        Evenement evenement = evenementRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Événement introuvable"));
+        return convertToDTO(evenement);
     }
 
     @Override
-    public EvenementDTO createEvenement(EvenementDTO dto) {
-        Evenement evenement = convertToEntity(dto);
-        return convertToDTO(evenementRepository.save(evenement));
+    @Transactional
+    public EvenementDTO createEvenement(EvenementDTO dto, int organisateurId) {
+
+        Utilisateur organisateur = utilisateurRepository.findById(organisateurId)
+                .orElseThrow(() -> new EntityNotFoundException("Organisateur non trouvé"));
+
+        Evenement evenement = new Evenement();
+        updateEntityFromDTO(evenement, dto);
+
+        evenement.setUtilisateur(organisateur);
+
+        // GESTION DU LIEU VIA LE SERVICE (Google Maps & Dédoublonnage)
+        if (dto.getLieu() != null) {
+            // 1. On crée ou récupère le lieu via le service (vérifie googlePlaceId)
+            LieuDTO savedLieuDto = lieuService.createLieu(dto.getLieu());
+
+            // 2. On récupère l'entité brute pour faire la liaison JPA
+            // (Nécessite la méthode getLieuEntityById dans LieuService)
+            Lieu savedLieuEntity = lieuService.getLieuEntityById(savedLieuDto.getId());
+
+            // 3. On lie l'événement à ce lieu
+            evenement.setLieu(savedLieuEntity);
+        }
+
+        Evenement saved = evenementRepository.save(evenement);
+        return convertToDTO(saved);
     }
 
     @Override
-    public List<EvenementDTO> getRecommended(int limit) {
-        var now = ZonedDateTime.now();
-        var page = PageRequest.of(0, Math.max(1, limit));
-        return evenementRepository
-                .findByDateDebutAfterOrderByDateDebutAsc(now, page)
-                .stream()
-                .map(this::convertToDTO)
-                .toList();
-    }
-
-    @Override
+    @Transactional
     public EvenementDTO updateEvenement(int id, EvenementDTO dto) {
-        return evenementRepository.findById(id)
-                .map(existing -> {
-                    existing.setNom(dto.getNom());
-                    existing.setDateDebut(dto.getDateDebut());
-                    existing.setDateFin(dto.getDateFin());
-                    existing.setPayant(dto.getPayant());
-                    existing.setDescription(dto.getDescription());
-                    existing.setPrix(dto.getPrix());
+        Evenement evenement = evenementRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Événement introuvable"));
 
-                    if (dto.getLieu() != null) {
-                        lieuRepository.findById(dto.getLieu().getId()).ifPresent(existing::setLieu);
-                    }
-                    if (dto.getUtilisateur() != null) {
-                        utilisateurRepository.findById(dto.getUtilisateur().getId()).ifPresent(existing::setUtilisateur);
-                    }
+        updateEntityFromDTO(evenement, dto);
 
-                    return convertToDTO(evenementRepository.save(existing));
-                })
-                .orElseGet(() -> createEvenement(dto));
+        // Mise à jour du lieu via le service (dédoublonnage + Google)
+        if (dto.getLieu() != null) {
+            LieuDTO savedLieuDto = lieuService.createLieu(dto.getLieu());
+            Lieu savedLieuEntity = lieuService.getLieuEntityById(savedLieuDto.getId());
+            evenement.setLieu(savedLieuEntity);
+        }
+
+        Evenement updated = evenementRepository.save(evenement);
+        return convertToDTO(updated);
     }
 
     @Override
     public void deleteEvenement(int id) {
+        if (!evenementRepository.existsById(id)) {
+            throw new EntityNotFoundException("Impossible de supprimer : Événement introuvable");
+        }
         evenementRepository.deleteById(id);
     }
 
-    // ======================================================
-    // Conversion Entity <-> DTO
-    // ======================================================
+    @Override
+    public List<EvenementDTO> getEvenementsByOrganisateur(int organisateurId) {
+        return evenementRepository.findByUtilisateurId(organisateurId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 
-    private EvenementDTO convertToDTO(Evenement e) {
+    @Override
+    public List<EvenementDTO> getEvenementsBetweenDates(LocalDateTime start, LocalDateTime end) {
+        return evenementRepository.findByDateDebutBetween(start, end).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // --- Helpers Mapping ---
+
+    private void updateEntityFromDTO(Evenement entity, EvenementDTO dto) {
+        entity.setNom(dto.getNom());
+        entity.setDescription(dto.getDescription());
+        entity.setDateDebut(dto.getDateDebut());
+        entity.setDateFin(dto.getDateFin());
+        entity.setPrix(dto.getPrix());
+        entity.setImageUrl(dto.getImageUrl());
+    }
+
+    private EvenementDTO convertToDTO(Evenement entity) {
         EvenementDTO dto = new EvenementDTO();
-        dto.setId(e.getId());
-        dto.setNom(e.getNom());
-        dto.setDateDebut(e.getDateDebut());
-        dto.setDateFin(e.getDateFin());
-        dto.setPayant(e.getPayant());
-        dto.setDescription(e.getDescription());
-        dto.setPrix(e.getPrix());
+        dto.setId(entity.getId());
+        dto.setNom(entity.getNom());
+        dto.setDescription(entity.getDescription());
+        dto.setDateDebut(entity.getDateDebut());
+        dto.setDateFin(entity.getDateFin());
+        dto.setPrix(entity.getPrix());
+        dto.setImageUrl(entity.getImageUrl());
 
-        if (e.getLieu() != null) {
-            LieuDTO lieuDTO = new LieuDTO();
-            lieuDTO.setId(e.getLieu().getId());
-            lieuDTO.setNom(e.getLieu().getNom());
-            dto.setLieu(lieuDTO);
+        // Mapping UTILISATEUR (organisateur)
+        if (entity.getUtilisateur() != null) {
+            UtilisateurDTO userDto = new UtilisateurDTO();
+            userDto.setId(entity.getUtilisateur().getId());
+            userDto.setNom(entity.getUtilisateur().getNom());
+            userDto.setPrenom(entity.getUtilisateur().getPrenom());
+            dto.setUtilisateur(userDto);
         }
 
-        if (e.getUtilisateur() != null) {
-            UtilisateurDTO utilisateurDTO = new UtilisateurDTO();
-            utilisateurDTO.setId(e.getUtilisateur().getId());
-            utilisateurDTO.setNom(e.getUtilisateur().getNom());
-            dto.setUtilisateur(utilisateurDTO);
+        // Mapping COMPLET du Lieu
+        if (entity.getLieu() != null) {
+            Lieu l = entity.getLieu();
+            LieuDTO lieuDto = new LieuDTO();
+
+            lieuDto.setId(l.getId());
+            lieuDto.setNom(l.getNom());
+            lieuDto.setAdresse(l.getAdresse());
+            lieuDto.setVille(l.getVille());
+            lieuDto.setCodePostal(l.getCodePostal());
+            lieuDto.setLatitude(l.getLatitude());
+            lieuDto.setLongitude(l.getLongitude());
+            lieuDto.setTypeLieu(l.getTypeLieu());
+            lieuDto.setGooglePlaceId(l.getGooglePlaceId());
+            lieuDto.setCapaciteMax(l.getCapaciteMax());
+
+            dto.setLieu(lieuDto);
         }
 
         return dto;
-    }
-
-    private Evenement convertToEntity(EvenementDTO dto) {
-        Evenement e = new Evenement();
-        e.setNom(dto.getNom());
-        e.setDateDebut(dto.getDateDebut());
-        e.setDateFin(dto.getDateFin());
-        e.setPayant(dto.getPayant());
-        e.setDescription(dto.getDescription());
-        e.setPrix(dto.getPrix());
-
-        if (dto.getLieu() != null) {
-            lieuRepository.findById(dto.getLieu().getId()).ifPresent(e::setLieu);
-        }
-
-        if (dto.getUtilisateur() != null) {
-            utilisateurRepository.findById(dto.getUtilisateur().getId()).ifPresent(e::setUtilisateur);
-        }
-
-        return e;
     }
 }
