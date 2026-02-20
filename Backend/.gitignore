@@ -57,3 +57,7 @@ dist/
 
 # Visual Studio (si présent côté Front)
 .vs/
+
+# merge backups
+*~HEAD
+*~main
