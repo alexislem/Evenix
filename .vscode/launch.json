@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-EvenixApplication<Evenix>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.evenix.EvenixApplication",
+            "projectName": "Evenix",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

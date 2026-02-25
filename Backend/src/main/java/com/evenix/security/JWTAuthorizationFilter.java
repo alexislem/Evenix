@@ -9,49 +9,66 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 public class JWTAuthorizationFilter extends OncePerRequestFilter {
 
-  @Override
-  protected void doFilterInternal(HttpServletRequest request,
-                                  HttpServletResponse response,
-                                  FilterChain filterChain) throws ServletException, IOException {
+    private final Algorithm algo;
 
-    String jwt = request.getHeader(SecParams.HEADER); 
-    if (jwt == null || !jwt.startsWith(SecParams.PREFIX)) {
-      filterChain.doFilter(request, response);
-      return;
+    public JWTAuthorizationFilter(String secret) {
+        this.algo = Algorithm.HMAC256(secret);
     }
 
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
-    String token = jwt.substring(SecParams.PREFIX.length());
 
-    try {
-      var verifier = JWT.require(Algorithm.HMAC256(SecParams.SECRET)).build();
-      var decoded  = verifier.verify(token);
+        String header = request.getHeader(SecParams.HEADER);
 
-      String username = decoded.getSubject();
-      List<String> roles = decoded.getClaim("roles").asList(String.class); // ex: ["ROLE_ADMIN"]
+        // Si pas de header ou pas le bon préfixe, on laisse passer (la requête sera traitée comme non authentifiée)
+        // Spring Security bloquera ensuite si la route nécessite une authentification.
+        if (!StringUtils.hasText(header) || !header.startsWith(SecParams.PREFIX)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-      var authorities = roles == null
-          ? List.<SimpleGrantedAuthority>of()
-          : roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+        // On retire le préfixe "Bearer "
+        String token = header.substring(SecParams.PREFIX.length());
 
-      var auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
-      SecurityContextHolder.getContext().setAuthentication(auth);
+        try {
+            var verifier = JWT.require(algo).build();
+            var decoded = verifier.verify(token);
 
-      filterChain.doFilter(request, response);
-    } catch (Exception e) {
-      SecurityContextHolder.clearContext();
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-      response.setContentType("application/json");
-      response.getWriter().write("{\"error\":\"Invalid or expired token\"}");
-      response.getWriter().flush();
+            String username = decoded.getSubject();
+            String[] roles = decoded.getClaim("roles").asArray(String.class);
+
+            Collection<SimpleGrantedAuthority> authorities =
+                    (roles == null)
+                            ? java.util.List.of()
+                            : Arrays.stream(roles)
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
+
+            var authentication =
+                    new UsernamePasswordAuthenticationToken(username, null, authorities);
+
+            // On injecte l'utilisateur authentifié dans le contexte de sécurité
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            filterChain.doFilter(request, response);
+
+        } catch (Exception ex) {
+            // En cas d'erreur (token expiré, signature invalide...)
+            SecurityContextHolder.clearContext();
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token invalide ou expiré");
+        }
     }
-  }
 }

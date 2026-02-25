@@ -1,86 +1,133 @@
 package com.evenix.services;
 
-import com.evenix.entities.Role;
-import com.evenix.entities.Utilisateur;
-import com.evenix.repos.RoleRepository;
-import com.evenix.repos.UtilisateurRepository;
+import com.evenix.dto.*;
+import com.evenix.entities.*;
+import com.evenix.repos.*;
+import com.evenix.services.UtilisateurService;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder; // Assurez-vous d'avoir ce bean configuré
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import com.evenix.services.EmailService;
 
 @Service
-public class UtilisateurServiceImpl implements UtilisateurService{
+@Transactional
+public class UtilisateurServiceImpl implements UtilisateurService {
 
     @Autowired
     private UtilisateurRepository utilisateurRepository;
-
     @Autowired
     private RoleRepository roleRepository;
-
     @Autowired
-    private BCryptPasswordEncoder bCryptPassWordEncoder;
-
-    /* ===== CRUD de base ===== */
+    private EntrepriseRepository entrepriseRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
-    public List<Utilisateur> getAllUtilisateurs() {
-        return utilisateurRepository.findAll();
+    public List<UtilisateurDTO> getAllUtilisateurs() {
+        return utilisateurRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<Utilisateur> getUtilisateurById(int id) {
-        // ton repo expose Optional<Utilisateur>
-        return utilisateurRepository.findById(id);
-    }
-
-    @Override
-    public Optional<Utilisateur> findUtilisateurByNom(String utilisateurNom) {
-        return utilisateurRepository.findByNom(utilisateurNom);
-    }
-
-    @Override
-    public Utilisateur createUtilisateur(Utilisateur utilisateur) {
-        // (Optionnel) bloquer les doublons d'email
-        if (utilisateur.getEmail() != null && utilisateurRepository.existsByEmail(utilisateur.getEmail())) {
-            throw new IllegalArgumentException("Email déjà utilisé : " + utilisateur.getEmail());
-        }
-        if (utilisateur.getMotDePasse() != null && !utilisateur.getMotDePasse().isBlank()) {
-            utilisateur.setMotDePasse(bCryptPassWordEncoder.encode(utilisateur.getMotDePasse()));
-        }
-        return utilisateurRepository.save(utilisateur);
-    }
-    
-
-    
-    @Override
-    public Utilisateur saveUtilisateur(Utilisateur utilisateur) {
-        if (utilisateur.getMotDePasse() != null && !utilisateur.getMotDePasse().isBlank()) {
-            utilisateur.setMotDePasse(bCryptPassWordEncoder.encode(utilisateur.getMotDePasse()));
-        }
-        return utilisateurRepository.save(utilisateur);
-    }
-
-    @Override
-    public Utilisateur updateUtilisateur(int id, Utilisateur utilisateurDetails) {
+    public UtilisateurDTO getUtilisateurById(int id) {
         return utilisateurRepository.findById(id)
-                .map(utilisateur -> {
-                    utilisateur.setNom(utilisateurDetails.getNom());
-                    utilisateur.setPrenom(utilisateurDetails.getPrenom());
-                    utilisateur.setDateDeNaissance(utilisateurDetails.getDateDeNaissance());
-                    // Encode le MDP uniquement si fourni (évite double-encodage)
-                    if (utilisateurDetails.getMotDePasse() != null && !utilisateurDetails.getMotDePasse().isBlank()) {
-                        utilisateur.setMotDePasse(bCryptPassWordEncoder.encode(utilisateurDetails.getMotDePasse()));
-                    }
-                    utilisateur.setEmail(utilisateurDetails.getEmail());
-                    utilisateur.setEntreprise(utilisateurDetails.getEntreprise());
-                    utilisateur.setRole(utilisateurDetails.getRole());
-                    return utilisateurRepository.save(utilisateur);
-                })
+                .map(this::convertToDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'id : " + id));
+    }
+
+    @Override
+    public UtilisateurDTO getUtilisateurByEmail(String email) {
+        return utilisateurRepository.findByEmail(email)
+                .map(this::convertToDTO)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'email : " + email));
+    }
+
+    @Override
+    public UtilisateurDTO createUtilisateur(UtilisateurDTO dto, String passwordBrut) {
+        if (utilisateurRepository.existsByEmail(dto.getEmail())) {
+            throw new IllegalArgumentException("Cet email est déjà utilisé.");
+        }
+
+        Utilisateur user = new Utilisateur();
+        user.setNom(dto.getNom());
+        user.setPrenom(dto.getPrenom());
+        user.setEmail(dto.getEmail());
+        user.setTelephone(dto.getTelephone());
+        user.setDateDeNaissance(dto.getDateDeNaissance());
+        user.setDateCreation(LocalDateTime.now());
+        user.setEstConfirme(false); // Par défaut
+
+        // Encodage du mot de passe
+        user.setMotDePasse(passwordEncoder.encode(passwordBrut));
+
+        // Gestion du Rôle
+        if (dto.getRole() != null) {
+            Role role = roleRepository.findById(dto.getRole().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Rôle spécifié introuvable"));
+            user.setRole(role);
+        } else {
+            // Rôle par défaut si non spécifié (ex: PARTICIPANT)
+            Role roleDefaut = roleRepository.findByNom("PARTICIPANT")
+                    .orElseThrow(() -> new RuntimeException("Rôle par défaut PARTICIPANT introuvable en base"));
+            user.setRole(roleDefaut);
+        }
+
+        // Gestion Entreprise (optionnel)
+        if (dto.getEntreprise() != null) {
+            Entreprise ent = entrepriseRepository.findById(dto.getEntreprise().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Entreprise introuvable"));
+            user.setEntreprise(ent);
+        }
+
+        Utilisateur saved = utilisateurRepository.save(user);
+        return convertToDTO(saved);
+    }
+
+    @Override
+    public UtilisateurDTO updateUtilisateur(int id, UtilisateurDTO dto) {
+        Utilisateur user = utilisateurRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
+
+        // Mise à jour des champs simples
+        user.setNom(dto.getNom());
+        user.setPrenom(dto.getPrenom());
+        user.setTelephone(dto.getTelephone());
+        user.setDateDeNaissance(dto.getDateDeNaissance());
+        
+        // On ne change l'email que s'il est différent et non pris
+        if (!user.getEmail().equals(dto.getEmail())) {
+            if (utilisateurRepository.existsByEmail(dto.getEmail())) {
+                throw new IllegalArgumentException("Nouvel email déjà pris.");
+            }
+            user.setEmail(dto.getEmail());
+        }
+
+        // Mise à jour Entreprise
+        if (dto.getEntreprise() != null) {
+             Entreprise ent = entrepriseRepository.findById(dto.getEntreprise().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Entreprise introuvable"));
+             user.setEntreprise(ent);
+        } else {
+            user.setEntreprise(null);
+        }
+
+        // Mise à jour Rôle (Attention : à sécuriser via contrôleur pour que seul un ADMIN puisse le faire)
+        if (dto.getRole() != null && dto.getRole().getId() != user.getRole().getId()) {
+            Role role = roleRepository.findById(dto.getRole().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Rôle introuvable"));
+            user.setRole(role);
+        }
+
+        return convertToDTO(utilisateurRepository.save(user));
     }
 
     @Override
@@ -88,44 +135,40 @@ public class UtilisateurServiceImpl implements UtilisateurService{
         utilisateurRepository.deleteById(id);
     }
 
-    /* ===== Association rôle <-> utilisateur ===== */
-
-    /** Variante A : par noms (utilise les Optional des repositories) */
     @Override
-    public Utilisateur addRoleToUtilisateur(String utilisateurNom, String roleNom) {
-        Utilisateur usr = utilisateurRepository.findByNom(utilisateurNom)
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur introuvable : " + utilisateurNom));
-
-        Role role = roleRepository.findByNom(roleNom)
-                .orElseThrow(() -> new EntityNotFoundException("Rôle introuvable : " + roleNom));
-
-        usr.setRole(role); // ManyToOne
-        return utilisateurRepository.save(usr);
+    public void changePassword(int id, String newPassword) {
+        Utilisateur user = utilisateurRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
+        user.setMotDePasse(passwordEncoder.encode(newPassword));
+        utilisateurRepository.save(user);
     }
 
-    /** Variante B : directement par Optional fournis en paramètre */
-    @Override
-    public Utilisateur addRoleToUtilisateur(Optional<Utilisateur> utilisateurOpt, Optional<Role> roleOpt) {
-        Utilisateur usr = utilisateurOpt
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur introuvable (Optional vide)"));
+    // --- Mappers ---
 
-        Role role = roleOpt
-                .orElseThrow(() -> new EntityNotFoundException("Rôle introuvable (Optional vide)"));
+    private UtilisateurDTO convertToDTO(Utilisateur entity) {
+        UtilisateurDTO dto = new UtilisateurDTO();
+        dto.setId(entity.getId());
+        dto.setNom(entity.getNom());
+        dto.setPrenom(entity.getPrenom());
+        dto.setEmail(entity.getEmail());
+        dto.setTelephone(entity.getTelephone());
+        dto.setDateDeNaissance(entity.getDateDeNaissance());
 
-        usr.setRole(role);
-        return utilisateurRepository.save(usr);
-    }
+        if (entity.getRole() != null) {
+            RoleDTO roleDTO = new RoleDTO();
+            roleDTO.setId(entity.getRole().getId());
+            roleDTO.setNom(entity.getRole().getNom());
+            dto.setRole(roleDTO);
+        }
 
-    /* (Optionnel) Variante C : par id (utilise Optional du JpaRepository) */
-    @Override
-    public Utilisateur addRoleToUtilisateur(int utilisateurId, int roleId) {
-        Utilisateur usr = utilisateurRepository.findById(utilisateurId)
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur introuvable id=" + utilisateurId));
+        if (entity.getEntreprise() != null) {
+            EntrepriseDTO entDTO = new EntrepriseDTO();
+            entDTO.setId(entity.getEntreprise().getId());
+            entDTO.setNom(entity.getEntreprise().getNom());
+            entDTO.setEmail(entity.getEntreprise().getEmail());
+            dto.setEntreprise(entDTO);
+        }
 
-        Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new EntityNotFoundException("Rôle introuvable id=" + roleId));
-
-        usr.setRole(role);
-        return utilisateurRepository.save(usr);
-    }
-}
+        return dto;
+    } } 
+  
