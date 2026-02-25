@@ -2,6 +2,7 @@
 <section name="Workbench">
 	<section name="MavenProjectImportWizardPage">
 		<list key="rootDirectory">
+			<item value="C:\source\E6\Evenix\Backend"/>
 			<item value="C:\source\Projet_SLAM\Evenix\Backend"/>
 		</list>
 		<list key="projectNameTemplate">
