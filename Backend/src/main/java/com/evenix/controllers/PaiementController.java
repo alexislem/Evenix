@@ -3,6 +3,8 @@ package com.evenix.controllers;
 import com.evenix.dto.PaiementDTO;
 import com.evenix.services.PaiementService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/paiement")
 @CrossOrigin
+@Tag(name = "Paiement", description ="Points d'accès pour la gestion des paiements")
 public class PaiementController {
 
     @Autowired

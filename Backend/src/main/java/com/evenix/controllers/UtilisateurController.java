@@ -3,6 +3,7 @@ package com.evenix.controllers;
 import com.evenix.dto.UtilisateurDTO;
 import com.evenix.services.UtilisateurService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/utilisateur")
 @CrossOrigin
+@Tag(name = "Utilisateur", description ="Points d'accès pour la gestion des utilisateurs")
 public class UtilisateurController {
 
     @Autowired

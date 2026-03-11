@@ -49,6 +49,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // --- ROUTES PUBLIQUES ---
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/evenement/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/inscription/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/entreprise/all").permitAll()
@@ -57,6 +58,7 @@ public class SecurityConfig {
                 
                 //Autoriser l'affichage des erreurs pour tout le monde
                 .requestMatchers("/error").permitAll()
+                
 
                 // --- UTILISATEURS ---
                 .requestMatchers(HttpMethod.GET, "/api/utilisateur/all").hasRole("ADMIN")

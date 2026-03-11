@@ -3,6 +3,8 @@ package com.evenix.controllers;
 import com.evenix.dto.TypeEvenementDTO;
 import com.evenix.services.TypeEvenementService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/type-evenement")
 @CrossOrigin
+@Tag(name = "TypeEvenement", description ="Points d'accès pour la gestion des types d'évènement")
 public class TypeEvenementController {
 
     @Autowired

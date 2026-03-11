@@ -3,6 +3,7 @@ package com.evenix.controllers;
 import com.evenix.dto.EntrepriseDTO;
 import com.evenix.services.EntrepriseService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/entreprise")
 @CrossOrigin
+@Tag(name = "Entreprise", description ="Points d'accès pour la gestion des entreprises")
 public class EntrepriseController {
 
     @Autowired

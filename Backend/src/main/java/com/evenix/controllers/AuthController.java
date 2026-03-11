@@ -8,6 +8,7 @@ import com.evenix.entities.Utilisateur;
 import com.evenix.services.AuthService;
 import com.evenix.services.UtilisateurService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin
+@Tag(name = "Authentification", description ="Points d'accès pour la gestion de l'authentification")
 public class AuthController {
 
     @Autowired
