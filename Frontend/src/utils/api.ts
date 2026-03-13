@@ -9,7 +9,7 @@ import axios from 'axios';
 // ============================================================================
 
 // L'adresse de votre serveur Backend Spring Boot
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = '/api';
 
 /**
  * Création d'une instance personnalisée d'Axios.
