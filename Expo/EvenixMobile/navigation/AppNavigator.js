@@ -6,6 +6,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/LoginScreen';
 import EventsListScreen from '../screens/EventsListScreen';
 import EventDetailScreen from '../screens/EventDetailScreen';
+import MesReservationsScreen from '../screens/MesReservationsScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
 // Création du Stack Navigator
 const Stack = createNativeStackNavigator();
@@ -39,6 +41,19 @@ export default function AppNavigator() {
         name="EventDetail"
         component={EventDetailScreen}
         options={{ title: 'Détail' }}
+      />
+      {/* Écran 4 : Mes réservations */}
+      <Stack.Screen
+        name="MesReservations"
+        component={MesReservationsScreen}
+        options={{ title: 'Mes réservations' }}
+      />
+
+      {/* Écran 5 : Profil utilisateur */}
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: "Profil" }}
       />
     </Stack.Navigator>
   );

@@ -11,52 +11,94 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getEvenementById, participerEvenement } from '../services/api';
+
 export default function EventDetailScreen({ route, navigation }) {
-  // --- RÉCUPÉRATION DU PARAMÈTRE ---
   const { eventId } = route.params;
 
-  // --- ÉTATS ---
-  const [evenement, setEvenement] = useState(null);  // L'événement chargé
-  const [loading, setLoading] = useState(true);       // Indicateur de chargement
-  const [erreur, setErreur] = useState(null);          // Message d'erreur
-const [participation, setParticipation] = useState(false);  // true si déjà inscrit
-    const [loadingParticipation, setLoadingParticipation] = useState(false); // chargement du bouton
-  // --- CHARGEMENT AU DÉMARRAGE ---
+  const [evenement, setEvenement] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [erreur, setErreur] = useState(null);
+  const [participation, setParticipation] = useState(false);
+  const [loadingParticipation, setLoadingParticipation] = useState(false);
+
   useEffect(() => {
     chargerEvenement();
   }, [eventId]);
 
-  // --- FONCTION DE CHARGEMENT ---
+  const verifierSiDejaInscrit = async (eventData) => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+
+      if (!userId || !eventData) {
+        setParticipation(false);
+        return;
+      }
+
+      let dejaInscrit = false;
+
+      // Cas 1 : le backend renvoie une liste d'inscriptions
+      if (Array.isArray(eventData.inscriptions)) {
+        dejaInscrit = eventData.inscriptions.some((inscription) => {
+          const idUtilisateur =
+            inscription?.utilisateur?.id ??
+            inscription?.user?.id ??
+            inscription?.userId;
+
+          return String(idUtilisateur) === String(userId);
+        });
+      }
+
+      // Cas 2 : le backend renvoie une liste de participants
+      else if (Array.isArray(eventData.participants)) {
+        dejaInscrit = eventData.participants.some((participant) => {
+          const idParticipant = participant?.id ?? participant?.userId;
+          return String(idParticipant) === String(userId);
+        });
+      }
+
+      setParticipation(dejaInscrit);
+
+      console.log('Participation détectée au chargement :', dejaInscrit);
+    } catch (error) {
+      console.log('Erreur vérification inscription :', error);
+      setParticipation(false);
+    }
+  };
+
   const chargerEvenement = async () => {
     try {
       setLoading(true);
       setErreur(null);
 
-      // Appel à l'API avec l'ID
       const data = await getEvenementById(eventId);
+
+      console.log('Objet événement complet :', JSON.stringify(data, null, 2));
+      console.log('inscriptions =', data?.inscriptions);
+      console.log('participants =', data?.participants);
+
       setEvenement(data);
-      navigation.setOptions({ title: data.nom });
+      navigation.setOptions({
+        title: data.nom || data.titre || 'Détail événement',
+      });
 
-      console.log('Événement chargé:', data.nom);
+      await verifierSiDejaInscrit(data);
 
+      console.log('Événement chargé :', data.nom || data.titre);
     } catch (error) {
-      console.error('Erreur chargement détail:', error.message);
+      console.error('Erreur chargement détail :', error.message);
       setErreur(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // --- FONCTION PARTICIPER ---
   const handleParticiper = async () => {
     try {
       setLoadingParticipation(true);
 
-      // 1. Lire le token et le userId depuis AsyncStorage
       const token = await AsyncStorage.getItem('token');
       const userId = await AsyncStorage.getItem('userId');
 
-      // Vérification : token et userId doivent exister
       if (!token || !userId) {
         Alert.alert(
           'Session expirée',
@@ -66,41 +108,39 @@ const [participation, setParticipation] = useState(false);  // true si déjà in
         return;
       }
 
-      // 2. Appel à l'API d'inscription
-      const resultat = await participerEvenement(token, userId, eventId);
+      await participerEvenement(token, userId, eventId);
 
-      // 3. Succès !
       setParticipation(true);
       Alert.alert('Inscription confirmée', 'Vous êtes inscrit à cet événement !');
-      console.log('Inscription réussie:', resultat);
-
     } catch (error) {
-      console.error('Erreur participation:', error.message);
+  console.error('Erreur participation:', error.message);
 
-      // Cas spécial : session expirée (code 401)
-      if (error.message === 'SESSION_EXPIREE') {
-        // On supprime le token invalide
-        await AsyncStorage.removeItem('token');
-        await AsyncStorage.removeItem('userId');
-        Alert.alert(
-          'Session expirée',
-          'Votre session a expiré. Veuillez vous reconnecter.',
-          [{ text: 'OK', onPress: () => navigation.replace('Login') }]
-        );
-        return;
-      }
+  if (error.message === 'SESSION_EXPIREE') {
+    await AsyncStorage.removeItem('token');
+    await AsyncStorage.removeItem('userId');
 
-      // Autres erreurs (400, 404, réseau, etc.)
-      Alert.alert('Erreur', error.message);
+    Alert.alert(
+      'Session expirée',
+      'Votre session a expiré. Veuillez vous reconnecter.',
+      [{ text: 'OK', onPress: () => navigation.replace('Login') }]
+    );
+    return;
+  }
 
-    } finally {
-      setLoadingParticipation(false);
-    }
+  if (
+    error.message?.toLowerCase().includes('déjà inscrit') ||
+    error.message?.toLowerCase().includes('deja inscrit')
+  ) {
+    setParticipation(true);
+    return;
+  }
+
+  Alert.alert('Erreur', error.message);
+} finally {
+  setLoadingParticipation(false);
+}
   };
 
-  // --- AFFICHAGE ---
-
-  // Cas 1 : Chargement
   if (loading) {
     return (
       <View style={styles.center}>
@@ -110,7 +150,6 @@ const [participation, setParticipation] = useState(false);  // true si déjà in
     );
   }
 
-  // Cas 2 : Erreur
   if (erreur) {
     return (
       <View style={styles.center}>
@@ -122,7 +161,6 @@ const [participation, setParticipation] = useState(false);  // true si déjà in
     );
   }
 
-  // Cas 3 : Événement non trouvé
   if (!evenement) {
     return (
       <View style={styles.center}>
@@ -131,22 +169,17 @@ const [participation, setParticipation] = useState(false);  // true si déjà in
     );
   }
 
-  // Cas 4 : Affichage normal
   return (
     <ScrollView style={styles.container}>
       <View style={styles.contenu}>
+        <Text style={styles.titre}>{evenement.nom || evenement.titre}</Text>
 
-        {/* TITRE */}
-        <Text style={styles.titre}>{evenement.titre}</Text>
-
-        {/* TYPE D'ÉVÉNEMENT */}
         {evenement.typeEvenement && evenement.typeEvenement.nom && (
           <View style={styles.badge}>
             <Text style={styles.badgeTexte}>{evenement.typeEvenement.nom}</Text>
           </View>
         )}
 
-        {/* DESCRIPTION */}
         {evenement.description && (
           <View style={styles.section}>
             <Text style={styles.sectionTitre}>Description</Text>
@@ -154,13 +187,13 @@ const [participation, setParticipation] = useState(false);  // true si déjà in
           </View>
         )}
 
-        {/* DATE ET HEURE */}
         <View style={styles.section}>
           <Text style={styles.sectionTitre}>Date et heure</Text>
 
           {evenement.dateDebut && (
             <Text style={styles.sectionTexte}>
-              Début : {new Date(evenement.dateDebut).toLocaleDateString('fr-FR', {
+              Début :{' '}
+              {new Date(evenement.dateDebut).toLocaleDateString('fr-FR', {
                 weekday: 'long',
                 day: 'numeric',
                 month: 'long',
@@ -173,7 +206,8 @@ const [participation, setParticipation] = useState(false);  // true si déjà in
 
           {evenement.dateFin && (
             <Text style={styles.sectionTexte}>
-              Fin : {new Date(evenement.dateFin).toLocaleDateString('fr-FR', {
+              Fin :{' '}
+              {new Date(evenement.dateFin).toLocaleDateString('fr-FR', {
                 weekday: 'long',
                 day: 'numeric',
                 month: 'long',
@@ -185,14 +219,20 @@ const [participation, setParticipation] = useState(false);  // true si déjà in
           )}
         </View>
 
-        {/* LIEU */}
         {evenement.lieu && (
           <View style={styles.section}>
             <Text style={styles.sectionTitre}>Lieu</Text>
-            <Text style={styles.sectionTexte}>{evenement.lieu.nom}</Text>
-            {evenement.lieu.adresse && (
-              <Text style={styles.sectionTexteSecondaire}>{evenement.lieu.adresse}</Text>
+
+            {evenement.lieu.nom && (
+              <Text style={styles.sectionTexte}>{evenement.lieu.nom}</Text>
             )}
+
+            {evenement.lieu.adresse && (
+              <Text style={styles.sectionTexteSecondaire}>
+                {evenement.lieu.adresse}
+              </Text>
+            )}
+
             {evenement.lieu.capaciteMax && (
               <Text style={styles.sectionTexteSecondaire}>
                 Capacité max : {evenement.lieu.capaciteMax} personnes
@@ -201,7 +241,6 @@ const [participation, setParticipation] = useState(false);  // true si déjà in
           </View>
         )}
 
-        {/* BOUTON PARTICIPER */}
         <TouchableOpacity
           style={[
             styles.boutonParticiper,
@@ -218,13 +257,11 @@ const [participation, setParticipation] = useState(false);  // true si déjà in
             </Text>
           )}
         </TouchableOpacity>
-
       </View>
     </ScrollView>
   );
 }
 
-// --- STYLES ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -5,7 +5,7 @@
 // Pour trouver votre IP : ouvrez un terminal et tapez "ipconfig"
 // Cherchez "Adresse IPv4" de votre carte Wi-Fi
 
-const BASE_URL = 'http://172.20.10.2:8080';
+const BASE_URL = 'http://192.168.56.13:8080';
 
 // Fonction de connexion
 // Envoie l'email et le mot de passe au backend
@@ -79,6 +79,7 @@ export async function participerEvenement(token, userId, eventId) {
     }
   );
 
+  
   // Cas 401 : token invalide ou expiré
   if (response.status === 401) {
     throw new Error('SESSION_EXPIREE');
@@ -103,6 +104,77 @@ export async function participerEvenement(token, userId, eventId) {
 
   const data = await response.json();
   return data;
+}
+
+export async function checkParticipation(token, userId, eventId) {
+  const response = await fetch(
+    `${BASE_URL}/inscriptions/utilisateur/${userId}/evenement/${eventId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return false;
+  }
+
+  const data = await response.json();
+  return data.participe === true;
+} 
+
+export async function getInscriptionsByUser(token, userId) {
+  const response = await fetch(`${BASE_URL}/api/inscription/user/${userId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || 'Impossible de récupérer les inscriptions');
+  }
+
+  return await response.json();
+}
+
+export async function desinscrireEvenement(token, inscriptionId) {
+  const response = await fetch(`${BASE_URL}/api/inscription/${inscriptionId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || 'Impossible de se désinscrire');
+  }
+
+  return true;
+}
+
+export async function getUtilisateurById(token, userId) {
+  const response = await fetch(`${BASE_URL}/api/utilisateur/${userId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || 'Impossible de récupérer le profil');
+  }
+
+  return await response.json();
 }
 
 export default BASE_URL;

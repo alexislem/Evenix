@@ -9,33 +9,27 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getEvenements } from '../services/api';
 
 export default function EventsListScreen({ navigation }) {
-  // --- ÉTATS ---
-  const [evenements, setEvenements] = useState([]);   // La liste des événements
-  const [loading, setLoading] = useState(true);        // Indicateur de chargement
-  const [erreur, setErreur] = useState(null);          // Message d'erreur éventuel
+  const [evenements, setEvenements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [erreur, setErreur] = useState(null);
 
-  // --- CHARGEMENT AU DÉMARRAGE ---
   useEffect(() => {
     chargerEvenements();
   }, []);
 
-  // --- FONCTION DE CHARGEMENT ---
   const chargerEvenements = async () => {
     try {
       setLoading(true);
       setErreur(null);
 
-      // 1. Appel à l'API
       const data = await getEvenements();
-
-      // 2. Stocker les événements dans le state
       setEvenements(data);
 
       console.log(`${data.length} événement(s) chargé(s)`);
-
     } catch (error) {
       console.error('Erreur chargement événements:', error.message);
       setErreur(error.message);
@@ -44,20 +38,24 @@ export default function EventsListScreen({ navigation }) {
     }
   };
 
-  // --- AFFICHAGE D'UN ÉVÉNEMENT (dans la FlatList) ---
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('userId');
+      navigation.replace('Login');
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de se déconnecter');
+    }
+  };
+
   const renderEvenement = ({ item }) => {
     return (
       <TouchableOpacity
         style={styles.carte}
-        onPress={() => {
-          // Navigation vers le détail avec l'id de l'événement
-          navigation.navigate('EventDetail', { eventId: item.id });
-        }}
+        onPress={() => navigation.navigate('EventDetail', { eventId: item.id })}
       >
-        {/* Titre */}
-        <Text style={styles.carteTitre}>{item.nom}</Text>
+        <Text style={styles.carteTitre}>{item.nom || item.titre}</Text>
 
-        {/* Date */}
         {item.dateDebut && (
           <Text style={styles.carteDate}>
             {new Date(item.dateDebut).toLocaleDateString('fr-FR', {
@@ -70,12 +68,10 @@ export default function EventsListScreen({ navigation }) {
           </Text>
         )}
 
-        {/* Lieu */}
         {item.lieu && item.lieu.nom && (
           <Text style={styles.carteLieu}>{item.lieu.nom}</Text>
         )}
 
-        {/* Type */}
         {item.typeEvenement && item.typeEvenement.nom && (
           <Text style={styles.carteType}>{item.typeEvenement.nom}</Text>
         )}
@@ -83,9 +79,6 @@ export default function EventsListScreen({ navigation }) {
     );
   };
 
-  // --- AFFICHAGE PRINCIPAL ---
-
-  // Cas 1 : Chargement en cours
   if (loading) {
     return (
       <View style={styles.center}>
@@ -95,7 +88,6 @@ export default function EventsListScreen({ navigation }) {
     );
   }
 
-  // Cas 2 : Erreur
   if (erreur) {
     return (
       <View style={styles.center}>
@@ -107,7 +99,6 @@ export default function EventsListScreen({ navigation }) {
     );
   }
 
-  // Cas 3 : Liste vide
   if (evenements.length === 0) {
     return (
       <View style={styles.center}>
@@ -116,9 +107,31 @@ export default function EventsListScreen({ navigation }) {
     );
   }
 
-  // Cas 4 : Affichage normal de la liste
   return (
     <View style={styles.container}>
+      <View style={styles.topActions}>
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={() => navigation.navigate('MesReservations')}
+        >
+          <Text style={styles.secondaryButtonText}>Mes réservations</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleLogout}
+        >
+          <Text style={styles.logoutButtonText}>Déconnexion</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+  onPress={() => navigation.navigate('Profile')}
+>
+  <Text>Profil</Text>
+</TouchableOpacity>
+
+      </View>
+
       <FlatList
         data={evenements}
         keyExtractor={(item) => item.id.toString()}
@@ -129,7 +142,6 @@ export default function EventsListScreen({ navigation }) {
   );
 }
 
-// --- STYLES ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -140,6 +152,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  topActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingTop: 12,
+    paddingBottom: 4,
+    gap: 10,
   },
   liste: {
     padding: 15,
@@ -175,6 +196,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     fontStyle: 'italic',
+  },
+  secondaryButton: {
+    backgroundColor: '#2196F3',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    flex: 1,
+    marginRight: 6,
+  },
+  secondaryButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  logoutButton: {
+    backgroundColor: '#f44336',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    flex: 1,
+    marginLeft: 6,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   loadingTexte: {
     marginTop: 10,
