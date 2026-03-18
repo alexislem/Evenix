@@ -104,18 +104,24 @@ navigation.replace('EventsList');
         )}
       </TouchableOpacity>
 
+      {/* Bouton Créer un compte */}
       <TouchableOpacity
-  style={[styles.bouton, { backgroundColor: '#2196F3', marginTop: 15 }]}
-  onPress={async () => {
-    const token = await AsyncStorage.getItem('token');
-    const userId = await AsyncStorage.getItem('userId');
-    Alert.alert('Données stockées', `Token: ${token ? 'OUI' : 'NON'}\nUserId: ${userId || 'NON'}`);
-  }}
->
-  <Text style={styles.boutonTexte}>Vérifier token</Text>
-</TouchableOpacity>
+        style={[styles.bouton, { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#4CAF50', marginTop: 15 }]}
+        onPress={() => navigation.navigate('RegisterScreen')}
+        >
+        <Text style={[styles.boutonTexte, { color: '#4CAF50' }]}>Créer un compte</Text>
+      </TouchableOpacity>
+
+<TouchableOpacity
+        style={[styles.bouton, { backgroundColor: '#607D8B', marginTop: 15 }]}
+        onPress={() => navigation.navigate('EventsList', { isGuest: true })}
+      >
+        <Text style={styles.boutonTexte}>Continuer sans se connecter</Text>
+      </TouchableOpacity>
     </View>
+    
   );
+  
 }
 
 // --- STYLES ---

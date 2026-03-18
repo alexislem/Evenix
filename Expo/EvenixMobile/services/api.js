@@ -5,7 +5,7 @@
 // Pour trouver votre IP : ouvrez un terminal et tapez "ipconfig"
 // Cherchez "Adresse IPv4" de votre carte Wi-Fi
 
-const BASE_URL = 'http://192.168.56.13:8080';
+const BASE_URL = 'http://192.168.1.169:8080';
 
 // Fonction de connexion
 // Envoie l'email et le mot de passe au backend
@@ -177,4 +177,112 @@ export async function getUtilisateurById(token, userId) {
   return await response.json();
 }
 
+export async function updateUtilisateur(token, id, data) {
+const response = await fetch(`${BASE_URL}/api/utilisateur/${id}`, {
+method: 'PUT',
+headers: {
+'Authorization': `Bearer ${token}`,
+'Content-Type': 'application/json',
+},
+body: JSON.stringify(data),
+});
+
+if (!response.ok) {
+const message = await response.text();
+throw new Error(message || 'Impossible de mettre à jour le profil');
+}
+
+return await response.json();
+}
+
+export async function getLieux() {
+const response = await fetch(`${BASE_URL}/api/lieu/all`, {
+method: 'GET',
+headers: {
+'Content-Type': 'application/json',
+},
+});
+
+if (!response.ok) {
+throw new Error('Impossible de récupérer les lieux');
+}
+
+return await response.json();
+}
+
+export async function updateEvenement(token, id, data) {
+const response = await fetch(`${BASE_URL}/api/evenement/${id}`, {
+method: 'PUT',
+headers: {
+'Authorization': `Bearer ${token}`,
+'Content-Type': 'application/json',
+},
+body: JSON.stringify(data),
+});
+
+if (!response.ok) {
+const message = await response.text();
+throw new Error(message || `Impossible de modifier l'événement`);
+}
+
+return await response.json();
+}
+
+export async function deleteEvenement(token, id) {
+const response = await fetch(`${BASE_URL}/api/evenement/${id}`, {
+method: 'DELETE',
+headers: {
+'Authorization': `Bearer ${token}`,
+'Content-Type': 'application/json',
+},
+});
+
+if (!response.ok) {
+const message = await response.text();
+throw new Error(message || `Impossible de supprimer l'événement`);
+}
+
+// Certains backends ne renvoient rien (204 No Content) lors d'une suppression
+// On retourne true pour confirmer que la requête a réussi
+return true;
+}
+
+export async function createEvenement(token, userId, data) {
+// Note : Adapte l'URL selon comment ton backend Spring Boot gère l'ID de l'organisateur.
+// Souvent c'est passé en paramètre d'URL (?userId=...) ou directement extrait du Token.
+const response = await fetch(`${BASE_URL}/api/evenement?utilisateurId=${userId}`, {
+method: 'POST',
+headers: {
+'Authorization': `Bearer ${token}`,
+'Content-Type': 'application/json',
+},
+body: JSON.stringify(data),
+});
+
+if (!response.ok) {
+const message = await response.text();
+throw new Error(message || `Impossible de créer l'événement`);
+}
+
+return await response.json();
+}
+
+export async function registerUtilisateur(data) {
+const response = await fetch(`${BASE_URL}/api/auth/register`, {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+},
+body: JSON.stringify(data),
+});
+
+if (!response.ok) {
+const message = await response.text();
+throw new Error(message || `Erreur lors de l'inscription`);
+}
+
+// Le backend renvoie peut-être juste un texte ou rien pour l'inscription,
+// on utilise .text() au cas où ce ne soit pas du JSON pur.
+return await response.text();
+}
 export default BASE_URL;

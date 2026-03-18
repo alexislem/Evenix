@@ -8,6 +8,11 @@ import EventsListScreen from '../screens/EventsListScreen';
 import EventDetailScreen from '../screens/EventDetailScreen';
 import MesReservationsScreen from '../screens/MesReservationsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import OrganizerEventsListScreen from '../screens/OrganizerEventsListScreen';
+import EditEventScreen from '../screens/EditEventScreen';
+import { createEvenement } from '../services/api';
+import CreateEventScreen from '../screens/CreateEventScreen';
+import RegisterScreen from '../screens/RegisterScreen';
 
 // Création du Stack Navigator
 const Stack = createNativeStackNavigator();
@@ -55,6 +60,30 @@ export default function AppNavigator() {
         component={ProfileScreen}
         options={{ title: "Profil" }}
       />
+
+      <Stack.Screen
+        name="MesEvenements"
+        component={OrganizerEventsListScreen}
+        options={{ title: "Mes évènements" }}
+      />
+
+      <Stack.Screen
+        component={EditEventScreen}
+        options={{ title: "Modifier l'évènement" }}
+      />
+
+      <Stack.Screen
+        name="CreateEventScreen"
+        component={CreateEventScreen}
+        options={{ title: "Créer un évènement" }}
+      />
+
+      <Stack.Screen
+        name="RegisterScreen"
+        component={RegisterScreen}
+        options={{ title: "Inscription" }}
+      />
+
     </Stack.Navigator>
   );
 }
