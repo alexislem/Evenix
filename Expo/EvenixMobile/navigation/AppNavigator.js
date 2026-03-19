@@ -68,6 +68,7 @@ export default function AppNavigator() {
       />
 
       <Stack.Screen
+        name="EditEventScreen"
         component={EditEventScreen}
         options={{ title: "Modifier l'évènement" }}
       />
