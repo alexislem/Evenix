@@ -5,7 +5,7 @@
 // Pour trouver votre IP : ouvrez un terminal et tapez "ipconfig"
 // Cherchez "Adresse IPv4" de votre carte Wi-Fi
 
-const BASE_URL = 'http://172.20.10.2:8080';
+const BASE_URL = 'http://192.168.56.13:8080';
 
 // Fonction de connexion
 // Envoie l'email et le mot de passe au backend
