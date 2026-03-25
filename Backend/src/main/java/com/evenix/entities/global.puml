@@ -1,0 +1,94 @@
+@startuml
+
+' --- Configuration du design ---
+skinparam monochrome true
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+
+title Diagramme de Classes - Projet Evenix
+
+package "com.evenix.entities" {
+
+    class Entreprise {
+        - int id
+        - String nom
+        - String adresse
+        - String email
+    }
+
+    class Utilisateur {
+        - int id
+        - String nom
+        - String prenom
+        - String email
+        - String motDePasse
+        - LocalDate dateDeNaissance
+        - LocalDateTime dateCreation
+        - boolean estConfirme
+        - String telephone
+        - String questionSecurite
+        - String reponseSecurite
+    }
+
+    class Evenement {
+        - int id
+        - String nom
+        - String description
+        - LocalDateTime dateDebut
+        - LocalDateTime dateFin
+        - double prix
+        - String imageUrl
+    }
+
+    class Inscription {
+        - int id
+        - LocalDateTime dateInscription
+        - String statut
+    }
+
+    class Lieu {
+        - int id
+        - String nom
+        - String adresse
+        - String ville
+        - Double latitude
+        - Double longitude
+        - String googlePlaceId
+        - int capaciteMax
+    }
+
+    class Paiement {
+        - int id
+        - double montant
+        - LocalDateTime datePaiement
+        - String moyenPaiement
+        - String statut
+    }
+
+    class Role {
+        - int id
+        - String nom
+    }
+
+    class TypeEvenement {
+        - int id
+        - String nom
+    }
+
+}
+
+' --- Relations (Liaisons entres les classes) ---
+
+Entreprise "1" -- "*" Utilisateur : travaille
+Utilisateur "*" -- "1" Role : possède
+Utilisateur "1" -- "*" Evenement : organise
+Utilisateur "1" -- "*" Inscription : s'inscrit à
+
+Evenement "1" -- "*" Inscription : concerne
+Evenement "*" -- "1" Lieu : se déroule à
+Evenement "*" -- "*" TypeEvenement : catégorisé par
+
+Inscription "1" -- "1" Paiement : génère
+
+@enduml
