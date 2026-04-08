@@ -75,7 +75,7 @@ public class AuthController {
     public ResponseEntity<Void> confirmAccount(@RequestParam("token") String token) {
         // L'URL du frontend
         // Vérifie si c'est localhost:5173 (Vite) 
-        String frontendUrl = "http://localhost:5173/login"; 
+        String frontendUrl = "https://evenix.fr/login"; 
 
         try {
             authService.confirmEmail(token);
