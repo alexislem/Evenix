@@ -15,7 +15,7 @@ public class EmailService {
     private JavaMailSender mailSender;
 
     public void sendConfirmationEmail(String email, String token) {
-        String url = "https://exenix.fr/api/auth/confirm?token=" + token;
+        String url = "https://evenix.fr/api/auth/confirm?token=" + token;
 
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setFrom("evenix.event@gmail.com");
