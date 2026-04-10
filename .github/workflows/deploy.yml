@@ -13,6 +13,8 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key_format: base64
+          port: 22
           script: |
             cd /root/evenix-app
             git pull origin main
