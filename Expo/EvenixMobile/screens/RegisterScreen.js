@@ -7,13 +7,22 @@ TouchableOpacity,
 StyleSheet,
 ActivityIndicator,
 Alert,
-ScrollView
+ScrollView,
+Modal,
+FlatList
 } from 'react-native';
 import { registerUtilisateur } from '../services/api';
+
+const QUESTIONS_SECURITE = [
+"Quel est le nom de votre premier animal ?",
+"Quelle est votre ville de naissance ?",
+"Quel est le nom de jeune fille de votre mère ?"
+];
 
 export default function RegisterScreen({ navigation }) {
 const [loading, setLoading] = useState(false);
 const [showPassword, setShowPassword] = useState(false);
+const [modalVisible, setModalVisible] = useState(false);
 
 const [formData, setFormData] = useState({
 nom: '',
@@ -24,7 +33,7 @@ telephone: '',
 dateDeNaissance: '',
 questionSecurite: '',
 reponseSecurite: '',
-role: 'PARTICIPANT' // Rôle par défaut
+role: 'PARTICIPANT'
 });
 
 const handleChange = (name, value) => {
@@ -38,7 +47,6 @@ setFormData({ ...formData, [name]: value });
 
 const validatePassword = (password) => {
 if (password.length < 12) return "Le mot de passe doit contenir au moins 12 caractères.";
-
 const lowerCount = (password.match(/[a-z]/g) || []).length;
 const specialCount = (password.match(/[!@#$%^&*(),.?":{}|<>]/g) || []).length;
 const upperCount = (password.match(/[A-Z]/g) || []).length;
@@ -55,8 +63,8 @@ return null;
 };
 
 const handleSubmit = async () => {
-if (!formData.nom || !formData.prenom || !formData.email || !formData.motDePasse) {
-Alert.alert('Erreur', 'Veuillez remplir les champs obligatoires.');
+if (!formData.nom || !formData.prenom || !formData.email || !formData.motDePasse || !formData.questionSecurite || !formData.reponseSecurite) {
+Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires (y compris la sécurité).');
 return;
 }
 
@@ -70,7 +78,7 @@ try {
   setLoading(true);
   await registerUtilisateur(formData);
   Alert.alert('Succès', 'Votre compte a été créé avec succès !');
-  navigation.navigate('Login'); // Retour à la page de connexion
+  navigation.navigate('Login');
 } catch (error) {
   console.error(error);
   Alert.alert('Erreur', error.message || 'Impossible de créer le compte');
@@ -160,19 +168,60 @@ return (
       </Text>
     </TouchableOpacity>
 
-    <Text style={styles.label}>Sécurité (Récupération)</Text>
-    <TextInput
-      style={styles.input}
-      placeholder="Votre question secrète"
-      value={formData.questionSecurite}
-      onChangeText={(text) => handleChange('questionSecurite', text)}
-    />
+    {/* --- SECTION SÉCURITÉ MODIFIÉE --- */}
+    <Text style={styles.label}>Sécurité (Récupération) *</Text>
+    
+    <TouchableOpacity 
+      style={styles.questionButton} 
+      onPress={() => setModalVisible(true)}
+    >
+      <Text style={formData.questionSecurite ? styles.questionSelectedText : styles.questionPlaceholderText}>
+        {formData.questionSecurite || "Choisir une question..."}
+      </Text>
+    </TouchableOpacity>
+
     <TextInput
       style={[styles.input, { marginTop: 10 }]}
-      placeholder="Votre réponse"
+      placeholder="Votre réponse secrète *"
       value={formData.reponseSecurite}
       onChangeText={(text) => handleChange('reponseSecurite', text)}
     />
+
+    {/* MODALE POUR LE CHOIX DE LA QUESTION */}
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={() => setModalVisible(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Sélectionnez une question</Text>
+          <FlatList
+            data={QUESTIONS_SECURITE}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity 
+                style={styles.modalOption}
+                onPress={() => {
+                  handleChange('questionSecurite', item);
+                  setModalVisible(false);
+                }}
+              >
+                <Text style={styles.modalOptionText}>{item}</Text>
+              </TouchableOpacity>
+            )}
+          />
+          <TouchableOpacity 
+            style={styles.modalCloseButton} 
+            onPress={() => setModalVisible(false)}
+          >
+            <Text style={styles.modalCloseText}>Fermer</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+    {/* --- FIN SECTION SÉCURITÉ --- */}
 
     <TouchableOpacity 
       style={[styles.submitButton, isOrga ? styles.bgPurple : styles.bgGreen]} 
@@ -217,5 +266,17 @@ bgGreen: { backgroundColor: '#4CAF50' },
 bgPurple: { backgroundColor: '#9C27B0' },
 submitButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 cancelButton: { marginTop: 15, paddingVertical: 10, alignItems: 'center' },
-cancelButtonText: { color: '#757575', fontSize: 14, fontWeight: 'bold' }
+cancelButtonText: { color: '#757575', fontSize: 14, fontWeight: 'bold' },
+
+// Styles pour la sécurité et la modale
+questionButton: { backgroundColor: '#f9f9f9', borderWidth: 1, borderColor: '#ddd', borderRadius: 8, paddingHorizontal: 15, paddingVertical: 12 },
+questionPlaceholderText: { color: '#999', fontSize: 14 },
+questionSelectedText: { color: '#333', fontSize: 14 },
+modalContainer: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '50%' },
+modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#333', textAlign: 'center' },
+modalOption: { paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#eee' },
+modalOptionText: { fontSize: 16, color: '#2196F3' },
+modalCloseButton: { marginTop: 20, padding: 15, backgroundColor: '#f44336', borderRadius: 8, alignItems: 'center' },
+modalCloseText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
 });

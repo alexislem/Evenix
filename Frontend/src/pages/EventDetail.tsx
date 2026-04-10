@@ -15,6 +15,7 @@ const EventDetail: React.FC = () => {
   const [userInscriptionId, setUserInscriptionId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -87,9 +88,9 @@ const EventDetail: React.FC = () => {
     try {
         await inscriptionService.delete(userInscriptionId);
         setUserInscriptionId(null);
-        alert("Désinscription réussie");
+        setSuccessMessage("Désinscription effectuée avec succès.");
     } catch (err) {
-        alert("Erreur lors de la désinscription");
+        setError("Erreur lors de la désinscription.");
     }
   };
 
@@ -127,6 +128,17 @@ const EventDetail: React.FC = () => {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Retour aux événements
         </Link>
+
+        {error && (
+          <div className="bg-red-900/30 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6">
+            {error}
+          </div>
+        )}
+        {successMessage && (
+          <div className="bg-green-900/30 border border-green-700 text-green-200 px-4 py-3 rounded-lg mb-6">
+            {successMessage}
+          </div>
+        )}
 
         <div className="bg-gray-800 rounded-2xl overflow-hidden border border-gray-700 shadow-2xl">
           {evenement.imageUrl ? (

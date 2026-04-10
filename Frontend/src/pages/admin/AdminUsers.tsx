@@ -15,6 +15,15 @@ interface EditFormData {
   entrepriseId: number | string;
 }
 
+interface UpdateUserPayload {
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone: string;
+  role: { id: number };
+  entreprise: { id: number } | null;
+}
+
 const AdminUsers: React.FC = () => {
   const navigate = useNavigate(); // Hook de navigation
   const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
@@ -24,6 +33,7 @@ const AdminUsers: React.FC = () => {
 
   // --- États pour l'édition ---
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
+  const [actionError, setActionError] = useState('');
   const [editFormData, setEditFormData] = useState<EditFormData>({
     nom: '', prenom: '', email: '', telephone: '', roleId: 1, entrepriseId: ''
   });
@@ -76,7 +86,8 @@ const AdminUsers: React.FC = () => {
   // --- Sauvegarde globale ---
   const handleSave = async (userId: number) => {
     try {
-      const payload: any = {
+      setActionError('');
+      const payload: UpdateUserPayload = {
         nom: editFormData.nom,
         prenom: editFormData.prenom,
         email: editFormData.email,
@@ -90,11 +101,11 @@ const AdminUsers: React.FC = () => {
       setUtilisateurs(utilisateurs.map((u) =>
         u.id === userId ? updatedUser : u
       ));
-      
+
       setEditingUserId(null);
     } catch (err) {
       console.error(err);
-      alert('Erreur lors de la modification');
+      setActionError('Erreur lors de la modification.');
     }
   };
 
@@ -104,7 +115,7 @@ const AdminUsers: React.FC = () => {
       await utilisateurService.delete(id);
       setUtilisateurs(utilisateurs.filter((u) => u.id !== id));
     } catch (err) {
-      alert('Erreur lors de la suppression');
+      setActionError('Erreur lors de la suppression.');
     }
   };
 
@@ -126,6 +137,12 @@ const AdminUsers: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Gestion des utilisateurs</h1>
         </div>
+
+        {actionError && (
+          <div className="bg-red-900/30 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6">
+            {actionError}
+          </div>
+        )}
 
         <div className="mb-6">
           <input
@@ -215,7 +232,7 @@ const AdminUsers: React.FC = () => {
                         ) : (
                           <div className="flex items-center text-gray-300">
                             <Phone className="w-4 h-4 mr-2 text-green-400" />
-                            {user.telephone}
+                            {user.telephone || '-'}
                           </div>
                         )}
                       </td>

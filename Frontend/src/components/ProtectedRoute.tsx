@@ -23,12 +23,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRoles
   }
 
   if (requiredRoles && requiredRoles.length > 0) {
-  const hasRequiredRole = requiredRoles.includes(user!.role.nom);
+    if (!user) return <Navigate to="/login" replace />;
+    const hasRequiredRole = requiredRoles.includes(user.role.nom);
 
-  if (!hasRequiredRole) {
-    return <Navigate to="/dashboard" replace />;
+    if (!hasRequiredRole) {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
-}
 
 
   return <>{children}</>;

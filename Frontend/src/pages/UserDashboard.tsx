@@ -5,8 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { Utilisateur } from '../types';
 
-// REMPLACEZ CECI PAR VOTRE VRAIE CLÉ API
-const GOOGLE_MAPS_API_KEY = "AIzaSyDjS8znkaMw0N1JM3YXT7QrcsxPkHLwS9I";
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 declare global {
   interface Window {

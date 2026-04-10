@@ -43,7 +43,7 @@ const MyRegistrations: React.FC = () => {
       // et on trie par date d'événement la plus proche
       const activeInscriptions = data
         .filter(ins => !ins.dateAnnulation && ins.evenement)
-        .sort((a, b) => new Date(a.evenement.dateDebut).getTime() - new Date(b.evenement.dateDebut).getTime());
+        .sort((a, b) => new Date(a.evenement!.dateDebut).getTime() - new Date(b.evenement!.dateDebut).getTime());
 
       setInscriptions(activeInscriptions);
     } catch (err) {
@@ -131,7 +131,7 @@ const MyRegistrations: React.FC = () => {
         ) : (
             <div className="space-y-4">
                 {inscriptions.map((inscription) => {
-                    const event = inscription.evenement;
+                    const event = inscription.evenement!;
                     // On vérifie si l'événement est passé
                     const isPast = new Date(event.dateDebut).getTime() < Date.now();
 

@@ -9,15 +9,16 @@ const OrganizerEventsList: React.FC = () => {
   const { user } = useAuth();
   const [evenements, setEvenements] = useState<Evenement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     loadEvenements();
-  }, []);
+  }, [user?.id]);
 
   const loadEvenements = async () => {
     try {
       const data = await evenementService.getAll();
-      const myEvents = data.filter((e) => e.utilisateur.id === user?.id);
+      const myEvents = data.filter((e) => e.utilisateur?.id === user?.id);
       setEvenements(myEvents);
     } catch (err) {
       console.error('Erreur lors du chargement des événements', err);
@@ -35,7 +36,7 @@ const OrganizerEventsList: React.FC = () => {
       await evenementService.delete(id);
       setEvenements(evenements.filter((e) => e.id !== id));
     } catch (err) {
-      alert('Erreur lors de la suppression');
+      setDeleteError("Erreur lors de la suppression de l'événement.");
     }
   };
 
@@ -71,6 +72,12 @@ const OrganizerEventsList: React.FC = () => {
             Nouvel événement
           </Link>
         </div>
+
+        {deleteError && (
+          <div className="bg-red-900/30 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6">
+            {deleteError}
+          </div>
+        )}
 
         {evenements.length === 0 ? (
           <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center">
@@ -110,13 +117,13 @@ const OrganizerEventsList: React.FC = () => {
                         <p className="text-gray-500 text-sm">Lieu</p>
                         <p className="text-white flex items-center">
                           <MapPin className="w-4 h-4 mr-1" />
-                          {event.lieu.ville}
+                          {event.lieu?.ville}
                         </p>
                       </div>
 
                       <div>
                         <p className="text-gray-500 text-sm">Places</p>
-                        <p className="text-white text-xl font-semibold">{event.lieu.capaciteMax}</p>
+                        <p className="text-white text-xl font-semibold">{event.lieu?.capaciteMax}</p>
                       </div>
 
                       <div>

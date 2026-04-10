@@ -91,10 +91,10 @@ export interface Evenement {
   
   imageUrl?: string; // Lien vers l'image de couverture (optionnel)
   inscriptions?: Inscription[];
-  // Relations (Objets imbriqués)
-  lieu: Lieu;               // Où ça se passe ?
-  utilisateur: Utilisateur; // Qui l'organise ?
-  types: TypeEvenement[];   // Tableau de catégories (Musique, Art...)
+  // Relations (Objets imbriqués) — optionnels car l'API peut ne pas les inclure selon le contexte
+  lieu: Lieu;                // Où ça se passe ?
+  utilisateur: Utilisateur;  // Qui l'organise ?
+  types: TypeEvenement[];    // Tableau de catégories (Musique, Art...)
 }
 
 /**
@@ -105,7 +105,9 @@ export interface Inscription {
   id: number;
   dateInscription: string;
   statut: string;
+  dateAnnulation?: string; // Présente si l'inscription a été annulée
   utilisateur?: { id: number; nom: string; prenom: string }; // Version allégée
+  evenement?: Evenement; // L'événement associé (présent selon le contexte d'appel)
 }
 
 /**

@@ -9,7 +9,7 @@ import axios from 'axios';
 // ============================================================================
 
 // L'adresse de votre serveur Backend Spring Boot
-const API_BASE_URL = '/api';
+const API_BASE_URL = '';
 
 /**
  * Création d'une instance personnalisée d'Axios.
@@ -58,7 +58,19 @@ api.interceptors.request.use(
  */
 api.interceptors.response.use(
   // Cas 1 : Tout va bien (Succès 200, 201...)
-  (response) => response, // On laisse passer la réponse telle quelle
+  (response) => {
+    // Si le backend renvoie un wrapper ApiResponse { success, message, data },
+    // on extrait automatiquement le champ "data" pour simplifier les services.
+    if (
+      response.data &&
+      typeof response.data === 'object' &&
+      'success' in response.data &&
+      'data' in response.data
+    ) {
+      response.data = response.data.data;
+    }
+    return response;
+  },
 
   // Cas 2 : Le serveur renvoie une erreur (4xx, 5xx)
   (error) => {

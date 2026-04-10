@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/source/E6/Evenix/Evenix/Frontend/src -name types.ts -o -name types.d.ts -o -name index.ts -path */types/*)"
+    ]
+  }
+}

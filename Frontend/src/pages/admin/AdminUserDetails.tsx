@@ -66,7 +66,7 @@ const AdminUserDetails: React.FC = () => {
                 <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg h-fit">
                     <div className="flex flex-col items-center text-center mb-6">
                         <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white text-4xl font-bold mb-4">
-                            {user.nom[0]}{user.prenom[0]}
+                            {user.nom?.[0]?.toUpperCase() ?? '?'}{user.prenom?.[0]?.toUpperCase() ?? '?'}
                         </div>
                         <h1 className="text-2xl font-bold text-white">{user.prenom} {user.nom}</h1>
                         <span className={`mt-2 px-3 py-1 rounded-full text-xs font-semibold ${
@@ -138,7 +138,9 @@ const AdminUserDetails: React.FC = () => {
                             {inscriptions.map(inscription => {
                                 const event = inscription.evenement;
                                 const isCancelled = !!inscription.dateAnnulation;
-                                
+
+                                if (!event) return null;
+
                                 return (
                                     <div key={inscription.id} className="p-4 hover:bg-gray-750 transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                         <div>

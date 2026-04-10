@@ -1,25 +1,19 @@
-name: Continuous Deployment Evenix
-
+name: Deploy Evenix App
 on:
-  push:
-    branches:
-      - main  
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to VPS via SSH
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: |
-            cd /root/evenix-app
-            
-            git pull origin main
-            
-            
-            docker compose up -d --build
+push:
+branches:
+- main
+jobs:
+deploy:
+runs-on: ubuntu-latest
+steps:
+- name: Deploy via SSH
+uses: appleboy/ssh-action@master
+with:
+host: ${{ secrets.SSH_HOST }}
+username: ${{ secrets.SSH_USER }}
+password: ${{ secrets.SSH_PASSWORD }}
+script: |
+cd /root/evenix-app
+git pull origin main
+docker compose up -d --build

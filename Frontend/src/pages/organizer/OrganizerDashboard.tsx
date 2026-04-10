@@ -12,13 +12,13 @@ const OrganizerDashboard: React.FC = () => {
 
   useEffect(() => {
     loadEvenements();
-  }, []);
+  }, [user?.id]);
 
   const loadEvenements = async () => {
     try {
       const data = await evenementService.getAll();
       // On filtre les événements dont l'utilisateur connecté est l'organisateur
-      const myEvents = data.filter((e) => e.utilisateur.id === user?.id);
+      const myEvents = data.filter((e) => e.utilisateur?.id === user?.id);
       setEvenements(myEvents);
     } catch (err) {
       console.error('Erreur lors du chargement des événements', err);
@@ -27,8 +27,8 @@ const OrganizerDashboard: React.FC = () => {
     }
   };
 
-  const totalPlaces = evenements.reduce((sum, e) => sum + e.lieu.capaciteMax, 0);
-  const totalRevenu = evenements.reduce((sum, e) => sum + e.prix * e.lieu.capaciteMax, 0);
+  const totalPlaces = evenements.reduce((sum, e) => sum + (e.lieu?.capaciteMax || 0), 0);
+  const totalRevenu = evenements.reduce((sum, e) => sum + e.prix * (e.lieu?.capaciteMax || 0), 0);
 
   return (
     <div className="min-h-screen bg-gray-950 py-12">
@@ -136,7 +136,7 @@ const OrganizerDashboard: React.FC = () => {
                       <p className="text-gray-400 text-sm flex items-center">
                         {new Date(event.dateDebut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                         <span className="mx-2">•</span>
-                        {event.lieu.ville}
+                        {event.lieu?.ville}
                       </p>
                     </div>
                     <div className="text-right">
@@ -145,7 +145,7 @@ const OrganizerDashboard: React.FC = () => {
                             {event.prix > 0 ? `${event.prix} €` : 'Gratuit'}
                         </span>
                         <span className="text-gray-500 text-xs">
-                            Capacité: {event.lieu.capaciteMax}
+                            Capacité: {event.lieu?.capaciteMax}
                         </span>
                       </div>
                     </div>

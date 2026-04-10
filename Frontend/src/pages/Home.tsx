@@ -37,7 +37,7 @@ const Home: React.FC = () => {
           if (Array.isArray(inscriptions)) {
             const ids = inscriptions
                 .filter(ins => ins.evenement && !ins.dateAnnulation)
-                .map(ins => ins.evenement.id);
+                .map(ins => ins.evenement!.id);
             setRegisteredEventIds(ids);
           }
         } catch (err) {
